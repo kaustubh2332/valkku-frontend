@@ -14,7 +14,10 @@
     "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa."
   },
   "home": {
-    "welcome": "Hei maailma"
+    "goodMorning": "Hyvää huomenta",
+    "goodAfternoon": "Hyvää päivää",
+    "goodEvening": "Hyvää iltaa",
+    "goodNight": "Hyvää yötä"
   },
   "language": {
     "english": "English",

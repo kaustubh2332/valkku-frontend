@@ -14,7 +14,10 @@
     "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard."
   },
   "home": {
-    "welcome": "Hello World"
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "goodNight": "Good night"
   },
   "language": {
     "english": "English",
