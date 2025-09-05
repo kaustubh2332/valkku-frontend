@@ -14,6 +14,13 @@ import 'vuetify/styles'
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   theme: {
-    defaultTheme: 'system',
+    defaultTheme: 'light',
+    themes: {
+      light: {
+        colors: {
+          primary: '#01B0D8',
+        },
+      },
+    },
   },
 })
