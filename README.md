@@ -61,6 +61,127 @@ yarn build
 
 Once the build process is completed, your application will be ready for deployment in a production environment.
 
+## 🗃️ State Management with Pinia
+
+This project uses [Pinia](https://pinia.vuejs.org/) for state management. Pinia is the official state management library for Vue 3.
+
+### Available Stores
+
+#### User Store (`src/stores/user.js`)
+Manages user authentication and profile data:
+
+```javascript
+import { useUserStore } from '@/stores/user'
+
+// In your component
+export default {
+  setup() {
+    const userStore = useUserStore()
+
+    // Access state
+    console.log(userStore.profile)
+    console.log(userStore.isLoading)
+
+    // Use getters
+    console.log(userStore.isAuthenticated)
+    console.log(userStore.userName)
+
+    // Call actions
+    userStore.setProfile(userData)
+    userStore.setLoading(true)
+    userStore.clearProfile()
+
+    return { userStore }
+  }
+}
+```
+
+#### App Store (`src/stores/app.js`)
+Manages application-wide state:
+
+```javascript
+import { useAppStore } from '@/stores/app'
+
+// In your component
+export default {
+  setup() {
+    const appStore = useAppStore()
+
+    // Access state
+    console.log(appStore.isLoading)
+    console.log(appStore.currentPage)
+
+    // Use getters
+    console.log(appStore.isHomePage)
+    console.log(appStore.isSettingsPage)
+
+    // Call actions
+    appStore.setLoading(true)
+    appStore.setCurrentPage('Settings')
+    appStore.setTheme('dark')
+
+    return { appStore }
+  }
+}
+```
+
+### Using Pinia with Options API
+
+```javascript
+import { mapState, mapGetters, mapActions } from 'pinia'
+import { useUserStore } from '@/stores/user'
+
+export default {
+  computed: {
+    // Map state properties
+    ...mapState(useUserStore, ['profile', 'isLoading']),
+
+    // Map getters
+    ...mapGetters(useUserStore, ['isAuthenticated', 'userName'])
+  },
+
+  methods: {
+    // Map actions
+    ...mapActions(useUserStore, ['setProfile', 'setLoading', 'clearProfile'])
+  }
+}
+```
+
+### Creating New Stores
+
+To create a new store, add a file in `src/stores/`:
+
+```javascript
+// src/stores/example.js
+import { defineStore } from 'pinia'
+
+export const useExampleStore = defineStore('example', {
+  state: () => ({
+    data: null,
+    loading: false
+  }),
+
+  getters: {
+    hasData: (state) => !!state.data
+  },
+
+  actions: {
+    async fetchData() {
+      this.loading = true
+      try {
+        // Your API call here
+        const response = await api.get('/data')
+        this.data = response.data
+      } catch (error) {
+        console.error(error)
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+})
+```
+
 ## 💪 Support Vuetify Development
 
 This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library with a comprehensive collection of Vue components. Vuetify is an MIT licensed Open Source project that has been made possible due to the generous contributions by our [sponsors and backers](https://vuetifyjs.com/introduction/sponsors-and-backers/). If you are interested in supporting this project, please consider:

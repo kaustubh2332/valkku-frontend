@@ -71,8 +71,6 @@
         // Increment click counter
         this.clickCount++
 
-        console.log('Click count:', this.clickCount)
-
         // If we've reached 20 clicks, switch to custom emoji mode
         if (this.clickCount >= 2 && !this.isCustomEmoji) {
           this.isCustomEmoji = true
