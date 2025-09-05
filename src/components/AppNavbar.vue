@@ -4,6 +4,7 @@
     dark
     prominent
   >
+    <Loading v-if="isLoading" />
     <v-app-bar-title>
       <v-img
         alt="Valkku"
@@ -90,6 +91,7 @@
     setup() {
       const {
         isAuthenticated,
+        isLoading,
         user,
         loginWithRedirect,
         logout: auth0Logout
@@ -97,6 +99,7 @@
 
       return {
         isAuthenticated,
+        isLoading,
         user,
         loginWithRedirect,
         auth0Logout

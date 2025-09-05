@@ -6,7 +6,7 @@
 
 // Composables
 import { authGuard } from '@auth0/auth0-vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 // Import your page components
 import Home from '@/pages/Home.vue'
@@ -24,11 +24,17 @@ const routes = [
     name: 'Settings',
     component: Settings,
     beforeEnter: authGuard
+  },
+  {
+    path: '/callback',
+    name: 'Callback',
+    component: () => import('@/pages/Callback.vue'),
+    beforeEnter: authGuard
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(),
   routes,
 })
 

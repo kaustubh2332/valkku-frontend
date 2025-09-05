@@ -32,7 +32,8 @@ app.use(
     domain: "valkku.eu.auth0.com",
     clientId: "TYPc6tf6czVlQFoRApFqdvtp9IzfayIR",
     authorizationParams: {
-      redirect_uri: window.location.origin
+      redirect_uri: window.location.origin + '/#/callback',
+      // audience: 'https://api.valkku.eu'
     }
   })
 );

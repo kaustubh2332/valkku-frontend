@@ -13,9 +13,10 @@
           {{ currentEmoji }}
         </span>
       </span>
-
     </div>
   </v-container>
+
+  <Loading v-if="isLoading" />
 </template>
 
 <script lang="ts">
@@ -35,7 +36,8 @@
         ],
         clickCount: 0,
         currentEmojiIndex: 0,
-        isCustomEmoji: false
+        isCustomEmoji: false,
+        isLoading: false
       }
     },
     computed: {
@@ -85,24 +87,19 @@
           console.log('Changed to emoji index:', this.currentEmojiIndex)
         }
 
-        // Generate random angle that doesn't go too far upwards
-        // 0° = right, 90° = down, 180° = left, 270° = up
-        // We want to avoid angles between 240° and 300° (too far up)
-        let randomAngle = Math.random() * 360
-        if (randomAngle > 240 && randomAngle < 300) {
-          // If angle is too far up, redirect it to a downward direction
-          randomAngle = 90 + (Math.random() * 60) // Between 90° and 150° (downward)
-        }
+        // Generate random angle from 60° to -90°
+        // 60° = down-right, -90° = straight up
+        const randomAngle = Math.random() * 150 - 90 // Range: -90 to +60 degrees
 
         const config = {
-          angle: randomAngle, // Random angle avoiding upward shots
-          spread: 60,
+          angle: randomAngle, // Random angle from 60° to -90°
+          spread: 50,
           startVelocity: 20,
           elementCount: 15,
           elementSize: 30,
           emoji: [this.currentEmoji], // Use the current emoji
           lifetime: 200,
-          position: 'absolute',
+          position: 'fixed',
           zIndex: 9999
         }
 
