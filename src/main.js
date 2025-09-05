@@ -10,6 +10,7 @@ import { createAuth0 } from '@auth0/auth0-vue'
 import { createApp } from 'vue'
 
 // Plugins
+import i18n from '@/i18n'
 import { registerPlugins } from '@/plugins'
 
 // Composables
@@ -22,6 +23,8 @@ import App from './App.vue'
 import 'unfonts.css'
 
 const app = createApp(App)
+
+app.use(i18n)
 
 app.use(
   createAuth0({

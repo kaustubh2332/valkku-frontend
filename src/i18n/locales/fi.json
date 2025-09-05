@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "Valkku",
+    "login": "Kirjaudu",
+    "logout": "Kirjaudu ulos",
+    "settings": "Asetukset",
+    "backToHome": "Takaisin etusivulle",
+    "openAuth0Dashboard": "Avaa Auth0 hallintapaneeli"
+  },
+  "settings": {
+    "title": "Asetukset",
+    "profile": "Profiili",
+    "language": "Kieli",
+    "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa."
+  },
+  "home": {
+    "welcome": "Hei maailma"
+  },
+  "language": {
+    "english": "English",
+    "finnish": "Suomi"
+  }
+}

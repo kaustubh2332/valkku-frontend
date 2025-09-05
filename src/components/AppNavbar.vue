@@ -19,6 +19,7 @@
     <v-spacer />
 
     <div v-if="isAuthenticated" class="d-flex align-center">
+      <!-- User Menu -->
       <v-menu
         v-model="menu"
         :close-on-content-click="false"
@@ -53,8 +54,16 @@
 
         <v-list min-width="200">
           <v-list-item
+            prepend-icon="mdi-cog"
+            :title="$t('app.settings')"
+            @click="goToSettings"
+          />
+
+          <v-divider />
+
+          <v-list-item
             prepend-icon="mdi-logout"
-            title="Logout"
+            :title="$t('app.logout')"
             @click="logout"
           />
         </v-list>
@@ -67,7 +76,7 @@
         variant="text"
         @click="login"
       >
-        Login
+        {{ $t('app.login') }}
       </v-btn>
     </div>
   </v-app-bar>
@@ -109,6 +118,10 @@
             returnTo: window.location.origin
           }
         })
+      },
+      goToSettings() {
+        this.menu = false
+        this.$router.push('/settings')
       }
     }
   }

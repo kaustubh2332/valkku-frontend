@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "Valkku",
+    "login": "Login",
+    "logout": "Logout",
+    "settings": "Settings",
+    "backToHome": "Back to Home",
+    "openAuth0Dashboard": "Open Auth0 Dashboard"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "language": "Language",
+    "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard."
+  },
+  "home": {
+    "welcome": "Hello World"
+  },
+  "language": {
+    "english": "English",
+    "finnish": "Suomi"
+  }
+}

@@ -10,7 +10,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // Import your page components
 import Home from '@/pages/Home.vue'
-import Profile from '@/pages/Profile.vue'
+import Settings from '@/pages/Settings.vue'
 
 const routes = [
   {
@@ -20,9 +20,9 @@ const routes = [
     beforeEnter: authGuard
   },
   {
-    path: '/profile',
-    name: 'Profile',
-    component: Profile,
+    path: '/settings',
+    name: 'Settings',
+    component: Settings,
     beforeEnter: authGuard
   }
 ]
