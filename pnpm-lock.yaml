@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@auth0/auth0-vue':
+        specifier: ^2.4.0
+        version: 2.4.0(typescript@5.9.2)(vue-router@4.5.1(vue@3.5.21(typescript@5.9.2)))
       '@fontsource/roboto':
         specifier: 5.2.6
         version: 5.2.6
@@ -59,6 +62,17 @@ packages:
     engines: {node: '>= 20'}
     peerDependencies:
       '@types/json-schema': ^7.0.15
+
+  '@auth0/auth0-spa-js@2.3.0':
+    resolution: {integrity: sha512-zAW6w79UO+G1+3AxboVQIUIZy05xluSOb1ymGg2dqG0pIi0JxEtZGec05BOf2LJ9SehzW4WeCYUQsYD9BjrVpQ==}
+
+  '@auth0/auth0-vue@2.4.0':
+    resolution: {integrity: sha512-12iLvojP8Pvxqu2Abxzksp0HqlSovGiAUhWrppnOaJP02MZEBQo+c/IwM6VbM0edNk+eqqjX5u96iw5peaCPSg==}
+    peerDependencies:
+      vue-router: ^4.0.12
+    peerDependenciesMeta:
+      vue-router:
+        optional: true
 
   '@babel/helper-string-parser@7.27.1':
     resolution: {integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==}
@@ -1943,6 +1957,17 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       js-yaml: 4.1.0
+
+  '@auth0/auth0-spa-js@2.3.0': {}
+
+  '@auth0/auth0-vue@2.4.0(typescript@5.9.2)(vue-router@4.5.1(vue@3.5.21(typescript@5.9.2)))':
+    dependencies:
+      '@auth0/auth0-spa-js': 2.3.0
+      vue: 3.5.21(typescript@5.9.2)
+    optionalDependencies:
+      vue-router: 4.5.1(vue@3.5.21(typescript@5.9.2))
+    transitivePeerDependencies:
+      - typescript
 
   '@babel/helper-string-parser@7.27.1': {}
 
