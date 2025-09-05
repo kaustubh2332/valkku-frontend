@@ -6,8 +6,8 @@
 
 
 import { createAuth0 } from '@auth0/auth0-vue'
-
 import { createApp } from 'vue'
+import VueRewards from 'vue-rewards'
 
 // Plugins
 import i18n from '@/i18n'
@@ -25,6 +25,7 @@ import 'unfonts.css'
 const app = createApp(App)
 
 app.use(i18n)
+app.use(VueRewards)
 
 app.use(
   createAuth0({
