@@ -1,11 +1,19 @@
 <template>
   <v-app-bar
-    color="primary"
+    color="white"
     dark
     prominent
   >
     <v-app-bar-title>
-      Valkku
+      <v-img
+        alt="Valkku"
+        contain
+        height="40"
+        src="@/assets/logo.svg"
+        style="cursor: pointer;"
+        width="40"
+        @click="$router.push('/')"
+      />
     </v-app-bar-title>
 
     <v-spacer />
@@ -19,7 +27,7 @@
       >
         <template #activator="{ props }">
           <v-btn
-            class="d-flex align-center pa-2"
+            class="d-flex align-center pa-2 mr-4"
             v-bind="props"
             min-width="auto"
             variant="text"
@@ -36,6 +44,7 @@
               <v-icon v-else>mdi-account</v-icon>
             </v-avatar>
 
+
             <span class="me-2">{{ user?.name || user?.email || 'User' }}</span>
 
             <v-icon>mdi-chevron-down</v-icon>
@@ -43,15 +52,6 @@
         </template>
 
         <v-list min-width="200">
-          <v-list-item
-            prepend-icon="mdi-account"
-            subtitle="Manage your profile"
-            title="Profile"
-            @click="goToManageAccount"
-          />
-
-          <v-divider />
-
           <v-list-item
             prepend-icon="mdi-logout"
             title="Logout"
@@ -73,35 +73,43 @@
   </v-app-bar>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import { useAuth0 } from '@auth0/auth0-vue'
+<script lang="ts">
+  import { useAuth0 } from '@auth0/auth0-vue'
 
-const menu = ref(false)
+  export default {
+    name: 'AppNavbar',
+    setup() {
+      const {
+        isAuthenticated,
+        user,
+        loginWithRedirect,
+        logout: auth0Logout
+      } = useAuth0()
 
-const {
-  isAuthenticated,
-  user,
-  loginWithRedirect,
-  logout: auth0Logout
-} = useAuth0()
-
-const login = () => {
-  loginWithRedirect()
-}
-
-const logout = () => {
-  menu.value = false
-  auth0Logout({
-    logoutParams: {
-      returnTo: window.location.origin
+      return {
+        isAuthenticated,
+        user,
+        loginWithRedirect,
+        auth0Logout
+      }
+    },
+    data() {
+      return {
+        menu: false
+      }
+    },
+    methods: {
+      login() {
+        this.loginWithRedirect()
+      },
+      logout() {
+        this.menu = false
+        this.auth0Logout({
+          logoutParams: {
+            returnTo: window.location.origin
+          }
+        })
+      }
     }
-  })
-}
-
-// Redirect to Auth0's hosted account management page
-const goToManageAccount = () => {
-  menu.value = false
-  window.location.href = 'https://valkku.eu.auth0.com/u/account'
-}
+  }
 </script>
