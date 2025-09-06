@@ -11,6 +11,8 @@
     "title": "Asetukset",
     "profile": "Profiili",
     "language": "Kieli",
+    "account": "Tili",
+    "changePassword": "Vaihda salasana",
     "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa."
   },
   "home": {
@@ -22,5 +24,10 @@
   "language": {
     "english": "English",
     "finnish": "Suomi"
+  },
+  "callback": {
+    "errorTitle": "Jotain meni pieleen",
+    "errorMessage": "Päivitä sivu ja yritä uudelleen.",
+    "refreshPage": "Päivitä sivu"
   }
 }

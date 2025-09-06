@@ -11,6 +11,8 @@
     "title": "Settings",
     "profile": "Profile",
     "language": "Language",
+    "account": "Account",
+    "changePassword": "Change Password",
     "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard."
   },
   "home": {
@@ -22,5 +24,10 @@
   "language": {
     "english": "English",
     "finnish": "Suomi"
+  },
+  "callback": {
+    "errorTitle": "Something went wrong",
+    "errorMessage": "Please refresh the page and try again.",
+    "refreshPage": "Refresh Page"
   }
 }

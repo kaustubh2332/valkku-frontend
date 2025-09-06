@@ -9,20 +9,29 @@ const api = axios.create({
   }
 })
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    // Get token from localStorage or Auth0
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+// Function to setup axios with Auth0 instance
+export function setupAxiosWithAuth0(auth0Instance) {
+  // Request interceptor to add auth token
+  api.interceptors.request.use(
+    async (config) => {
+      try {
+        // Get token from Auth0 for every request
+        const token = await auth0Instance.getAccessTokenSilently({
+          audience: 'https://valkku.eu.auth0.com/api/v2/'
+        });
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`
+        }
+      } catch (error) {
+        console.error('Failed to get access token:', error)
+      }
+      return config
+    },
+    (error) => {
+      return Promise.reject(error)
     }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
+  )
+}
 
 // Response interceptor to handle common errors
 api.interceptors.response.use(
