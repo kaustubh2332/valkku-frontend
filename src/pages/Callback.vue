@@ -1,8 +1,8 @@
 <template>
-  <Loading v-if="isLoading" />
+  <Loading v-if="!hasError" />
 
   <!-- Error Message -->
-  <v-container v-else-if="hasError">
+  <v-container v-else>
     <v-card
       class="mx-auto"
       max-width="400"

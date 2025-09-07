@@ -1,44 +1,66 @@
-
-import { authGuard, useAuth0 } from '@auth0/auth0-vue'
+import { authGuard } from '@auth0/auth0-vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 // Import your page components
 import Home from '@/pages/Home.vue'
 import Settings from '@/pages/Settings.vue'
 
+import { useUserStore } from '@/stores/user'
+
+import { getUserFromLocalStorage } from '@/utils/auth'
+
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
-    beforeEnter: authGuard
+    component: Home
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: Settings,
-    beforeEnter: authGuard
+    meta: {
+      allowWithoutDetails: true
+    },
+    component: Settings
   },
   {
     path: '/callback',
     name: 'Callback',
-    component: () => import('@/pages/Callback.vue'),
-    beforeEnter: authGuard
+    component: () => import('@/pages/Callback.vue')
   },
   {
     path: '/details',
     name: 'Details',
-    component: () => import('@/pages/Callback.vue'),
-    beforeEnter: authGuard
+    component: () => import('@/pages/Details.vue')
   }
 ]
 
+const guardedRoutes = routes.map(route => ({ ...route, beforeEnter: authGuard }))
+
 // BEFORE EACH GUARD
 function beforeEachGuard(to, from, next) {
-  console.log('beforeEachGuard', to, from)
-  console.log('isAuthenticated', useAuth0().isAuthenticated)
-  // TODO: IF NO USER GO TO /callback
-  // TODO: IF PENDING DETAILS GO TO /details
+  const userStore = useUserStore()
+  let user = userStore.getUser
+
+  if(!user) {
+    user = getUserFromLocalStorage()
+    if(user) {
+      userStore.setUser(user)
+    }
+  }
+
+  // If no user and not going to callback, redirect to callback
+  if (!user && to.path !== '/callback') {
+    next('/callback')
+    return
+  }
+
+  // If user exists and has pendingDetails, redirect to details
+  if (user && user.pendingDetails && to.path !== '/details' && !to.meta.allowWithoutDetails) {
+    next('/details')
+    return
+  }
+
   // TODO: (LATER) IF NO TEAMS ASK FOR CODE
 
   next()
@@ -46,7 +68,7 @@ function beforeEachGuard(to, from, next) {
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes,
+  routes: guardedRoutes
 })
 
 router.beforeEach(beforeEachGuard)

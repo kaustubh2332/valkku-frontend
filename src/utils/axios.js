@@ -15,15 +15,20 @@ export function setupAxiosWithAuth0(auth0Instance) {
   api.interceptors.request.use(
     async (config) => {
       try {
-        // Get token from Auth0 for every request
-        const token = await auth0Instance.getAccessTokenSilently({
-          audience: 'https://valkku.eu.auth0.com/api/v2/'
-        });
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
+        // Check if user is authenticated before trying to get token
+        if (auth0Instance.isAuthenticated.value) {
+          const token = await auth0Instance.getAccessTokenSilently({
+            audience: 'https://valkku.eu.auth0.com/api/v2/'
+          });
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
         }
       } catch (error) {
-        console.error('Failed to get access token:', error)
+        // Only log error if it's not related to missing refresh token during logout
+        if (!error.message?.includes('Missing Refresh Token')) {
+          console.error('Failed to get access token:', error)
+        }
       }
       return config
     },
@@ -41,16 +46,18 @@ api.interceptors.response.use(
   (error) => {
     // Handle common HTTP errors
     if (error.response?.status === 401) {
-      // Unauthorized - redirect to login or refresh token
-      localStorage.removeItem('auth_token')
-      window.location.href = '/login'
+      // Unauthorized - only redirect if not already on login/callback page
+      if (!window.location.pathname.includes('/callback') && !window.location.pathname.includes('/login')) {
+        localStorage.removeItem('auth_token')
+        window.location.href = '/login'
+      }
     } else if (error.response?.status === 403) {
       // Forbidden
       console.error('Access forbidden')
-    } else if (error.response?.status >= 500) {
-      // Server error
-      console.error('Server error:', error.response.data)
-    }
+    } else if (error.response?.status >= 500 && // Server error - only log if it's not during logout process
+      !error.config?.url?.includes('/logout') && !window.location.pathname.includes('/callback')) {
+        console.error('Server error:', error.response.data)
+      }
 
     return Promise.reject(error)
   }

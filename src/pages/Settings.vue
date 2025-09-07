@@ -49,18 +49,25 @@
         </v-btn>
       </v-card-text>
     </v-card>
+    <v-card-text>
+      <div class="text-caption text-grey-darken-3 mb-4" style="opacity: 0.6;">
+        {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.getUser?.emojiClickedCount }) }}.
+      </div>
+    </v-card-text>
   </v-container>
 </template>
 
 <script lang="ts">
   import { useAuth0 } from '@auth0/auth0-vue'
+  import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
     name: 'Settings',
     setup() {
       const { user } = useAuth0()
-      return { user }
+      const userStore = useUserStore()
+      return { user, userStore }
     },
     data() {
       return {

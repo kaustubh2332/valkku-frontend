@@ -47,7 +47,7 @@
             </v-avatar>
 
 
-            <span class="me-2">{{ user?.name || user?.email || 'User' }}</span>
+            <span class="me-2">{{ fullName || user?.email || 'User' }}</span>
 
             <v-icon>mdi-chevron-down</v-icon>
           </v-btn>
@@ -65,7 +65,7 @@
           <v-list-item
             prepend-icon="mdi-logout"
             :title="$t('app.logout')"
-            @click="logout"
+            @click="startLogout"
           />
         </v-list>
       </v-menu>
@@ -75,7 +75,6 @@
       <v-btn
         prepend-icon="mdi-login"
         variant="text"
-        @click="login"
       >
         {{ $t('app.login') }}
       </v-btn>
@@ -85,6 +84,7 @@
 
 <script lang="ts">
   import { useAuth0 } from '@auth0/auth0-vue'
+  import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'AppNavbar',
@@ -96,12 +96,14 @@
         loginWithRedirect,
         logout: auth0Logout
       } = useAuth0()
+      const userStore = useUserStore()
 
       return {
         isAuthenticated,
         isLoading,
         user,
         loginWithRedirect,
+        userStore,
         auth0Logout
       }
     },
@@ -110,12 +112,15 @@
         menu: false
       }
     },
+    computed: {
+      fullName() {
+        return this.userStore.fullName
+      }
+    },
     methods: {
-      login() {
-        this.loginWithRedirect()
-      },
-      logout() {
+      startLogout() {
         this.menu = false
+        this.userStore.logout()
         this.auth0Logout({
           logoutParams: {
             returnTo: window.location.origin

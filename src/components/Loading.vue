@@ -1,6 +1,21 @@
 <template>
   <div class="loading-overlay">
     <div class="loading-content">
+      <!-- Spinner -->
+      <div class="spinner-container">
+        <v-progress-circular
+          color="primary"
+          indeterminate
+          size="64"
+          width="4"
+        />
+      </div>
+
+      <!-- Loading text -->
+      <div class="loading-text">
+        Loading...
+      </div>
+
       <div class="skeleton-container">
         <v-skeleton-loader
           class="mb-4"
@@ -63,6 +78,21 @@
   width: 90%;
 }
 
+.spinner-container {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 32px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .skeleton-container {
   width: 100%;
 }
@@ -73,6 +103,15 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 </style>

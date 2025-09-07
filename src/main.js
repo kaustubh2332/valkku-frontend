@@ -39,7 +39,9 @@ const auth0 = createAuth0({
     redirect_uri: window.location.origin + '/#/callback',
     audience: 'https://valkku.eu.auth0.com/api/v2/',
     scope: 'openid profile email'
-  }
+  },
+  cacheLocation: "localstorage",   // persist tokens across refresh
+  useRefreshTokens: true
 })
 
 app.use(auth0)

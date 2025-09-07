@@ -5,7 +5,7 @@
     :class="['emoji-count-display', { show: chipVisible, hide: !chipVisible }]"
   >
     <v-icon class="me-1">mdi-cursor-pointer</v-icon>
-    {{ userStore.getUser.emojiClickedCount }}
+    {{ userStore.getUser?.emojiClickedCount }}
   </div>
 
   <div

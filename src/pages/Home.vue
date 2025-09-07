@@ -2,7 +2,7 @@
 
   <v-container>
     <div class="d-flex text-h4 text-md-h3 text-sm-h4 text-xs-h4 mt-4">
-      {{ greeting }}!
+      {{ greeting }}, {{ userStore.firstName }}!
       <BigEmoji />
       <!-- {{ userStore.getUser }} -->
     </div>
