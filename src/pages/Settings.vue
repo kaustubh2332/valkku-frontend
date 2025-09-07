@@ -47,6 +47,14 @@
           <v-icon class="me-2">mdi-key</v-icon>
           {{ $t('settings.changePassword') }}
         </v-btn>
+        <br>
+        <v-btn
+          class="mt-4"
+          @click="startLogout"
+        >
+          <v-icon class="me-2">mdi-logout</v-icon>
+          {{ $t('app.logout') }}
+        </v-btn>
       </v-card-text>
     </v-card>
     <v-card-text>
@@ -65,9 +73,9 @@
   export default {
     name: 'Settings',
     setup() {
-      const { user } = useAuth0()
+      const { user, logout: auth0Logout } = useAuth0()
       const userStore = useUserStore()
-      return { user, userStore }
+      return { user, userStore, auth0Logout }
     },
     data() {
       return {
@@ -79,6 +87,14 @@
       setLocale(locale: string) {
         this.$i18n.locale = locale
         localStorage.setItem('locale', locale)
+      },
+      startLogout() {
+        this.userStore.logout()
+        this.auth0Logout({
+          logoutParams: {
+            returnTo: window.location.origin
+          }
+        })
       },
       async changePassword() {
         try {

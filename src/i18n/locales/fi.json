@@ -18,10 +18,11 @@
     "version": "Versio"
   },
   "home": {
-    "goodMorning": "Hyvää huomenta",
-    "goodAfternoon": "Hyvää päivää",
-    "goodEvening": "Hyvää iltaa",
-    "goodNight": "Hyvää iltaa"
+    "goodMorning": "Huomenta",
+    "goodAfternoon": "Päivää",
+    "goodEvening": "Iltää",
+    "goodNight": "Iltaa",
+    "welcome": "Tervetuloa"
   },
   "language": {
     "english": "English",

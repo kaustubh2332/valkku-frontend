@@ -1,4 +1,6 @@
 <template>
+  <!-- Confetti trigger element at top of page -->
+  <div id="confetti-trigger" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 9999;" />
 
   <v-container>
     <div class="d-flex text-h4 text-md-h3 text-sm-h4 text-xs-h4 mt-4">
@@ -6,6 +8,15 @@
       <BigEmoji />
       <!-- {{ userStore.getUser }} -->
     </div>
+
+    <v-row>
+      <!-- Tulevat tapahtumat
+      Menneet tapahtumat?
+      Lisää harjoitus / tapahtuma
+      Raportti
+      Ohjeita käyttöön
+      Tehtävät -->
+    </v-row>
   </v-container>
 
   <Loading v-if="isLoading" />
@@ -29,6 +40,11 @@
     },
     computed: {
       greeting() {
+        // If first=true, show welcome message instead of time-based greeting
+        if (this.$route.query.first === 'true') {
+          return this.$t('home.welcome')
+        }
+
         const hour = new Date().getHours()
 
         let timeKey = 'goodMorning'
@@ -43,7 +59,37 @@
         return this.$t(`home.${timeKey}`)
       }
     },
-    methods: {}
+    mounted() {
+      // Check if 'first' query parameter is 'true' and shoot confetti
+      if (this.$route.query.first === 'true') {
+        this.shootConfetti()
+
+        setTimeout(() => {
+          this.shootConfetti()
+        }, 300)
+
+        setTimeout(() => {
+          this.shootConfetti()
+        }, 600)
+      }
+    },
+    methods: {
+      shootConfetti() {
+        const config = {
+          angle: 270, // Shoot downward from top
+          spread: 60,
+          startVelocity: 20,
+          elementCount: 100,
+          elementSize: 8,
+          lifetime: 300,
+          colors: ['#A45BF1', '#25C6F6', '#72F753', '#F76C88', '#F5F770'],
+          position: 'fixed'
+        }
+
+        const { reward } = this.$reward('confetti-trigger', 'confetti', config)
+        reward()
+      }
+    }
   }
 </script>
 
