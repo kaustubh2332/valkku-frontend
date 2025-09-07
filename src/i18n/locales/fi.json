@@ -20,13 +20,18 @@
   "home": {
     "goodMorning": "Huomenta",
     "goodAfternoon": "Päivää",
-    "goodEvening": "Iltää",
+    "goodEvening": "Iltaa",
     "goodNight": "Iltaa",
     "welcome": "Tervetuloa"
   },
   "language": {
     "english": "English",
     "finnish": "Suomi"
+  },
+  "sidebar": {
+    "home": "Koti",
+    "settings": "Asetukset",
+    "minify": "Pienennä"
   },
   "callback": {
     "errorTitle": "Jotain meni pieleen",

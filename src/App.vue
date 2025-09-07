@@ -1,9 +1,19 @@
 <template>
   <v-app>
-    <AppNavbar />
+    <AppSidebar ref="sidebar" />
+    <!-- <AppNavbar /> -->
     <v-main>
       <router-view />
     </v-main>
+
+    <!-- Mobile FAB for sidebar -->
+    <v-fab
+      v-if="$vuetify.display.mobile"
+      icon="mdi-menu"
+      size="small"
+      style="top: 16px; right: 16px; position: fixed;"
+      @click="openMobileSidebar"
+    />
   </v-app>
 </template>
 
@@ -15,12 +25,29 @@
     name: 'App',
     setup() {
       const userStore = useUserStore()
-      const { isAuthenticated } = useAuth0()
-      return { userStore, isAuthenticated }
+      const { isAuthenticated, isLoading } = useAuth0()
+      return { userStore, isAuthenticated, isLoading }
     },
-    created() {
-      // Let's init the user even if it had been loaded from localStorage
-      if(this.isAuthenticated) {
+    methods: {
+      openMobileSidebar() {
+        this.$refs.sidebar.drawer = true
+      }
+    },
+    watch: {
+      isLoading: {
+        handler(newVal) {
+          // When Auth0 finishes loading, check if user is authenticated
+          if (!newVal && this.isAuthenticated) {
+            this.userStore.fetchUser()
+          }
+        },
+        immediate: true
+      }
+    },
+    mounted() {
+      // Also check immediately in case Auth0 is already loaded
+      if (!this.isLoading && this.isAuthenticated) {
+        console.log('Auth0 already loaded, fetching user data')
         this.userStore.fetchUser()
       }
     }

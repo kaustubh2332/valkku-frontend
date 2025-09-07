@@ -28,6 +28,11 @@
     "english": "English",
     "finnish": "Suomi"
   },
+  "sidebar": {
+    "home": "Home",
+    "settings": "Settings",
+    "minify": "Minify"
+  },
   "callback": {
     "errorTitle": "Something went wrong",
     "errorMessage": "Please refresh the page and try again.",
