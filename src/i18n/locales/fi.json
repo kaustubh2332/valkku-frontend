@@ -1,26 +1,49 @@
 {
   "app": {
-    "title": "Valkku",
+    "backToHome": "Takaisin etusivulle",
     "login": "Kirjaudu",
     "logout": "Kirjaudu ulos",
+    "openAuth0Dashboard": "Avaa Auth0 hallintapaneeli",
     "settings": "Asetukset",
-    "backToHome": "Takaisin etusivulle",
-    "openAuth0Dashboard": "Avaa Auth0 hallintapaneeli"
+    "title": "Valkku"
   },
-  "settings": {
-    "title": "Asetukset",
-    "profile": "Profiili",
-    "language": "Kieli",
-    "account": "Tili",
-    "changePassword": "Vaihda salasana",
-    "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa.",
-    "emojiClicked": "Emojia klikattu {count} kertaa",
-    "version": "Versio"
+  "callback": {
+    "errorMessage": "Päivitä sivu ja yritä uudelleen.",
+    "errorTitle": "Jotain meni pieleen",
+    "refreshPage": "Päivitä sivu"
+  },
+  "chooseTeam": {
+    "noTeams": "Ei joukkueita saatavilla",
+    "selectTeam": "Valitse joukkue / ryhmä"
+  },
+  "createTeam": {
+    "description": "Anna joukkueen nimi.",
+    "errors": {
+      "team_name_min_length": "Joukkueen nimen tulee olla vähintään 2 merkkiä",
+      "team_name_required": "Joukkueen nimi on pakollinen"
+    },
+    "submit": "Luo joukkue",
+    "team_name": "Joukkueen nimi",
+    "title": "Luo joukkue"
+  },
+  "details": {
+    "description": "Täytä vielä nimesi jatkaaksesi.",
+    "errors": {
+      "first_name_min_length": "Etunimen tulee olla vähintään 2 merkkiä",
+      "first_name_required": "Etunimi on pakollinen",
+      "last_name_min_length": "Sukunimen tulee olla vähintään 2 merkkiä",
+      "last_name_required": "Sukunimi on pakollinen"
+    },
+    "first_name": "Etunimi",
+    "last_name": "Sukunimi",
+    "submit": "Valmista!",
+    "welcome": "Tervetuloa Valkkuun",
+    "why_we_need_your_name": "Tarvitsemme nimesi, jotta ryhmäsi jäsenet tunnistavat sinut."
   },
   "home": {
-    "goodMorning": "Huomenta",
     "goodAfternoon": "Päivää",
     "goodEvening": "Iltaa",
+    "goodMorning": "Huomenta",
     "goodNight": "Iltaa",
     "welcome": "Tervetuloa"
   },
@@ -28,28 +51,20 @@
     "english": "English",
     "finnish": "Suomi"
   },
+  "settings": {
+    "account": "Tili",
+    "changePassword": "Vaihda salasana",
+    "emojiClicked": "Emojia klikattu {count} kertaa",
+    "language": "Kieli",
+    "profile": "Profiili",
+    "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa.",
+    "title": "Asetukset",
+    "version": "Versio"
+  },
   "sidebar": {
     "home": "Koti",
+    "minify": "Pienennä",
     "settings": "Asetukset",
-    "minify": "Pienennä"
-  },
-  "callback": {
-    "errorTitle": "Jotain meni pieleen",
-    "errorMessage": "Päivitä sivu ja yritä uudelleen.",
-    "refreshPage": "Päivitä sivu"
-  },
-  "details": {
-    "welcome": "Tervetuloa Valkkuun",
-    "description": "Täytä vielä nimesi jatkaaksesi.",
-    "why_we_need_your_name": "Tarvitsemme nimesi, jotta ryhmäsi jäsenet tunnistavat sinut.",
-    "first_name": "Etunimi",
-    "last_name": "Sukunimi",
-    "submit": "Valmista!",
-    "errors": {
-      "first_name_required": "Etunimi on pakollinen",
-      "first_name_min_length": "Etunimen tulee olla vähintään 2 merkkiä",
-      "last_name_required": "Sukunimi on pakollinen",
-      "last_name_min_length": "Sukunimen tulee olla vähintään 2 merkkiä"
-    }
+    "userManagement": "Käyttäjät"
   }
 }

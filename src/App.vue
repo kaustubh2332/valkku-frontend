@@ -28,17 +28,13 @@
       const { isAuthenticated, isLoading } = useAuth0()
       return { userStore, isAuthenticated, isLoading }
     },
-    methods: {
-      openMobileSidebar() {
-        this.$refs.sidebar.drawer = true
-      }
-    },
     watch: {
       isLoading: {
         handler(newVal) {
           // When Auth0 finishes loading, check if user is authenticated
           if (!newVal && this.isAuthenticated) {
             this.userStore.fetchUser()
+            this.userStore.startPeriodicFetch()
           }
         },
         immediate: true
@@ -49,6 +45,16 @@
       if (!this.isLoading && this.isAuthenticated) {
         console.log('Auth0 already loaded, fetching user data')
         this.userStore.fetchUser()
+        this.userStore.startPeriodicFetch()
+      }
+    },
+    beforeUnmount() {
+      // Clean up the interval when the app is destroyed
+      this.userStore.stopPeriodicFetch()
+    },
+    methods: {
+      openMobileSidebar() {
+        this.$refs.sidebar.drawer = true
       }
     }
   }

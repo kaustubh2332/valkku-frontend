@@ -7,6 +7,7 @@ export const useUserStore = defineStore('user', {
     user: null,
     pendingClickCount: 0,
     batchTimer: null,
+    fetchInterval: null,
   }),
 
   getters: {
@@ -40,7 +41,38 @@ export const useUserStore = defineStore('user', {
       })
     },
     logout() {
+      // Clear any pending batch timer
+      if (this.batchTimer) {
+        clearTimeout(this.batchTimer)
+        this.batchTimer = null
+      }
+
+      // Clear fetch interval
+      this.stopPeriodicFetch()
+
+      // Reset pending click count
+      this.pendingClickCount = 0
+
+      // Clear user data
+      this.user = null
       removeUserFromLocalStorage()
+    },
+    startPeriodicFetch() {
+      // Clear any existing interval
+      this.stopPeriodicFetch()
+
+      // Set up new interval to fetch user data every minute
+      this.fetchInterval = setInterval(() => {
+        this.fetchUser().catch(error => {
+          console.error('Periodic user fetch failed:', error)
+        })
+      }, 60_000) // 60 seconds = 1 minute
+    },
+    stopPeriodicFetch() {
+      if (this.fetchInterval) {
+        clearInterval(this.fetchInterval)
+        this.fetchInterval = null
+      }
     },
     incrementEmojiClickCount() {
       if (!this.user || this.user.emojiClickedCount === null || this.user.emojiClickedCount === undefined) {

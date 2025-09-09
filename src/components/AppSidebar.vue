@@ -7,54 +7,15 @@
     :temporary="$vuetify.display.mobile"
     @click="rail = false"
   >
-    <!-- User Menu from Navbar -->
+    <!-- Team Selection -->
     <div v-if="isAuthenticated" class="pa-4">
       <div class="d-flex align-center">
-        <v-menu
-          v-model="menu"
-          :close-on-content-click="false"
-          location="bottom start"
-          offset="8"
-        >
-          <template #activator="{ props }">
-            <v-btn
-              class="d-flex align-center pa-2 flex-grow-1"
-              v-bind="props"
-              min-width="auto"
-              variant="text"
-            >
-              <v-avatar
-                class="me-2"
-                :size="rail ? 24 : 32"
-              >
-                <v-img
-                  v-if="user?.picture"
-                  :alt="user.name || 'User'"
-                  :src="user.picture"
-                />
-                <v-icon v-else>mdi-account</v-icon>
-              </v-avatar>
-
-              <span v-if="!rail" class="me-2">{{ fullName || user?.email || 'User' }}</span>
-            </v-btn>
-          </template>
-
-          <v-list min-width="200">
-            <v-list-item
-              prepend-icon="mdi-cog"
-              :title="$t('app.settings')"
-              @click="goToSettings"
-            />
-
-            <v-divider />
-
-            <v-list-item
-              prepend-icon="mdi-logout"
-              :title="$t('app.logout')"
-              @click="startLogout"
-            />
-          </v-list>
-        </v-menu>
+        <ChooseTeamBtn
+          v-if="!rail"
+          class="flex-grow-1"
+          main
+        />
+        <v-icon v-else class="me-2">mdi-account-group</v-icon>
 
         <v-btn
           v-if="!rail && !$vuetify.display.mobile"
@@ -73,85 +34,76 @@
       <v-list-item
         v-for="item in navigationItems"
         :key="item.name"
-        v-tooltip:right="$t(item.titleKey)"
+        v-tooltip:right="getItemTitle(item)"
         :active="$route.name === item.name"
         :density="$vuetify.display.mobile ? 'default' : 'compact'"
         :prepend-icon="item.icon"
-        :title="$t(item.titleKey)"
+        :title="getItemTitle(item)"
         :to="{ name: item.name }"
         @click.stop="handleMobileNavigation"
       />
     </v-list>
 
     <template #append>
-      <v-list>
-        <v-list-item
-          :active="$route.name === 'Settings'"
-          :density="$vuetify.display.mobile ? 'default' : 'compact'"
-          prepend-icon="mdi-cog"
-          :title="$t('sidebar.settings')"
-          :to="{ name: 'Settings' }"
-          @click.stop="handleMobileNavigation"
+      <!-- Profile Menu -->
+      <div class="pa-2">
+        <ProfileMenu
+          v-if="isAuthenticated"
+          @close-mobile-drawer="handleMobileNavigation"
         />
-      </v-list>
+      </div>
     </template>
   </v-navigation-drawer>
 </template>
 
 <script lang="ts">
   import { useAuth0 } from '@auth0/auth0-vue'
-  import { useUserStore } from '@/stores/user'
+  import ChooseTeamBtn from '@/components/general/ChooseTeamBtn.vue'
+  import ProfileMenu from '@/components/general/ProfileMenu.vue'
 
   export default {
     name: 'AppSidebar',
+    components: {
+      ChooseTeamBtn,
+      ProfileMenu
+    },
     setup() {
-      const {
-        isAuthenticated,
-        user,
-        logout: auth0Logout
-      } = useAuth0()
-      const userStore = useUserStore()
+      const { isAuthenticated } = useAuth0()
 
       return {
-        isAuthenticated,
-        user,
-        userStore,
-        auth0Logout
+        isAuthenticated
       }
     },
     data() {
       return {
         drawer: true,
-        rail: false,
-        menu: false,
-        navigationItems: [
+        rail: false
+      }
+    },
+    computed: {
+      navigationItems() {
+        return [
           {
             name: 'Home',
             icon: 'mdi-home',
             titleKey: 'sidebar.home'
-          }
+          },
+          {
+            name: 'UserManagement',
+            icon: 'mdi-account-group',
+            titleKey: 'sidebar.userManagement'
+          },
+          {
+            name: 'Settings',
+            icon: 'mdi-cog',
+            titleKey: 'sidebar.settings'
+          },
         ]
       }
     },
-    computed: {
-      fullName() {
-        return this.userStore.fullName
-      }
-    },
     methods: {
-      startLogout() {
-        this.menu = false
-        this.userStore.logout()
-        this.auth0Logout({
-          logoutParams: {
-            returnTo: window.location.origin
-          }
-        })
-      },
-      goToSettings() {
-        this.menu = false
-        this.$router.push('/settings')
-        this.handleMobileNavigation()
+      getItemTitle(item) {
+        return this.$t(item.titleKey)
       },
       handleMobileNavigation() {
         // Close mobile drawer when navigation items are clicked

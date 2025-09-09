@@ -161,10 +161,9 @@
 }
 
 .emoji-count-display {
-  position: fixed;
+  position: absolute;
   top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 10px;
   z-index: 9999;
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, width 0.3s ease-in-out;
 

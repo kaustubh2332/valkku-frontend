@@ -19,7 +19,8 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     meta: {
-      allowWithoutDetails: true
+      allowWithoutDetails: true,
+      allowWithoutTeam: true
     },
     component: Settings
   },
@@ -32,6 +33,16 @@ const routes = [
     path: '/details',
     name: 'Details',
     component: () => import('@/pages/Details.vue')
+  },
+  {
+    path: '/user-management',
+    name: 'UserManagement',
+    component: () => import('@/pages/UserManagement.vue')
+  },
+  {
+    path: '/create-team',
+    name: 'CreateTeam',
+    component: () => import('@/pages/CreateTeam.vue')
   }
 ]
 
@@ -44,8 +55,13 @@ function beforeEachGuard(to, from, next) {
 
   if(!user) {
     user = getUserFromLocalStorage()
+    console.log('user from localStorage', user)
     if(user) {
       userStore.setUser(user)
+    } else if(to.path !== '/callback') { // No user in pinia, no user in localStorage, redirect to callback
+      console.log('redirecting to callback')
+      next('/callback')
+      return
     }
   }
 
@@ -58,6 +74,11 @@ function beforeEachGuard(to, from, next) {
   // If user exists and has pendingDetails, redirect to details
   if (user && user.pendingDetails && to.path !== '/details' && !to.meta.allowWithoutDetails) {
     next('/details')
+    return
+  }
+
+  if (user && user.teams.length === 0 && to.path !== '/create-team' && !to.meta.allowWithoutTeam) {
+    next('/create-team')
     return
   }
 

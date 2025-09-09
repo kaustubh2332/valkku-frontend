@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useUserStore } from '@/stores/user'
 
 // Create axios instance with default configuration
 const api = axios.create({
@@ -15,6 +16,14 @@ export function setupAxiosWithAuth0(auth0Instance) {
   api.interceptors.request.use(
     async (config) => {
       try {
+
+        const userStore = useUserStore()
+        const user = userStore.getUser
+
+        if(user && user.currentTeamId) {
+          config.headers['x-current-team-id'] = user.currentTeamId
+        }
+
         // Check if user is authenticated before trying to get token
         if (auth0Instance.isAuthenticated.value) {
           const token = await auth0Instance.getAccessTokenSilently({

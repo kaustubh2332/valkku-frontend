@@ -19,11 +19,11 @@
           @update:model-value="setLocale"
         >
           <v-radio
-            :label="$t('language.english')"
+            :label="englishLabel"
             value="en"
           />
           <v-radio
-            :label="$t('language.finnish')"
+            :label="finnishLabel"
             value="fi"
           />
         </v-radio-group>
@@ -81,6 +81,14 @@
       return {
         selectedLanguage: this.$i18n.locale,
         loadingPwChangeUri: false
+      }
+    },
+    computed: {
+      englishLabel() {
+        return this.$t('language.english')
+      },
+      finnishLabel() {
+        return this.$t('language.finnish')
       }
     },
     methods: {

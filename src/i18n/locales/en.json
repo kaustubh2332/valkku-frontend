@@ -1,26 +1,49 @@
 {
   "app": {
-    "title": "Valkku",
+    "backToHome": "Back to Home",
     "login": "Login",
     "logout": "Logout",
+    "openAuth0Dashboard": "Open Auth0 Dashboard",
     "settings": "Settings",
-    "backToHome": "Back to Home",
-    "openAuth0Dashboard": "Open Auth0 Dashboard"
+    "title": "Valkku"
   },
-  "settings": {
-    "title": "Settings",
-    "profile": "Profile",
-    "language": "Language",
-    "account": "Account",
-    "changePassword": "Change Password",
-    "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard.",
-    "emojiClicked": "Emoji clicked {count} times",
-    "version": "Version"
+  "callback": {
+    "errorMessage": "Please refresh the page and try again.",
+    "errorTitle": "Something went wrong",
+    "refreshPage": "Refresh Page"
+  },
+  "chooseTeam": {
+    "noTeams": "No teams available",
+    "selectTeam": "Select team / group"
+  },
+  "createTeam": {
+    "description": "Give your teams name to get started!",
+    "errors": {
+      "team_name_min_length": "Team name must be at least 2 characters",
+      "team_name_required": "Team name is required"
+    },
+    "submit": "Create Team",
+    "team_name": "Team Name",
+    "title": "Create New Team"
+  },
+  "details": {
+    "description": "Please fill in your name to continue.",
+    "errors": {
+      "first_name_min_length": "First name must be at least 2 characters",
+      "first_name_required": "First name is required",
+      "last_name_min_length": "Last name must be at least 2 characters",
+      "last_name_required": "Last name is required"
+    },
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "submit": "Ready!",
+    "welcome": "Welcome to Valkku",
+    "why_we_need_your_name": "We need your name so your team members can recognize you."
   },
   "home": {
-    "goodMorning": "Morning",
     "goodAfternoon": "Afternoon",
     "goodEvening": "Evening",
+    "goodMorning": "Morning",
     "goodNight": "Evening",
     "welcome": "Welcome"
   },
@@ -28,28 +51,20 @@
     "english": "English",
     "finnish": "Suomi"
   },
+  "settings": {
+    "account": "Account",
+    "changePassword": "Change Password",
+    "emojiClicked": "Emoji clicked {count} times",
+    "language": "Language",
+    "profile": "Profile",
+    "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard.",
+    "title": "Settings",
+    "version": "Version"
+  },
   "sidebar": {
     "home": "Home",
+    "minify": "Minify",
     "settings": "Settings",
-    "minify": "Minify"
-  },
-  "callback": {
-    "errorTitle": "Something went wrong",
-    "errorMessage": "Please refresh the page and try again.",
-    "refreshPage": "Refresh Page"
-  },
-  "details": {
-    "welcome": "Welcome to Valkku",
-    "description": "Please fill in your name to continue.",
-    "why_we_need_your_name": "We need your name so your team members can recognize you.",
-    "first_name": "First Name",
-    "last_name": "Last Name",
-    "submit": "Ready!",
-    "errors": {
-      "first_name_required": "First name is required",
-      "first_name_min_length": "First name must be at least 2 characters",
-      "last_name_required": "Last name is required",
-      "last_name_min_length": "Last name must be at least 2 characters"
-    }
+    "userManagement": "Users"
   }
 }
