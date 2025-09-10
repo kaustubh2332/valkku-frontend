@@ -14,6 +14,9 @@
       size="small"
       @click="openMobileSidebar"
     />
+
+    <!-- Notification Display -->
+    <NotificationDisplay />
   </v-app>
 </template>
 

@@ -71,6 +71,35 @@ export function saveUserToLocalStorage(userData) {
   }
 }
 
+export function getTokenFromLocalStorage() {
+  try {
+    const token = localStorage.getItem('valkku:accessToken')
+    return token ? JSON.parse(token) : null
+  } catch (error) {
+    console.error('Failed to fetch token from localStorage:', error)
+    return null
+  }
+}
+
+export function saveTokenToLocalStorage(token) {
+  try {
+    localStorage.setItem('valkku:accessToken', token)
+    console.log('Token saved to localStorage:', token)
+  } catch (error) {
+    console.error('Failed to save token to localStorage:', error)
+  }
+}
+
+export function removeTokenFromLocalStorage() {
+  try {
+    localStorage.removeItem('valkku:accessToken')
+    console.log('Token removed from localStorage')
+  } catch (error) {
+    console.error('Failed to remove token from localStorage:', error)
+  }
+}
+
+
 /**
  * Fetches user data from localStorage
  * @returns {Object|null} User data from localStorage or null if not found

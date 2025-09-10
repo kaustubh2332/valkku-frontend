@@ -1,4 +1,5 @@
 import { authGuard } from '@auth0/auth0-vue'
+// import { jwtDecode } from 'jwt-decode'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 // Import your page components
@@ -7,7 +8,7 @@ import Settings from '@/pages/Settings.vue'
 
 import { useUserStore } from '@/stores/user'
 
-import { getUserFromLocalStorage } from '@/utils/auth'
+import { getTokenFromLocalStorage } from '@/utils/auth'
 
 const routes = [
   {
@@ -22,7 +23,7 @@ const routes = [
       hideSidebar: true,
       allowWithoutAuth: true
     },
-    component: () => import('@/pages/SignIn.vue')
+    component: () => import('@/pages/Signin.vue')
   },
   {
     path: '/signup',
@@ -69,23 +70,20 @@ const guardedRoutes = routes.map(route => ({ ...route, beforeEnter: authGuard })
 // BEFORE EACH GUARD
 function beforeEachGuard(to, from, next) {
   const userStore = useUserStore()
-  let user = userStore.getUser
+  const user = userStore.user
+  let token = userStore.token
 
-  if(!user) {
-    user = getUserFromLocalStorage()
-    console.log('user from localStorage', user)
-    if(user) {
-      userStore.setUser(user)
-    } else if(to.path !== '/callback') { // No user in pinia, no user in localStorage, redirect to callback
-      console.log('redirecting to callback')
-      next('/callback')
-      return
+  if(!token) {
+    token = getTokenFromLocalStorage()
+
+    if(token) {
+      userStore.setToken(token)
     }
   }
 
   // If no user and not going to callback, redirect to callback
-  if (!user && to.path !== '/callback') {
-    next('/callback')
+  if (!token && !to.meta.allowWithoutAuth) {
+    next('/signin')
     return
   }
 

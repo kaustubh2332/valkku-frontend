@@ -8,6 +8,7 @@ export const useUserStore = defineStore('user', {
     pendingClickCount: 0,
     batchTimer: null,
     fetchInterval: null,
+    token: null,
   }),
   getters: {
     getUser: (state) => state.user,
@@ -20,12 +21,14 @@ export const useUserStore = defineStore('user', {
     }
   },
   actions: {
+    setToken(token) {
+      this.token = token
+    },
     setUser(user) {
       this.user = user
       saveUserToLocalStorage(user)
     },
     fetchUser() {
-      console.log('Fetching user')
       return new Promise((resolve, reject) => {
         api.get('/user').then((response) => {
           if (response.data && response.data.data) {
@@ -36,6 +39,19 @@ export const useUserStore = defineStore('user', {
             reject(new Error('Invalid response format from user endpoint'))
           }
         })
+      })
+    },
+    signin({ email, password }) {
+      return new Promise((resolve, reject) => {
+        api.post('/auth/signin', { email, password })
+          .then((response) => {
+            console.log('Signin response:', response.data)
+            this.setToken(response.data.data.token)
+            resolve(response.data.data.token)
+          })
+          .catch((error) => {
+            reject(error)
+          })
       })
     },
     logout() {

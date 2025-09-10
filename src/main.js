@@ -13,11 +13,6 @@ import VueRewards from 'vue-rewards'
 import i18n from '@/i18n'
 import { registerPlugins } from '@/plugins'
 
-// Utils
-import { setupAxiosWithAuth0 } from '@/utils/axios'
-
-// Composables
-
 // Components
 import App from './App.vue'
 
@@ -45,9 +40,6 @@ const auth0 = createAuth0({
 })
 
 app.use(auth0)
-
-// Setup axios with Auth0 instance
-setupAxiosWithAuth0(auth0)
 
 registerPlugins(app)
 

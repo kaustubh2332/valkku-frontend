@@ -187,7 +187,7 @@
       passwordRules() {
         return [
           (v: string) => !!v || this.$t('signUp.errors.password_required'),
-          (v: string) => (v && v.length >= 6) || this.$t('signUp.errors.password_min_length')
+          (v: string) => (v && v.length >= 8) || this.$t('signUp.errors.password_min_length')
         ]
       },
       passwordCheckRules() {

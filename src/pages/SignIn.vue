@@ -77,8 +77,16 @@
 </template>
 
 <script lang="ts">
+  import { useNotificationStore } from '@/stores/notification'
+  import { useUserStore } from '@/stores/user'
+
   export default {
     name: 'LoginPage',
+    setup() {
+      const userStore = useUserStore()
+      const notificationStore = useNotificationStore()
+      return { userStore, notificationStore }
+    },
     data() {
       return {
         logo: '/src/assets/logo.svg',
@@ -99,25 +107,17 @@
     methods: {
       async submitForm() {
         if (!this.formValid) return
-
         this.isSubmitting = true
-
-        try {
-          // TODO: Implement actual login logic
-          console.log('Login attempt:', { email: this.email, password: this.password })
-
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000))
-
-          // For now, just redirect to home
-          this.$router.push('/')
-
-        } catch (error) {
-          console.error('Login error:', error)
-          // TODO: Show error message to user
-        } finally {
-          this.isSubmitting = false
-        }
+        this.userStore.signin({ email: this.email, password: this.password })
+          .then(() => {
+            this.$router.push('/')
+          })
+          .catch((error) => {
+            this.notificationStore.handleBackendError(error)
+          })
+          .finally(() => {
+            this.isSubmitting = false
+          })
       },
       goToRegister() {
         this.$router.push('/signup')

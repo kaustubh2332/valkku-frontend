@@ -66,29 +66,6 @@
     "submit": "Sign In",
     "title": "Sign in"
   },
-  "signUp": {
-    "title": "Create Account",
-    "description": "Join Valkku and start your journey",
-    "firstName": "First Name",
-    "lastName": "Last Name",
-    "email": "Email",
-    "password": "Password",
-    "passwordCheck": "Confirm Password",
-    "submit": "Create Account",
-    "haveAccount": "Already have an account? Sign in",
-    "errors": {
-      "firstName_required": "First name is required",
-      "firstName_min_length": "First name must be at least 2 characters",
-      "lastName_required": "Last name is required",
-      "lastName_min_length": "Last name must be at least 2 characters",
-      "email_required": "Email is required",
-      "email_invalid": "Please enter a valid email address",
-      "password_required": "Password is required",
-      "password_min_length": "Password must be at least 6 characters",
-      "passwordCheck_required": "Please confirm your password",
-      "passwordCheck_match": "Passwords do not match"
-    }
-  },
   "roles": {
     "admin": "Admin",
     "athlete": "Athlete",
@@ -112,6 +89,29 @@
     "minify": "Minify",
     "settings": "Settings",
     "userManagement": "Users"
+  },
+  "signUp": {
+    "description": "Join Valkku and start your journey",
+    "email": "Email",
+    "errors": {
+      "email_invalid": "Please enter a valid email address",
+      "email_required": "Email is required",
+      "firstName_min_length": "First name must be at least 2 characters",
+      "firstName_required": "First name is required",
+      "lastName_min_length": "Last name must be at least 2 characters",
+      "lastName_required": "Last name is required",
+      "passwordCheck_match": "Passwords do not match",
+      "passwordCheck_required": "Please confirm your password",
+      "password_min_length": "Password must be at least 8 characters",
+      "password_required": "Password is required"
+    },
+    "firstName": "First Name",
+    "haveAccount": "Already have an account? Sign in",
+    "lastName": "Last Name",
+    "password": "Password",
+    "passwordCheck": "Confirm Password",
+    "submit": "Create Account",
+    "title": "Create Account"
   },
   "userManagement": {
     "noUsers": "No users found",
