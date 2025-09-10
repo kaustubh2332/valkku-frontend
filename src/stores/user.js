@@ -9,7 +9,6 @@ export const useUserStore = defineStore('user', {
     batchTimer: null,
     fetchInterval: null,
   }),
-
   getters: {
     getUser: (state) => state.user,
     firstName: (state) => state.user?.firstName,
@@ -20,7 +19,6 @@ export const useUserStore = defineStore('user', {
         : null
     }
   },
-
   actions: {
     setUser(user) {
       this.user = user

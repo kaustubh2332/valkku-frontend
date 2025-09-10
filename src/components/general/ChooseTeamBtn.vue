@@ -2,9 +2,9 @@
   <v-menu>
     <template #activator="{ props }">
       <v-btn
-        v-tooltip:right="$t('chooseTeam.selectTeam')"
+        v-tooltip:right="isMobile ? null : $t('chooseTeam.selectTeam')"
         v-bind="props"
-        block
+        :block="block"
         :disabled="!hasTeams"
         variant="outlined"
       >
@@ -23,6 +23,11 @@
         @click="selectTeam(team)"
       >
         <v-list-item-title>{{ team.name }}</v-list-item-title>
+        <v-list-item-subtitle>
+          <div class="d-flex" :style="{ color: roleToColor[team.role] }">
+            {{ $t('roles.' + team.role) }}
+          </div>
+        </v-list-item-subtitle>
       </v-list-item>
 
       <v-list-item
@@ -31,26 +36,59 @@
       >
         <v-list-item-title>{{ $t('chooseTeam.noTeams') }}</v-list-item-title>
       </v-list-item>
+
+      <v-divider v-if="hasTeams" />
+
+      <v-list-item
+        @click="createTeam"
+      >
+        <template #prepend>
+          <v-icon>mdi-plus</v-icon>
+        </template>
+        <v-list-item-title>{{ $t('chooseTeam.createTeam') }}</v-list-item-title>
+      </v-list-item>
     </v-list>
   </v-menu>
+
+  <Dialog
+    v-model="createTeamDialog"
+  >
+    <CreateTeam @close="createTeamDialog = false" />
+  </Dialog>
 </template>
 
 <script lang="ts">
+  import CreateTeam from '@/pages/CreateTeam.vue'
   import { useUserStore } from '@/stores/user'
+  import { roleToColor } from '@/utils/mappings'
 
   export default {
     name: 'ChooseTeamBtn',
+    components: {
+      CreateTeam
+    },
     props: {
       main: {
         type: Boolean,
         default: false
+      },
+      block: {
+        type: Boolean,
+        default: false
       }
     },
+    emits: ['change'],
     setup() {
       const userStore = useUserStore()
-      return { userStore }
+      return { userStore, roleToColor }
     },
+    data: () => ({
+      createTeamDialog: false
+    }),
     computed: {
+      isMobile() {
+        return this.$vuetify.display.mobile
+      },
       user() {
         return this.userStore.getUser
       },
@@ -74,8 +112,6 @@
         if (team.id === this.currentTeamId) return
 
         try {
-          // TODO: Implement API call to switch team
-          console.log('Switching to team:', team.name)
 
           // Update user store with new current team
           this.userStore.setUser({
@@ -83,15 +119,20 @@
             currentTeamId: team.id
           })
 
-          if(this.main) {
-            // Reload current page
-            window.location.reload()
-          }
-
+          this.$nextTick(() => {
+            this.$emit('change', team)
+            if(this.main) {
+              // Reload current page and clear query params
+              window.location.href = window.location.pathname
+            }
+          })
         } catch (error) {
           console.error('Error switching team:', error)
           // TODO: Show error message to user
         }
+      },
+      createTeam() {
+        this.createTeamDialog = true
       }
     }
   }

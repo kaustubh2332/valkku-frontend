@@ -1,58 +1,56 @@
 <template>
-  <v-container class="fill-height d-flex align-center justify-center" fluid>
-    <v-sheet
-      class="pa-0"
-      max-width="800"
+  <v-sheet
+    class="pa-0 fill-height d-flex align-center justify-center"
+    max-width="800"
+  >
+    <v-card-title class="text-h5 text-sm-h4 text-md-h3 text-center mb-4">
+      {{ $t('details.welcome') }}!
+    </v-card-title>
+
+    <v-card-text class="text-center mb-6">
+      <p class="text-body-1 mb-2">
+        {{ $t('details.description') }}
+      </p>
+      <p class="text-body-2 text-medium-emphasis">
+        {{ $t('details.why_we_need_your_name') }}
+      </p>
+    </v-card-text>
+
+    <v-form
+      ref="form"
+      v-model="formValid"
+      @submit.prevent="submitForm"
     >
-      <v-card-title class="text-h5 text-sm-h4 text-md-h3 text-center mb-4">
-        {{ $t('details.welcome') }}!
-      </v-card-title>
+      <v-text-field
+        v-model="firstName"
+        class="mb-4"
+        :label="$t('details.first_name')"
+        required
+        :rules="firstNameRules"
+        variant="outlined"
+      />
 
-      <v-card-text class="text-center mb-6">
-        <p class="text-body-1 mb-2">
-          {{ $t('details.description') }}
-        </p>
-        <p class="text-body-2 text-medium-emphasis">
-          {{ $t('details.why_we_need_your_name') }}
-        </p>
-      </v-card-text>
+      <v-text-field
+        v-model="lastName"
+        class="mb-6"
+        :label="$t('details.last_name')"
+        required
+        :rules="lastNameRules"
+        variant="outlined"
+      />
 
-      <v-form
-        ref="form"
-        v-model="formValid"
-        @submit.prevent="submitForm"
+      <v-btn
+        block
+        color="primary"
+        :disabled="!formValid"
+        :loading="isSubmitting"
+        size="large"
+        type="submit"
       >
-        <v-text-field
-          v-model="firstName"
-          class="mb-4"
-          :label="$t('details.first_name')"
-          required
-          :rules="firstNameRules"
-          variant="outlined"
-        />
-
-        <v-text-field
-          v-model="lastName"
-          class="mb-6"
-          :label="$t('details.last_name')"
-          required
-          :rules="lastNameRules"
-          variant="outlined"
-        />
-
-        <v-btn
-          block
-          color="primary"
-          :disabled="!formValid"
-          :loading="isSubmitting"
-          size="large"
-          type="submit"
-        >
-          {{ $t('details.submit') }}
-        </v-btn>
-      </v-form>
-    </v-sheet>
-  </v-container>
+        {{ $t('details.submit') }}
+      </v-btn>
+    </v-form>
+  </v-sheet>
 </template>
 
 <script lang="ts">

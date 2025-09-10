@@ -6,15 +6,13 @@
     offset="8"
   >
     <template #activator="{ props }">
-      <v-btn
-        class="d-flex align-left pa-2 flex-grow-1"
+      <div
         v-bind="props"
-        min-width="auto"
-        style="width: 100%;"
-        variant="text"
+        class="profile-activator"
+        :class="sidebar ? 'profile-activator-rail' : 'profile-activator-full'"
       >
         <v-avatar
-          class="mr-4"
+          :class="sidebar ? '' : 'me-3'"
           :size="32"
         >
           <v-img
@@ -25,9 +23,11 @@
           <v-icon v-else>mdi-account</v-icon>
         </v-avatar>
 
-        <span class="me-2">{{ fullName || user?.email || 'User' }}</span>
-        <v-icon>mdi-chevron-up</v-icon>
-      </v-btn>
+        <div v-if="!sidebar" class="profile-content">
+          <span class="profile-name">{{ fullName || user?.email || 'User' }}</span>
+          <v-icon class="profile-chevron">mdi-chevron-up</v-icon>
+        </div>
+      </div>
     </template>
 
     <v-list min-width="200">
@@ -54,6 +54,12 @@
 
   export default {
     name: 'ProfileMenu',
+    props: {
+      sidebar: {
+        type: Boolean,
+        default: false
+      }
+    },
     emits: ['close-mobile-drawer'],
     setup() {
       const {
@@ -105,3 +111,46 @@
     }
   }
 </script>
+
+<style scoped>
+.profile-activator {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.profile-activator:hover {
+  background-color: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+.profile-activator-full {
+  width: 100%;
+  padding: 8px 12px;
+  justify-content: flex-start;
+}
+
+.profile-activator-rail {
+  padding: 8px;
+  justify-content: center;
+}
+
+.profile-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.profile-chevron {
+  font-size: 1.25rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+</style>

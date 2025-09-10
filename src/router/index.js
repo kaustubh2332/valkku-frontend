@@ -16,6 +16,24 @@ const routes = [
     component: Home
   },
   {
+    path: '/signin',
+    name: 'SignIn',
+    meta: {
+      hideSidebar: true,
+      allowWithoutAuth: true
+    },
+    component: () => import('@/pages/SignIn.vue')
+  },
+  {
+    path: '/signup',
+    name: 'SignUp',
+    meta: {
+      hideSidebar: true,
+      allowWithoutAuth: true
+    },
+    component: () => import('@/pages/SignUp.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     meta: {
@@ -35,9 +53,9 @@ const routes = [
     component: () => import('@/pages/Details.vue')
   },
   {
-    path: '/user-management',
-    name: 'UserManagement',
-    component: () => import('@/pages/UserManagement.vue')
+    path: '/users',
+    name: 'Users',
+    component: () => import('@/pages/Users.vue')
   },
   {
     path: '/create-team',
@@ -71,13 +89,14 @@ function beforeEachGuard(to, from, next) {
     return
   }
 
-  // If user exists and has pendingDetails, redirect to details
+  // If user exists and has pendingDetails, redirect to details (highest priority)
   if (user && user.pendingDetails && to.path !== '/details' && !to.meta.allowWithoutDetails) {
     next('/details')
     return
   }
 
-  if (user && user.teams.length === 0 && to.path !== '/create-team' && !to.meta.allowWithoutTeam) {
+  // If user exists and has no teams, redirect to create-team (but only if details are complete)
+  if (user && !user.pendingDetails && user.teams.length === 0 && to.path !== '/create-team' && to.path !== '/callback' && !to.meta.allowWithoutTeam) {
     next('/create-team')
     return
   }

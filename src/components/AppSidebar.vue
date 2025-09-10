@@ -12,36 +12,35 @@
       <div class="d-flex align-center">
         <ChooseTeamBtn
           v-if="!rail"
+          block
           class="flex-grow-1"
           main
         />
         <v-icon v-else class="me-2">mdi-account-group</v-icon>
-
-        <v-btn
-          v-if="!rail && !$vuetify.display.mobile"
-          v-tooltip:right="$t('sidebar.minify')"
-          :icon="'mdi-chevron-left'"
-          size="small"
-          variant="text"
-          @click.stop="rail = !rail"
-        />
       </div>
     </div>
 
     <v-divider />
 
     <v-list>
-      <v-list-item
+      <v-tooltip
         v-for="item in navigationItems"
         :key="item.name"
-        v-tooltip:right="getItemTitle(item)"
-        :active="$route.name === item.name"
-        :density="$vuetify.display.mobile ? 'default' : 'compact'"
-        :prepend-icon="item.icon"
-        :title="getItemTitle(item)"
-        :to="{ name: item.name }"
-        @click.stop="handleMobileNavigation"
-      />
+        :disabled="isMobile || !rail"
+        location="right"
+      >
+        <template #activator="{ props }">
+          <v-list-item
+            v-bind="props"
+            :active="$route.name === item.name"
+            :prepend-icon="item.icon"
+            :title="item.title"
+            :to="{ name: item.name }"
+            @click.stop="handleMobileNavigation"
+          />
+        </template>
+        <span>{{ item.title }}</span>
+      </v-tooltip>
     </v-list>
 
     <template #append>
@@ -49,11 +48,23 @@
       <div class="pa-2">
         <ProfileMenu
           v-if="isAuthenticated"
+          :sidebar="rail"
           @close-mobile-drawer="handleMobileNavigation"
         />
       </div>
     </template>
   </v-navigation-drawer>
+
+  <!-- Minify FAB Button -->
+  <v-fab
+    v-if="!$vuetify.display.mobile"
+    v-tooltip:right="isMobile ? null : (rail ? $t('sidebar.expand') : $t('sidebar.minify'))"
+    :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+    size="small"
+    :style="rail ? 'position: absolute; left: 60px; top: 4px;' : 'position: absolute; left: 260px; top: 4px;'"
+    variant="text"
+    @click="rail = !rail"
+  />
 </template>
 
 <script lang="ts">
@@ -81,30 +92,30 @@
       }
     },
     computed: {
+      isMobile() {
+        return this.$vuetify.display.mobile
+      },
       navigationItems() {
         return [
           {
             name: 'Home',
             icon: 'mdi-home',
-            titleKey: 'sidebar.home'
+            title: this.$t('sidebar.home')
           },
           {
-            name: 'UserManagement',
+            name: 'Users',
             icon: 'mdi-account-group',
-            titleKey: 'sidebar.userManagement'
+            title: this.$t('sidebar.userManagement')
           },
           {
             name: 'Settings',
             icon: 'mdi-cog',
-            titleKey: 'sidebar.settings'
+            title: this.$t('sidebar.settings')
           },
         ]
       }
     },
     methods: {
-      getItemTitle(item) {
-        return this.$t(item.titleKey)
-      },
       handleMobileNavigation() {
         // Close mobile drawer when navigation items are clicked
         if (this.$vuetify.display.mobile) {

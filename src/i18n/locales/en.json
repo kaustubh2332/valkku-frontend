@@ -13,6 +13,7 @@
     "refreshPage": "Refresh Page"
   },
   "chooseTeam": {
+    "createTeam": "New team",
     "noTeams": "No teams available",
     "selectTeam": "Select team / group"
   },
@@ -51,6 +52,50 @@
     "english": "English",
     "finnish": "Suomi"
   },
+  "login": {
+    "description": "Sign in to your account to continue",
+    "email": "Email",
+    "errors": {
+      "email_invalid": "Please enter a valid email address",
+      "email_required": "Email is required",
+      "password_min_length": "Password must be at least 6 characters",
+      "password_required": "Password is required"
+    },
+    "noAccount": "Don't have an account? Sign up",
+    "password": "Password",
+    "submit": "Sign In",
+    "title": "Sign in"
+  },
+  "signUp": {
+    "title": "Create Account",
+    "description": "Join Valkku and start your journey",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordCheck": "Confirm Password",
+    "submit": "Create Account",
+    "haveAccount": "Already have an account? Sign in",
+    "errors": {
+      "firstName_required": "First name is required",
+      "firstName_min_length": "First name must be at least 2 characters",
+      "lastName_required": "Last name is required",
+      "lastName_min_length": "Last name must be at least 2 characters",
+      "email_required": "Email is required",
+      "email_invalid": "Please enter a valid email address",
+      "password_required": "Password is required",
+      "password_min_length": "Password must be at least 6 characters",
+      "passwordCheck_required": "Please confirm your password",
+      "passwordCheck_match": "Passwords do not match"
+    }
+  },
+  "roles": {
+    "admin": "Admin",
+    "athlete": "Athlete",
+    "coach": "Coach",
+    "guardian": "Guardian",
+    "owner": "Owner"
+  },
   "settings": {
     "account": "Account",
     "changePassword": "Change Password",
@@ -62,9 +107,15 @@
     "version": "Version"
   },
   "sidebar": {
+    "expand": "Expand",
     "home": "Home",
     "minify": "Minify",
     "settings": "Settings",
     "userManagement": "Users"
+  },
+  "userManagement": {
+    "noUsers": "No users found",
+    "noUsersDescription": "There are no users in this team yet.",
+    "title": "Users"
   }
 }

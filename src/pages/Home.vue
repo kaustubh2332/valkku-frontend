@@ -1,23 +1,11 @@
 <template>
   <!-- Confetti trigger element at top of page -->
   <div id="confetti-trigger" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 9999;" />
-
-  <v-container>
-    <div class="d-flex text-h4 text-md-h3 text-sm-h4 text-xs-h4 mt-4">
-      {{ greeting }}, {{ userStore.firstName }}!
-      <BigEmoji />
-      <!-- {{ userStore.getUser }} -->
-    </div>
-
-    <v-row>
-      <!-- Tulevat tapahtumat
-      Menneet tapahtumat?
-      Lisää harjoitus / tapahtuma
-      Raportti
-      Ohjeita käyttöön
-      Tehtävät -->
-    </v-row>
-  </v-container>
+  <div class="d-flex text-h4 text-md-h3 text-sm-h4 text-xs-h4 mt-4">
+    {{ greeting }}, {{ userStore.firstName }}!
+    <BigEmoji />
+    <!-- {{ userStore.getUser }} -->
+  </div>
 
   <Loading v-if="isLoading" />
 </template>

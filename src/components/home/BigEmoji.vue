@@ -151,12 +151,12 @@
 }
 
 .emoji-clickable.bounce {
-  animation: bounce 0.01s ease-in-out;
+  animation: bounce 0.03s ease-in-out;
 }
 
 @keyframes bounce {
   0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
+  50% { transform: scale(1.4); }
   100% { transform: scale(1.0); }
 }
 

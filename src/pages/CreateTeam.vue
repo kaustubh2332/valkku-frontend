@@ -1,8 +1,9 @@
 <template>
-  <v-container class="fill-height d-flex align-center justify-center" fluid>
+  <div class="fill-height d-flex align-center justify-center">
     <v-sheet
-      class="pa-0"
-      max-width="800"
+      class="pa-6"
+      max-width="600"
+      width="100%"
     >
       <v-card-title class="text-h5 text-sm-h4 text-md-h3 text-center mb-4">
         {{ $t('createTeam.title') }}
@@ -40,7 +41,7 @@
         </v-btn>
       </v-form>
     </v-sheet>
-  </v-container>
+  </div>
 </template>
 
 <script lang="ts">
@@ -49,6 +50,7 @@
 
   export default {
     name: 'CreateTeamPage',
+    emits: ['close'],
     setup() {
       const userStore = useUserStore()
       return { userStore }
@@ -84,6 +86,7 @@
                 first: 'true' // First time for user so let's show some confetti
               }
             })
+            this.$emit('close')
           } else {
             // Show error message to user
             console.error('Failed to create team:', response.data?.message)

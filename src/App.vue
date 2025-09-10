@@ -1,17 +1,17 @@
 <template>
-  <v-app>
-    <AppSidebar ref="sidebar" />
-    <!-- <AppNavbar /> -->
+  <v-app id="valkku-app">
+    <AppSidebar v-if="!$route.meta.hideSidebar" ref="sidebar" />
     <v-main>
-      <router-view />
+      <v-container style="height: 100vh;">
+        <router-view />
+      </v-container>
     </v-main>
 
-    <!-- Mobile FAB for sidebar -->
     <v-fab
-      v-if="$vuetify.display.mobile"
+      v-if="$vuetify.display.mobile && !$route.meta.hideSidebar"
+      class="mobile-fab"
       icon="mdi-menu"
       size="small"
-      style="top: 16px; right: 16px; position: fixed;"
       @click="openMobileSidebar"
     />
   </v-app>
@@ -59,3 +59,18 @@
     }
   }
 </script>
+
+<style>
+#valkku-app {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+.mobile-fab {
+    position: fixed;
+    top: calc(16px + env(safe-area-inset-top));
+    right: calc(16px + env(safe-area-inset-right));
+}
+</style>

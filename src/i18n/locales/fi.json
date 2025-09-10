@@ -7,12 +7,50 @@
     "settings": "Asetukset",
     "title": "Valkku"
   },
+  "login": {
+    "title": "Kirjaudu",
+    "description": "Kirjaudu sisään jatkaaksesi",
+    "email": "Sähköposti",
+    "password": "Salasana",
+    "submit": "Kirjaudu sisään",
+    "noAccount": "Eikö sinulla ole tiliä? Rekisteröidy",
+    "errors": {
+      "email_required": "Sähköposti on pakollinen",
+      "email_invalid": "Anna kelvollinen sähköpostiosoite",
+      "password_required": "Salasana on pakollinen",
+      "password_min_length": "Salasanan tulee olla vähintään 6 merkkiä"
+    }
+  },
+  "signUp": {
+    "title": "Luo tili",
+    "description": "Liity Valkkuun ja aloita matkasi",
+    "firstName": "Etunimi",
+    "lastName": "Sukunimi",
+    "email": "Sähköposti",
+    "password": "Salasana",
+    "passwordCheck": "Vahvista salasana",
+    "submit": "Luo tili",
+    "haveAccount": "Onko sinulla jo tili? Kirjaudu sisään",
+    "errors": {
+      "firstName_required": "Etunimi on pakollinen",
+      "firstName_min_length": "Etunimen tulee olla vähintään 2 merkkiä",
+      "lastName_required": "Sukunimi on pakollinen",
+      "lastName_min_length": "Sukunimen tulee olla vähintään 2 merkkiä",
+      "email_required": "Sähköposti on pakollinen",
+      "email_invalid": "Anna kelvollinen sähköpostiosoite",
+      "password_required": "Salasana on pakollinen",
+      "password_min_length": "Salasanan tulee olla vähintään 6 merkkiä",
+      "passwordCheck_required": "Vahvista salasanasi",
+      "passwordCheck_match": "Salasanat eivät täsmää"
+    }
+  },
   "callback": {
     "errorMessage": "Päivitä sivu ja yritä uudelleen.",
     "errorTitle": "Jotain meni pieleen",
     "refreshPage": "Päivitä sivu"
   },
   "chooseTeam": {
+    "createTeam": "Uusi joukkue",
     "noTeams": "Ei joukkueita saatavilla",
     "selectTeam": "Valitse joukkue / ryhmä"
   },
@@ -62,9 +100,22 @@
     "version": "Versio"
   },
   "sidebar": {
+    "expand": "Laajenna",
     "home": "Koti",
     "minify": "Pienennä",
     "settings": "Asetukset",
     "userManagement": "Käyttäjät"
+  },
+  "userManagement": {
+    "title": "Käyttäjänhallinta",
+    "noUsers": "Käyttäjiä ei löytynyt",
+    "noUsersDescription": "Tässä joukkueessa ei ole vielä käyttäjiä."
+  },
+  "roles": {
+    "owner": "Omistaja",
+    "admin": "Admin",
+    "coach": "Valmentaja",
+    "athlete": "Urheilija",
+    "guardian": "Huoltaja"
   }
 }

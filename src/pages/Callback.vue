@@ -2,39 +2,38 @@
   <Loading v-if="!hasError" />
 
   <!-- Error Message -->
-  <v-container v-else>
-    <v-card
-      class="mx-auto"
-      max-width="400"
-      variant="outlined"
-    >
-      <v-card-text class="text-center pa-6">
-        <v-icon
-          class="mb-4"
-          color="error"
-          size="48"
-        >
-          mdi-alert-circle
-        </v-icon>
+  <v-card
+    v-else
+    class="mx-auto"
+    max-width="400"
+    variant="outlined"
+  >
+    <v-card-text class="text-center pa-6">
+      <v-icon
+        class="mb-4"
+        color="error"
+        size="48"
+      >
+        mdi-alert-circle
+      </v-icon>
 
-        <div class="text-h6 mb-2">
-          {{ $t('callback.errorTitle') }}
-        </div>
+      <div class="text-h6 mb-2">
+        {{ $t('callback.errorTitle') }}
+      </div>
 
-        <div class="text-body-2 mb-4">
-          {{ $t('callback.errorMessage') }}
-        </div>
+      <div class="text-body-2 mb-4">
+        {{ $t('callback.errorMessage') }}
+      </div>
 
-        <v-btn
-          color="primary"
-          @click="refreshPage"
-        >
-          <v-icon class="me-2">mdi-refresh</v-icon>
-          {{ $t('callback.refreshPage') }}
-        </v-btn>
-      </v-card-text>
-    </v-card>
-  </v-container>
+      <v-btn
+        color="primary"
+        @click="refreshPage"
+      >
+        <v-icon class="me-2">mdi-refresh</v-icon>
+        {{ $t('callback.refreshPage') }}
+      </v-btn>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script lang="ts">

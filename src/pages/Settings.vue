@@ -1,68 +1,66 @@
 <template>
-  <v-container>
-    <div class="text-h4 my-4">
-      {{ $t('settings.title') }}
-    </div>
+  <div class="text-h4 my-4">
+    {{ $t('settings.title') }}
+  </div>
 
-    <!-- Language Settings -->
-    <v-card
-      class="mb-4"
-      variant="outlined"
-    >
-      <v-card-text class="pa-6">
-        <div class="text-h6 mb-4">
-          <v-icon class="me-2">mdi-translate</v-icon>
-          {{ $t('settings.language') }}
-        </div>
-        <v-radio-group
-          v-model="selectedLanguage"
-          @update:model-value="setLocale"
-        >
-          <v-radio
-            :label="englishLabel"
-            value="en"
-          />
-          <v-radio
-            :label="finnishLabel"
-            value="fi"
-          />
-        </v-radio-group>
-      </v-card-text>
-    </v-card>
-
-    <!-- Account Settings -->
-    <v-card
-      class="mb-4"
-      variant="outlined"
-    >
-      <v-card-text class="pa-6">
-        <div class="text-h6 mb-4">
-          <v-icon class="me-2">mdi-account-cog</v-icon>
-          {{ $t('settings.account') }}
-        </div>
-        <v-btn
-          :loading="loadingPwChangeUri"
-          @click="changePassword"
-        >
-          <v-icon class="me-2">mdi-key</v-icon>
-          {{ $t('settings.changePassword') }}
-        </v-btn>
-        <br>
-        <v-btn
-          class="mt-4"
-          @click="startLogout"
-        >
-          <v-icon class="me-2">mdi-logout</v-icon>
-          {{ $t('app.logout') }}
-        </v-btn>
-      </v-card-text>
-    </v-card>
-    <v-card-text>
-      <div class="text-caption text-grey-darken-3 mb-4" style="opacity: 0.6;">
-        {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.getUser?.emojiClickedCount }) }}.
+  <!-- Language Settings -->
+  <v-card
+    class="mb-4"
+    variant="outlined"
+  >
+    <v-card-text class="pa-6">
+      <div class="text-h6 mb-4">
+        <v-icon class="me-2">mdi-translate</v-icon>
+        {{ $t('settings.language') }}
       </div>
+      <v-radio-group
+        v-model="selectedLanguage"
+        @update:model-value="setLocale"
+      >
+        <v-radio
+          :label="englishLabel"
+          value="en"
+        />
+        <v-radio
+          :label="finnishLabel"
+          value="fi"
+        />
+      </v-radio-group>
     </v-card-text>
-  </v-container>
+  </v-card>
+
+  <!-- Account Settings -->
+  <v-card
+    class="mb-4"
+    variant="outlined"
+  >
+    <v-card-text class="pa-6">
+      <div class="text-h6 mb-4">
+        <v-icon class="me-2">mdi-account-cog</v-icon>
+        {{ $t('settings.account') }}
+      </div>
+      <v-btn
+        :loading="loadingPwChangeUri"
+        @click="changePassword"
+      >
+        <v-icon class="me-2">mdi-key</v-icon>
+        {{ $t('settings.changePassword') }}
+      </v-btn>
+      <br>
+      <v-btn
+        class="mt-4"
+        @click="startLogout"
+      >
+        <v-icon class="me-2">mdi-logout</v-icon>
+        {{ $t('app.logout') }}
+      </v-btn>
+    </v-card-text>
+  </v-card>
+  <v-card-text>
+    <div class="text-caption text-grey-darken-3 mb-4" style="opacity: 0.6;">
+      {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.getUser?.emojiClickedCount }) }}.
+    </div>
+  </v-card-text>
 </template>
 
 <script lang="ts">
