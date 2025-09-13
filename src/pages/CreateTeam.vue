@@ -45,6 +45,7 @@
 </template>
 
 <script lang="ts">
+  import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
@@ -53,7 +54,11 @@
     emits: ['close'],
     setup() {
       const userStore = useUserStore()
-      return { userStore }
+      const notificationStore = useNotificationStore()
+      const success = notificationStore.success
+      const handleBackendError = notificationStore.handleBackendError
+
+      return { userStore, notificationStore, success, handleBackendError }
     },
     data() {
       return {
@@ -62,7 +67,8 @@
         isSubmitting: false,
         teamNameRules: [
           (v: string) => !!v || this.$t('createTeam.errors.team_name_required'),
-          (v: string) => (v && v.length >= 2) || this.$t('createTeam.errors.team_name_min_length')
+          (v: string) => (v && v.length >= 2) || this.$t('createTeam.errors.team_name_min_length'),
+          (v: string) => (v && v.length <= 50) || this.$t('createTeam.errors.team_name_max_length')
         ]
       }
     },
@@ -72,33 +78,28 @@
 
         this.isSubmitting = true
 
-        try {
-          const response = await api.post('/team', {
-            name: this.teamName
-          })
-
-          if (response.data && response.data.success) {
+        api.post('/team', {
+          name: this.teamName
+        })
+          .then((response) => {
             this.userStore.setUser(response.data.data.user)
-            // Success - redirect to home or team page
+            this.userStore.setCurrentTeam(response.data.data.team.id)
+            this.userStore.setUser(response.data.data.user)
             this.$router.push({
               path: '/',
               query: {
                 first: 'true' // First time for user so let's show some confetti
               }
             })
+            this.success(this.$t('createTeam.success'))
             this.$emit('close')
-          } else {
-            // Show error message to user
-            console.error('Failed to create team:', response.data?.message)
-            // TODO: Show error message in UI (snackbar, alert, etc.)
-          }
-
-        } catch (error) {
-          console.error('Error creating team:', error)
-          // TODO: Show error message to user
-        } finally {
-          this.isSubmitting = false
-        }
+          })
+          .catch((error) => {
+            this.handleBackendError(error)
+          })
+          .finally(() => {
+            this.isSubmitting = false
+          })
       }
     }
   }

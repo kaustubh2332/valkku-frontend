@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
-import { removeUserFromLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
+import { getCurrentTeamFromLocalStorage, removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeUserFromLocalStorage, saveCurrentTeamToLocalStorage, saveTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
 import api from '@/utils/axios'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
+    currentTeamId: null,
     pendingClickCount: 0,
     batchTimer: null,
     fetchInterval: null,
@@ -12,8 +13,10 @@ export const useUserStore = defineStore('user', {
   }),
   getters: {
     getUser: (state) => state.user,
+    getToken: (state) => state.token,
     firstName: (state) => state.user?.firstName,
     lastName: (state) => state.user?.lastName,
+    currentTeam: (state) => state.user?.teams?.find(team => team.teamId === state.currentTeamId),
     fullName: (state) => {
       return state.user?.firstName && state.user?.lastName
         ? state.user.firstName + ' ' + state.user.lastName
@@ -23,6 +26,7 @@ export const useUserStore = defineStore('user', {
   actions: {
     setToken(token) {
       this.token = token
+      saveTokenToLocalStorage(token)
     },
     setUser(user) {
       this.user = user
@@ -30,22 +34,30 @@ export const useUserStore = defineStore('user', {
     },
     fetchUser() {
       return new Promise((resolve, reject) => {
-        api.get('/user').then((response) => {
-          if (response.data && response.data.data) {
-            this.setUser(response.data.data)
-            resolve(response.data.data)
-          } else {
-            console.log('Invalid response format from user endpoint')
-            reject(new Error('Invalid response format from user endpoint'))
-          }
-        })
+        api.get('/user/me')
+          .then((response) => {
+            if (response.data && response.data.data) {
+              this.setUser(response.data.data)
+              const currentTeamId = getCurrentTeamFromLocalStorage()
+              if (currentTeamId) {
+                this.setCurrentTeam(Number.parseInt(currentTeamId))
+              } else {
+                this.setCurrentTeam(this.user.teams[0].teamId)
+              }
+              resolve(response.data.data)
+            } else {
+              reject(new Error('Invalid response format from user endpoint'))
+            }
+          })
+          .catch((error) => {
+            reject(error)
+          })
       })
     },
     signin({ email, password }) {
       return new Promise((resolve, reject) => {
         api.post('/auth/signin', { email, password })
           .then((response) => {
-            console.log('Signin response:', response.data)
             this.setToken(response.data.data.token)
             resolve(response.data.data.token)
           })
@@ -56,6 +68,20 @@ export const useUserStore = defineStore('user', {
     },
     logout() {
       // Clear any pending batch timer
+      return new Promise((resolve, reject) => {
+        api.post('/auth/logout')
+          .then(() => {
+            resolve()
+          })
+          .catch((error) => {
+            reject(error)
+          })
+          .finally(() => {
+            this.finishLogout()
+          })
+      })
+    },
+    finishLogout() {
       if (this.batchTimer) {
         clearTimeout(this.batchTimer)
         this.batchTimer = null
@@ -63,13 +89,22 @@ export const useUserStore = defineStore('user', {
 
       // Clear fetch interval
       this.stopPeriodicFetch()
+      removeCurrentTeamFromLocalStorage()
 
       // Reset pending click count
       this.pendingClickCount = 0
 
-      // Clear user data
+      // Clear user data from store
       this.user = null
+      this.currentTeamId = null
+      this.token = null
+
+      // Clear data from localStorage
+      removeTokenFromLocalStorage()
       removeUserFromLocalStorage()
+
+      // Redirect to home page
+      window.location.href = '/'
     },
     startPeriodicFetch() {
       // Clear any existing interval
@@ -106,12 +141,17 @@ export const useUserStore = defineStore('user', {
       // Set a new timer to batch the API call
       this.batchTimer = setTimeout(() => {
         this.flushPendingClicks()
-      }, 2000) // 2 seconds
+      }, 60_000) // 2 seconds
+    },
+
+    setCurrentTeam(teamId) {
+      this.currentTeamId = teamId
+      saveCurrentTeamToLocalStorage(teamId)
     },
 
     async updateUser(updates) {
       try {
-        const response = await api.patch('/user', updates)
+        const response = await api.patch('/user/me', updates)
 
         if (response.data && response.data.success) {
           // Update the user in the store with the complete response data

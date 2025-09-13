@@ -45,7 +45,7 @@ export async function fetchAndSetUser() {
  */
 export function isAuthenticated() {
   const userStore = useUserStore()
-  return !!userStore.getUser
+  return !!userStore.user
 }
 
 /**
@@ -54,7 +54,7 @@ export function isAuthenticated() {
  */
 export function hasPendingDetails() {
   const userStore = useUserStore()
-  const user = userStore.getUser
+  const user = userStore.user
   return !!(user && user.pendingDetails)
 }
 
@@ -74,7 +74,7 @@ export function saveUserToLocalStorage(userData) {
 export function getTokenFromLocalStorage() {
   try {
     const token = localStorage.getItem('valkku:accessToken')
-    return token ? JSON.parse(token) : null
+    return token
   } catch (error) {
     console.error('Failed to fetch token from localStorage:', error)
     return null
@@ -82,6 +82,10 @@ export function getTokenFromLocalStorage() {
 }
 
 export function saveTokenToLocalStorage(token) {
+  if(!token) {
+    return
+  }
+
   try {
     localStorage.setItem('valkku:accessToken', token)
     console.log('Token saved to localStorage:', token)
@@ -131,6 +135,34 @@ export function removeUserFromLocalStorage() {
   }
 }
 
+export async function saveCurrentTeamToLocalStorage(teamId) {
+  try {
+    localStorage.setItem('valkku:currentTeamId', teamId)
+    console.log('Current team saved to localStorage:', teamId)
+  } catch (error) {
+    console.error('Failed to save current team to localStorage:', error)
+  }
+}
+
+export async function removeCurrentTeamFromLocalStorage() {
+  try {
+    localStorage.removeItem('valkku:currentTeamId')
+    console.log('Current team removed from localStorage')
+  } catch (error) {
+    console.error('Failed to remove current team from localStorage:', error)
+  }
+}
+
+export function getCurrentTeamFromLocalStorage() {
+  try {
+    const teamId = localStorage.getItem('valkku:currentTeamId')
+    return teamId
+  } catch (error) {
+    console.error('Failed to fetch current team from localStorage:', error)
+    return null
+  }
+}
+
 /**
  * Fetches user data and sets it in the user store, also saves to localStorage
  * @returns {Promise<Object>} User data from the backend
@@ -168,4 +200,13 @@ export function loadUserFromLocalStorage() {
     console.error('Failed to load user from localStorage:', error)
     return null
   }
+}
+
+/**
+ * Centralized logout function that calls the user store logout method
+ * This is the single source of truth for logout functionality
+ */
+export function logout() {
+  const userStore = useUserStore()
+  userStore.logout()
 }

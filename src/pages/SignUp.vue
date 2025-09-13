@@ -59,6 +59,7 @@
           <v-col cols="12" sm="6">
             <v-text-field
               v-model="firstName"
+              autocomplete="given-name"
               :label="$t('signUp.firstName')"
               required
               :rules="firstNameRules"
@@ -68,6 +69,7 @@
           <v-col cols="12" sm="6">
             <v-text-field
               v-model="lastName"
+              autocomplete="family-name"
               :label="$t('signUp.lastName')"
               required
               :rules="lastNameRules"
@@ -81,6 +83,7 @@
           <v-col cols="12">
             <v-text-field
               v-model="email"
+              autocomplete="email"
               :label="$t('signUp.email')"
               required
               :rules="emailRules"
@@ -95,6 +98,7 @@
           <v-col cols="12" sm="6">
             <v-text-field
               v-model="password"
+              autocomplete="new-password"
               :label="$t('signUp.password')"
               required
               :rules="passwordRules"
@@ -105,6 +109,7 @@
           <v-col cols="12" sm="6">
             <v-text-field
               v-model="passwordCheck"
+              autocomplete="new-password"
               :label="$t('signUp.passwordCheck')"
               required
               :rules="passwordCheckRules"
@@ -149,8 +154,18 @@
 </template>
 
 <script lang="ts">
+  import { useNotificationStore } from '@/stores/notification'
+  import { useUserStore } from '@/stores/user'
+  import api from '@/utils/axios'
+
   export default {
     name: 'SignUpPage',
+    setup() {
+      const notificationStore = useNotificationStore()
+      const userStore = useUserStore()
+
+      return { error: notificationStore.error, userStore }
+    },
     data() {
       return {
         logo: '/src/assets/logo.svg',
@@ -215,8 +230,27 @@
             lastName: this.lastName,
             email: this.email,
             password: this.password,
-            language: this.selectedLanguage
+            preferredLanguage: this.selectedLanguage
           })
+
+          api.post('/auth/signup', {
+            firstName: this.firstName,
+            lastName: this.lastName,
+            email: this.email,
+            password: this.password,
+            repeatPassword: this.passwordCheck,
+            preferredLanguage: this.selectedLanguage
+          })
+            .then(async (response) => {
+              await this.userStore.signin({ email: this.email, password: this.password })
+              this.$router.push('/')
+            })
+            .catch((error) => {
+              this.error(error)
+            })
+            .finally(() => {
+              this.isSubmitting = false
+            })
 
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 1000))

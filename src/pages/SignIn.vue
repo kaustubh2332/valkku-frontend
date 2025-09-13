@@ -1,5 +1,39 @@
 <template>
   <div class="fill-height d-flex align-center justify-center">
+    <!-- Language Selector -->
+    <v-menu
+      v-model="languageMenu"
+      :close-on-content-click="false"
+      location="top end"
+      offset="8"
+    >
+      <template #activator="{ props }">
+        <v-btn
+          v-bind="props"
+          class="language-selector"
+          color="primary"
+          icon="mdi-translate"
+          size="small"
+          variant="text"
+        />
+      </template>
+
+      <v-list min-width="120">
+        <v-list-item
+          :active="$i18n.locale === 'en'"
+          @click="setLocale('en')"
+        >
+          <v-list-item-title>English</v-list-item-title>
+        </v-list-item>
+        <v-list-item
+          :active="$i18n.locale === 'fi'"
+          @click="setLocale('fi')"
+        >
+          <v-list-item-title>Suomi</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+
     <v-sheet
       class="pa-6"
       max-width="600"
@@ -33,6 +67,7 @@
       >
         <v-text-field
           v-model="email"
+          autocomplete="email"
           class="mb-4"
           :label="$t('login.email')"
           required
@@ -43,6 +78,7 @@
 
         <v-text-field
           v-model="password"
+          autocomplete="current-password"
           class="mb-6"
           :label="$t('login.password')"
           required
@@ -94,6 +130,7 @@
         password: '',
         formValid: false,
         isSubmitting: false,
+        languageMenu: false,
         emailRules: [
           (v: string) => !!v || this.$t('login.errors.email_required'),
           (v: string) => /.+@.+\..+/.test(v) || this.$t('login.errors.email_invalid')
@@ -110,7 +147,7 @@
         this.isSubmitting = true
         this.userStore.signin({ email: this.email, password: this.password })
           .then(() => {
-            this.$router.push('/')
+            this.$router.push('/callback')
           })
           .catch((error) => {
             this.notificationStore.handleBackendError(error)
@@ -121,7 +158,21 @@
       },
       goToRegister() {
         this.$router.push('/signup')
+      },
+      setLocale(locale: string) {
+        this.$i18n.locale = locale
+        localStorage.setItem('locale', locale)
+        this.languageMenu = false
       }
     }
   }
 </script>
+
+<style scoped>
+.language-selector {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+</style>

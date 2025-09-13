@@ -34,5 +34,21 @@ export const backendMessages = {
   "not_found": {
     "en": "Something went wrong",
     "fi": "Jotain meni pieleen"
+  },
+  "unauthorized": {
+    "en": "Unauthorized",
+    "fi": "Ei oikeuksia"
+  },
+  "user_already_in_team": {
+    "en": "User is already in team",
+    "fi": "Käyttäjä on jo joukkueessa"
+  },
+  "user_already_invited_to_team": {
+    "en": "User is already invited to this team",
+    "fi": "Käyttäjä on jo kutsuttu joukkueeseen"
+  },
+  "invite_created_successfully": {
+    "en": "User invited",
+    "fi": "Käyttäjä kutsuttu"
   }
 }

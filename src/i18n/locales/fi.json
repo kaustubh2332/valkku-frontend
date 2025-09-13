@@ -8,22 +8,28 @@
     "title": "Valkku"
   },
   "callback": {
-    "errorMessage": "Päivitä sivu ja yritä uudelleen.",
-    "errorTitle": "Jotain meni pieleen",
-    "refreshPage": "Päivitä sivu"
+    "errorMessage": "Todennus epäonnistui. Yritä uudelleen.",
+    "errorTitle": "Todennusvirhe",
+    "goToSignIn": "Siirry kirjautumiseen",
+    "loading": "Todennetaan...",
+    "loadingDescription": "Odota hetki, kun vahvistamme tunnistetietosi",
+    "retry": "Yritä uudelleen"
   },
   "chooseTeam": {
     "createTeam": "Uusi joukkue",
     "noTeams": "Ei joukkueita saatavilla",
-    "selectTeam": "Valitse joukkue / ryhmä"
+    "selectTeam": "Valitse joukkue",
+    "success": "Joukkue vaihdettu"
   },
   "createTeam": {
     "description": "Anna joukkueen nimi.",
     "errors": {
+      "team_name_max_length": "Joukkueen nimen tulee olla alle 50 merkkiä",
       "team_name_min_length": "Joukkueen nimen tulee olla vähintään 2 merkkiä",
       "team_name_required": "Joukkueen nimi on pakollinen"
     },
     "submit": "Luo joukkue",
+    "success": "Uusi joukkue luotu!",
     "team_name": "Joukkueen nimi",
     "title": "Luo joukkue"
   },
@@ -42,6 +48,7 @@
     "why_we_need_your_name": "Tarvitsemme nimesi, jotta ryhmäsi jäsenet tunnistavat sinut."
   },
   "home": {
+    "addEvent": "Lisää tapahtuma",
     "goodAfternoon": "Päivää",
     "goodEvening": "Iltaa",
     "goodMorning": "Huomenta",
@@ -103,19 +110,32 @@
       "passwordCheck_match": "Salasanat eivät täsmää",
       "passwordCheck_required": "Vahvista salasanasi",
       "password_min_length": "Salasanan tulee olla vähintään 8 merkkiä",
-      "password_required": "Salasana on pakollinen"
+      "password_required": "Salasana on pakollinen",
+      "role_required": "Rooli vaaditaan"
     },
     "firstName": "Etunimi",
     "haveAccount": "Onko sinulla jo tili? Kirjaudu sisään",
     "lastName": "Sukunimi",
     "password": "Salasana",
     "passwordCheck": "Vahvista salasana",
+    "preferredLanguage": "Kieli",
     "submit": "Luo tili",
     "title": "Luo tili"
   },
   "userManagement": {
+    "addUser": "Lisää käyttäjä",
+    "inviteUser": "Kutsu käyttäjä",
+    "inviteUserDescription": "Kutsu käyttäjä joukkueeseen",
+    "inviteUserSuccess": "Käyttäjä kutsuttu",
+    "noInvites": "Ei odottavia kutsuja",
+    "noInvitesDescription": "Tälle joukkueelle ei ole odottavia kutsuja.",
     "noUsers": "Käyttäjiä ei löytynyt",
     "noUsersDescription": "Tässä joukkueessa ei ole vielä käyttäjiä.",
+    "pendingInvite": "Odottaa kutsua",
+    "pendingInvites": "Kutsut",
+    "role": "Rooli",
+    "teamMember": "Joukkueen jäsen",
+    "teamMembers": "Jäsenet",
     "title": "Käyttäjänhallinta"
   }
 }

@@ -1,10 +1,10 @@
-import { authGuard } from '@auth0/auth0-vue'
-// import { jwtDecode } from 'jwt-decode'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 // Import your page components
 import Home from '@/pages/Home.vue'
 import Settings from '@/pages/Settings.vue'
+import SignIn from '@/pages/Signin.vue'
+import Users from '@/pages/Users.vue'
 
 import { useUserStore } from '@/stores/user'
 
@@ -23,7 +23,7 @@ const routes = [
       hideSidebar: true,
       allowWithoutAuth: true
     },
-    component: () => import('@/pages/Signin.vue')
+    component: SignIn
   },
   {
     path: '/signup',
@@ -35,6 +35,14 @@ const routes = [
     component: () => import('@/pages/SignUp.vue')
   },
   {
+    path: '/callback',
+    name: 'Callback',
+    meta: {
+      hideSidebar: false,
+    },
+    component: () => import('@/pages/Callback.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     meta: {
@@ -44,19 +52,9 @@ const routes = [
     component: Settings
   },
   {
-    path: '/callback',
-    name: 'Callback',
-    component: () => import('@/pages/Callback.vue')
-  },
-  {
-    path: '/details',
-    name: 'Details',
-    component: () => import('@/pages/Details.vue')
-  },
-  {
     path: '/users',
     name: 'Users',
-    component: () => import('@/pages/Users.vue')
+    component: Users
   },
   {
     path: '/create-team',
@@ -65,7 +63,7 @@ const routes = [
   }
 ]
 
-const guardedRoutes = routes.map(route => ({ ...route, beforeEnter: authGuard }))
+const guardedRoutes = routes
 
 // BEFORE EACH GUARD
 function beforeEachGuard(to, from, next) {
@@ -84,6 +82,14 @@ function beforeEachGuard(to, from, next) {
   // If no user and not going to callback, redirect to callback
   if (!token && !to.meta.allowWithoutAuth) {
     next('/signin')
+    return
+  }
+
+  if(token && !user && to.path !== '/callback') {
+    next({
+      path: '/callback',
+      query: { redirect: to.fullPath }
+    })
     return
   }
 

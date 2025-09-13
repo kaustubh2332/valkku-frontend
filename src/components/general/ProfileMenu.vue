@@ -49,7 +49,6 @@
 </template>
 
 <script lang="ts">
-  import { useAuth0 } from '@auth0/auth0-vue'
   import { useUserStore } from '@/stores/user'
 
   export default {
@@ -61,27 +60,19 @@
       }
     },
     emits: ['close-mobile-drawer'],
-    setup() {
-      const {
-        isAuthenticated,
-        user,
-        logout: auth0Logout
-      } = useAuth0()
-      const userStore = useUserStore()
-
-      return {
-        isAuthenticated,
-        user,
-        userStore,
-        auth0Logout
-      }
-    },
     data() {
       return {
+        userStore: useUserStore(),
         menu: false
       }
     },
     computed: {
+      isAuthenticated() {
+        return !!this.userStore.user
+      },
+      user() {
+        return this.userStore.user
+      },
       fullName() {
         return this.userStore.fullName
       }
@@ -90,11 +81,6 @@
       startLogout() {
         this.menu = false
         this.userStore.logout()
-        this.auth0Logout({
-          logoutParams: {
-            returnTo: window.location.origin
-          }
-        })
       },
       goToSettings() {
         this.menu = false

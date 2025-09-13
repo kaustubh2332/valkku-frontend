@@ -2,18 +2,23 @@
   <v-app id="valkku-app">
     <AppSidebar v-if="!$route.meta.hideSidebar" ref="sidebar" />
     <v-main>
-      <v-container style="height: 100vh;">
+      <v-container
+        :class="{ 'mobile-bottom-spacing': $vuetify.display.mobile && !$route.meta.hideSidebar }"
+      >
         <router-view />
       </v-container>
     </v-main>
 
     <v-fab
       v-if="$vuetify.display.mobile && !$route.meta.hideSidebar"
-      class="mobile-fab"
+      id="mobile-fab"
       icon="mdi-menu"
       size="small"
       @click="openMobileSidebar"
     />
+
+    <!-- Mobile Bottom Navigation -->
+    <MobileBottomNav />
 
     <!-- Notification Display -->
     <NotificationDisplay />
@@ -21,35 +26,19 @@
 </template>
 
 <script lang="ts">
-  import { useAuth0 } from '@auth0/auth0-vue'
   import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'App',
-    setup() {
-      const userStore = useUserStore()
-      const { isAuthenticated, isLoading } = useAuth0()
-      return { userStore, isAuthenticated, isLoading }
-    },
-    watch: {
-      isLoading: {
-        handler(newVal) {
-          // When Auth0 finishes loading, check if user is authenticated
-          if (!newVal && this.isAuthenticated) {
-            this.userStore.fetchUser()
-            this.userStore.startPeriodicFetch()
-          }
-        },
-        immediate: true
+    data() {
+      return {
+        userStore: useUserStore()
       }
     },
     mounted() {
-      // Also check immediately in case Auth0 is already loaded
-      if (!this.isLoading && this.isAuthenticated) {
-        console.log('Auth0 already loaded, fetching user data')
-        this.userStore.fetchUser()
-        this.userStore.startPeriodicFetch()
-      }
+      // Initialize user data on app mount
+      this.userStore.fetchUser()
+      this.userStore.startPeriodicFetch()
     },
     beforeUnmount() {
       // Clean up the interval when the app is destroyed
@@ -65,15 +54,29 @@
 
 <style>
 #valkku-app {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-top: env(safe-area-inset-top, 0px);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
-.mobile-fab {
-    position: fixed;
-    top: calc(16px + env(safe-area-inset-top));
-    right: calc(16px + env(safe-area-inset-right));
+#valkku-app .v-main {
+    flex: 1;
+    min-height: 0; /* Allows flex item to shrink below content size */
+}
+
+#mobile-fab {
+    position: absolute;
+    right: 16px;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    z-index: 1000;
+}
+
+.mobile-bottom-spacing {
+    padding-bottom: 80px !important;
 }
 </style>

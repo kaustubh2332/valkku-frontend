@@ -8,22 +8,28 @@
     "title": "Valkku"
   },
   "callback": {
-    "errorMessage": "Please refresh the page and try again.",
-    "errorTitle": "Something went wrong",
-    "refreshPage": "Refresh Page"
+    "errorMessage": "Authentication failed. Please try again.",
+    "errorTitle": "Authentication Error",
+    "goToSignIn": "Go to Sign In",
+    "loading": "Authenticating...",
+    "loadingDescription": "Please wait while we verify your credentials",
+    "retry": "Try Again"
   },
   "chooseTeam": {
     "createTeam": "New team",
     "noTeams": "No teams available",
-    "selectTeam": "Select team / group"
+    "selectTeam": "Select team",
+    "success": "Team changes"
   },
   "createTeam": {
     "description": "Give your teams name to get started!",
     "errors": {
+      "team_name_max_length": "Team name must be under 50 characters",
       "team_name_min_length": "Team name must be at least 2 characters",
       "team_name_required": "Team name is required"
     },
     "submit": "Create Team",
+    "success": "New team created!",
     "team_name": "Team Name",
     "title": "Create New Team"
   },
@@ -42,6 +48,7 @@
     "why_we_need_your_name": "We need your name so your team members can recognize you."
   },
   "home": {
+    "addEvent": "Add event",
     "goodAfternoon": "Afternoon",
     "goodEvening": "Evening",
     "goodMorning": "Morning",
@@ -103,19 +110,32 @@
       "passwordCheck_match": "Passwords do not match",
       "passwordCheck_required": "Please confirm your password",
       "password_min_length": "Password must be at least 8 characters",
-      "password_required": "Password is required"
+      "password_required": "Password is required",
+      "role_required": "Role required"
     },
     "firstName": "First Name",
     "haveAccount": "Already have an account? Sign in",
     "lastName": "Last Name",
     "password": "Password",
     "passwordCheck": "Confirm Password",
+    "preferredLanguage": "Language",
     "submit": "Create Account",
     "title": "Create Account"
   },
   "userManagement": {
+    "addUser": "Add user",
+    "inviteUser": "Invite user",
+    "inviteUserDescription": "Invite user to team",
+    "inviteUserSuccess": "User invited",
+    "noInvites": "No pending invites",
+    "noInvitesDescription": "There are no pending invites for this team.",
     "noUsers": "No users found",
     "noUsersDescription": "There are no users in this team yet.",
+    "pendingInvite": "Pending Invite",
+    "pendingInvites": "Invites",
+    "role": "Role",
+    "teamMember": "Team Member",
+    "teamMembers": "Members",
     "title": "Users"
   }
 }

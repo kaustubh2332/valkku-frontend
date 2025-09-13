@@ -15,16 +15,17 @@ function isAuthEndpoint(url = '') {
   return url.includes('/auth/refresh') || url.includes('/auth/login') || url.includes('/auth/signup') || url.includes('/auth/logout')
 }
 function tokenLikelyExpired(error) {
-  const code = error?.response?.data?.error || error?.response?.data?.messageCode
-  const www  = error?.response?.headers?.['www-authenticate'] || ''
-  return code === 'token_expired' || /token expired/i.test(www) || /invalid_token/i.test(www)
+  console.log('Error:', error)
+  const code = error?.response?.data?.code || error?.response?.data?.messageCode
+  console.log('Code:', code)
+  return code === 'token_expired' || code === 'unauthorized'
 }
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     const userStore = useUserStore()
     refreshPromise = api
-      .post('/auth/refresh', null) // cookie sent automatically
+      .post('/auth/refresh') // cookie sent automatically
       .then((res) => {
         const newToken = res?.data?.token
         if (!newToken) {
@@ -58,15 +59,14 @@ async function refreshAccessToken() {
 api.interceptors.request.use(async (config) => {
   const userStore = useUserStore()
 
-  const token = (userStore.getToken && userStore.getToken()) || userStore.token
+  const token = userStore.token || window.localStorage.getItem('valkku:accessToken')
   if (token) {
     config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
   }
 
   // custom header
-  const user = (typeof userStore.getUser === 'function') ? userStore.getUser() : userStore.getUser
-  const currentTeamId = user?.currentTeamId
+  const currentTeamId = userStore.currentTeamId
   if (currentTeamId) {
     config.headers = config.headers || {}
     config.headers['x-current-team-id'] = currentTeamId
@@ -83,6 +83,12 @@ api.interceptors.response.use(
     const original = error.config || {}
     const url = original.url || ''
 
+    console.log('Status:', status)
+    console.log('Original:', original)
+    console.log('URL:', url)
+    console.log('Is auth endpoint:', isAuthEndpoint(url))
+    console.log('Token likely expired:', tokenLikelyExpired(error))
+
     // Only attempt refresh on token-expired 401s, not on auth endpoints, and only once
     if (
       status === 401 &&
@@ -90,6 +96,7 @@ api.interceptors.response.use(
       !isAuthEndpoint(url) &&
       tokenLikelyExpired(error)
     ) {
+      console.log('Refreshing access token')
       original._retry = true
       try {
         const newToken = await refreshAccessToken()
@@ -104,8 +111,8 @@ api.interceptors.response.use(
 
     // Central handling
     if (status === 401) {
-      if (!location.pathname.includes('/callback') && !location.pathname.includes('/login')) {
-        location.href = '/login'
+      if (!location.pathname.includes('/callback') && !location.pathname.includes('/signin') && !location.pathname.includes('/signup')) {
+        location.href = '/#/signin'
       }
     } else if (status === 403) {
       console.error('Access forbidden')

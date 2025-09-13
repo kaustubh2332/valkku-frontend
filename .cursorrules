@@ -4,6 +4,7 @@
 
 ### Always Use Options API
 - **MANDATORY**: Always use Vue.js Options API syntax, never Composition API
+- Allow for setup()
 - Use `export default { data(), methods: {}, computed: {}, etc. }` format
 - Do NOT use `<script setup>` or Composition API syntax
 - Do NOT use `ref()`, `reactive()`, `computed()`, or other Composition API functions

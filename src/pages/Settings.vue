@@ -58,30 +58,28 @@
   </v-card>
   <v-card-text>
     <div class="text-caption text-grey-darken-3 mb-4" style="opacity: 0.6;">
-      {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.getUser?.emojiClickedCount }) }}.
+      {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.user?.emojiClickedCount }) }}.
     </div>
   </v-card-text>
 </template>
 
 <script lang="ts">
-  import { useAuth0 } from '@auth0/auth0-vue'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
     name: 'Settings',
-    setup() {
-      const { user, logout: auth0Logout } = useAuth0()
-      const userStore = useUserStore()
-      return { user, userStore, auth0Logout }
-    },
     data() {
       return {
+        userStore: useUserStore(),
         selectedLanguage: this.$i18n.locale,
         loadingPwChangeUri: false
       }
     },
     computed: {
+      user() {
+        return this.userStore.user
+      },
       englishLabel() {
         return this.$t('language.english')
       },
@@ -96,11 +94,6 @@
       },
       startLogout() {
         this.userStore.logout()
-        this.auth0Logout({
-          logoutParams: {
-            returnTo: window.location.origin
-          }
-        })
       },
       async changePassword() {
         try {

@@ -1,11 +1,11 @@
 <template>
   <!-- Emoji Click Count Display - Top Center of Page -->
   <div
-    v-show="chipVisible && userStore.getUser?.emojiClickedCount"
+    v-show="chipVisible && userStore.user?.emojiClickedCount"
     :class="['emoji-count-display', { show: chipVisible, hide: !chipVisible }]"
   >
     <v-icon class="me-1">mdi-cursor-pointer</v-icon>
-    {{ userStore.getUser?.emojiClickedCount }}
+    {{ userStore.user?.emojiClickedCount }}
   </div>
 
   <div
@@ -129,8 +129,7 @@
           elementSize: 30,
           emoji: [this.currentEmoji], // Use the current emoji
           lifetime: 200,
-          position: 'fixed',
-          zIndex: 9999
+          zIndex: 9_999_999
         }
 
         const { reward } = this.$reward('emoji-trigger', 'emoji', config)
@@ -164,7 +163,7 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 9999;
+  z-index: 9_999_999;
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, width 0.3s ease-in-out;
 
   /* Custom styling */

@@ -4,22 +4,88 @@
   <div class="d-flex text-h4 text-md-h3 text-sm-h4 text-xs-h4 mt-4">
     {{ greeting }}, {{ userStore.firstName }}!
     <BigEmoji />
-    <!-- {{ userStore.getUser }} -->
   </div>
 
   <Loading v-if="isLoading" />
+  <v-row
+    v-else
+    class="my-8"
+  >
+    <v-col>
+      <StunningButton
+        block
+        color="primary"
+        :glow="true"
+        :gradient="true"
+        icon="mdi-plus"
+        :text="$t('home.addEvent')"
+        @click="handleGetStarted"
+      />
+    </v-col>
+    <v-col>
+      <StunningButton
+        block
+        color="secondary"
+        disabled
+        :glow="true"
+        :gradient="true"
+        icon="mdi-compass"
+        text="Explore Features"
+        trailing-icon="mdi-arrow-right"
+      />
+    </v-col>
+  </v-row>
+
+  <!-- Additional content placeholders -->
+  <v-row>
+    <v-col cols="12" sm="6">
+      <div class="my-3" style="height: 200px; background-color: #f0f0f0;">Tulevat tapahtumat</div>
+    </v-col>
+    <v-col cols="12" sm="6">
+      <div class="my-3" style="height: 200px; background-color: #f0f0f0;">Tehtävät</div>
+    </v-col>
+    <v-col cols="12" sm="12">
+      <div class="my-3" style="height: 300px; background-color: #f0f0f0;">Oma viikkoni (athlete & parent)</div>
+    </v-col>
+  </v-row>
+
+  <!-- Bottom App Buttons -->
+  <div class="my-8 d-flex justify-space-around">
+    <AppButton
+      color="primary"
+      icon="mdi-home"
+      text="Home"
+      @click="handleGetStarted"
+    />
+    <AppButton
+      color="secondary"
+      icon="mdi-account-multiple"
+      text="Team"
+      @click="handleExploreFeatures"
+    />
+    <AppButton
+      color="success"
+      icon="mdi-trophy"
+      text="Results"
+      @click="handleGetStarted"
+    />
+    <AppButton
+      color="info"
+      icon="mdi-chart-bar"
+      text="Raportit"
+      @click="handleExploreFeatures"
+    />
+  </div>
 </template>
 
 <script lang="ts">
-  import { useAuth0 } from '@auth0/auth0-vue'
   import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'Home',
     setup() {
-      const { user } = useAuth0()
       const userStore = useUserStore()
-      return { user, userStore }
+      return { userStore }
     },
     data() {
       return {
@@ -27,6 +93,9 @@
       }
     },
     computed: {
+      user() {
+        return this.userStore.user
+      },
       greeting() {
         // If first=true, show welcome message instead of time-based greeting
         if (this.$route.query.first === 'true') {
@@ -76,6 +145,16 @@
 
         const { reward } = this.$reward('confetti-trigger', 'confetti', config)
         reward()
+      },
+      handleGetStarted() {
+        // Add your get started logic here
+        console.log('Get Started clicked!')
+        this.$router.push('/settings')
+      },
+      handleExploreFeatures() {
+        // Add your explore features logic here
+        console.log('Explore Features clicked!')
+        this.$router.push('/users')
       }
     }
   }
@@ -89,5 +168,24 @@
   -ms-user-select: none;
 }
 
+.home-content {
+  padding: 20px 0;
+}
 
+.button-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.button-section .stunning-button {
+  min-width: 280px;
+}
+
+@media (max-width: 600px) {
+  .button-section .stunning-button {
+    min-width: 240px;
+  }
+}
 </style>

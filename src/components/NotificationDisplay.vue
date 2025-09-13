@@ -7,17 +7,35 @@
       <v-snackbar
         v-for="notification in notifications"
         :key="notification.id"
+        :class="{ 'mobile-notification': $vuetify.display.mobile }"
         :color="getNotificationColor(notification.type)"
-        location="top"
+        :location="$vuetify.display.mobile ? 'top center' : 'bottom left'"
         :model-value="true"
         :timeout="notification.duration"
-        variant="elevated"
+        :variant="$vuetify.display.mobile ? 'tonal' : 'elevated'"
         @update:model-value="removeNotification(notification.id)"
       >
-        <div class="d-flex align-center">
+        <div v-if="$vuetify.display.mobile" class="mobile-notification-content">
+          <v-icon
+            class="mr-2"
+            :icon="getNotificationIcon(notification.type)"
+            size="16"
+          />
+          <span class="mobile-message">{{ notification.message }}</span>
+          <v-btn
+            class="ml-2"
+            icon="mdi-close"
+            size="x-small"
+            variant="text"
+            @click="removeNotification(notification.id)"
+          />
+        </div>
+
+        <div v-else class="desktop-notification-content">
           <v-icon
             class="mr-3"
             :icon="getNotificationIcon(notification.type)"
+            size="20"
           />
           <div class="flex-grow-1">
             <div
@@ -31,7 +49,7 @@
             </div>
           </div>
           <v-btn
-            :icon="'mdi-close'"
+            icon="mdi-close"
             size="small"
             variant="text"
             @click="removeNotification(notification.id)"
@@ -40,7 +58,7 @@
 
         <!-- Action button if provided -->
         <template
-          v-if="notification.action"
+          v-if="notification.action && !$vuetify.display.mobile"
           #actions
         >
           <v-btn
@@ -116,6 +134,48 @@
   margin-bottom: 10px;
 }
 
+/* Mobile notification styles */
+.mobile-notification :deep(.v-snackbar__wrapper) {
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 18px !important;
+  max-width: calc(100vw - 16px) !important;
+  margin: 0 auto !important;
+}
+
+.mobile-notification :deep(.v-snackbar__content) {
+  padding: 0 !important;
+  min-height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mobile-notification-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  min-height: 36px;
+}
+
+.mobile-message {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 8px;
+}
+
+/* Desktop notification styles */
+.desktop-notification-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
 /* Transition animations */
 .notification-enter-active,
 .notification-leave-active {
@@ -132,6 +192,19 @@
   transform: translateX(100%);
 }
 
+/* Mobile enter/leave animations */
+@media (max-width: 600px) {
+  .notification-enter-from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  .notification-leave-to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
 .notification-move {
   transition: transform 0.3s ease;
 }
@@ -139,13 +212,30 @@
 /* Mobile responsiveness */
 @media (max-width: 600px) {
   .notification-container {
-    top: 10px;
-    right: 10px;
-    left: 10px;
+    top: 58px; /* Inside v-app padding (50px + 8px margin) */
+    right: 8px;
+    left: 8px;
   }
 
   .notification-container :deep(.v-snackbar) {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+  }
+
+  /* Ensure notifications don't interfere with mobile bottom nav */
+  .notification-container :deep(.v-snackbar) {
+    position: relative !important;
+    top: 0 !important;
+    bottom: auto !important;
+  }
+
+  /* Additional mobile spacing */
+  .mobile-notification-content {
+    padding: 6px 10px;
+  }
+
+  .mobile-message {
+    font-size: 11px;
+    margin: 0 6px;
   }
 }
 </style>

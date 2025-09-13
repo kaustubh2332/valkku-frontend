@@ -55,8 +55,7 @@
     </template>
   </v-navigation-drawer>
 
-  <!-- Minify FAB Button -->
-  <v-fab
+  <!-- <v-fab
     v-if="!$vuetify.display.mobile"
     v-tooltip:right="isMobile ? null : (rail ? $t('sidebar.expand') : $t('sidebar.minify'))"
     :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
@@ -64,13 +63,14 @@
     :style="rail ? 'position: absolute; left: 60px; top: 4px;' : 'position: absolute; left: 260px; top: 4px;'"
     variant="text"
     @click="rail = !rail"
-  />
+  /> -->
 </template>
 
 <script lang="ts">
-  import { useAuth0 } from '@auth0/auth0-vue'
   import ChooseTeamBtn from '@/components/general/ChooseTeamBtn.vue'
   import ProfileMenu from '@/components/general/ProfileMenu.vue'
+
+  import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'AppSidebar',
@@ -78,20 +78,17 @@
       ChooseTeamBtn,
       ProfileMenu
     },
-    setup() {
-      const { isAuthenticated } = useAuth0()
-
-      return {
-        isAuthenticated
-      }
-    },
     data() {
       return {
-        drawer: true,
+        userStore: useUserStore(),
+        drawer: false,
         rail: false
       }
     },
     computed: {
+      isAuthenticated() {
+        return !!this.userStore.getUser
+      },
       isMobile() {
         return this.$vuetify.display.mobile
       },
@@ -114,6 +111,20 @@
           },
         ]
       }
+    },
+    watch: {
+      '$vuetify.display.mobile': {
+        handler(isMobile) {
+          // Auto-hide drawer when switching to mobile
+          if (isMobile) {
+            this.drawer = false
+          }
+        }
+      }
+    },
+    mounted() {
+      // Set initial drawer state based on screen size
+      this.drawer = !this.$vuetify.display.mobile
     },
     methods: {
       handleMobileNavigation() {

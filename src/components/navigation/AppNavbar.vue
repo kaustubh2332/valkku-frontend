@@ -23,13 +23,12 @@
 </template>
 
 <script lang="ts">
-  import { useAuth0 } from '@auth0/auth0-vue'
-
   export default {
     name: 'AppNavbar',
-    setup() {
-      const { isLoading } = useAuth0()
-      return { isLoading }
+    data() {
+      return {
+        isLoading: false
+      }
     }
   }
 </script>
