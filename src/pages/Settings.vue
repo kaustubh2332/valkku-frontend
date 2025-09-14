@@ -6,11 +6,10 @@
   <!-- Language Settings -->
   <v-card
     class="mb-4"
-    variant="outlined"
   >
     <v-card-text class="pa-6">
       <div class="text-h6 mb-4">
-        <v-icon class="me-2">mdi-translate</v-icon>
+        <v-icon class="me-2" color="primary">mdi-translate</v-icon>
         {{ $t('settings.language') }}
       </div>
       <v-radio-group
@@ -32,18 +31,17 @@
   <!-- Account Settings -->
   <v-card
     class="mb-4"
-    variant="outlined"
   >
     <v-card-text class="pa-6">
       <div class="text-h6 mb-4">
-        <v-icon class="me-2">mdi-account-cog</v-icon>
+        <v-icon class="me-2" color="primary">mdi-account-cog</v-icon>
         {{ $t('settings.account') }}
       </div>
       <v-btn
         :loading="loadingPwChangeUri"
         @click="changePassword"
       >
-        <v-icon class="me-2">mdi-key</v-icon>
+        <v-icon class="me-2" color="primary">mdi-key</v-icon>
         {{ $t('settings.changePassword') }}
       </v-btn>
       <br>
@@ -51,7 +49,7 @@
         class="mt-4"
         @click="startLogout"
       >
-        <v-icon class="me-2">mdi-logout</v-icon>
+        <v-icon class="me-2" color="primary">mdi-logout</v-icon>
         {{ $t('app.logout') }}
       </v-btn>
     </v-card-text>

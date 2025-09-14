@@ -8,7 +8,6 @@
         v-bind="props"
         :block="block"
         :disabled="!hasTeams"
-        variant="outlined"
       >
         <v-icon start>mdi-account-group</v-icon>
         {{ truncatedCurrentTeamName || $t('chooseTeam.selectTeam') }}
@@ -57,13 +56,14 @@
     </v-list>
   </v-menu>
 
-  <Dialog
+  <BottomSheetModal
     v-model="createTeamDialog"
+    height="90vh"
   >
     <CreateTeam
       @close="createTeamDialog = false"
     />
-  </Dialog>
+  </BottomSheetModal>
 </template>
 
 <script lang="ts">

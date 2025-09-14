@@ -50,5 +50,9 @@ export const backendMessages = {
   "invite_created_successfully": {
     "en": "User invited",
     "fi": "Käyttäjä kutsuttu"
+  },
+  "invite_deleted_successfully": {
+    "en": "Invite deleted",
+    "fi": "Kutsu poistettu"
   }
 }

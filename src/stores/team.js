@@ -23,6 +23,8 @@ export const useTeamStore = defineStore('team', {
         })
           .then((response) => {
             resolve(response.data.data)
+            console.log('response.data.data', response.data.data)
+            this.teamInvites = this.teamInvites.concat(response.data.data.invite)
           })
           .catch((error) => {
             reject(error)

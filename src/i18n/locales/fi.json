@@ -15,6 +15,7 @@
     "loadingDescription": "Odota hetki, kun vahvistamme tunnistetietosi",
     "retry": "Yritä uudelleen"
   },
+  "cancel": "Peru",
   "chooseTeam": {
     "createTeam": "Uusi joukkue",
     "noTeams": "Ei joukkueita saatavilla",
@@ -123,7 +124,11 @@
     "title": "Luo tili"
   },
   "userManagement": {
+    "addGuardian": "Lisää huoltaja",
     "addUser": "Lisää käyttäjä",
+    "createUserAndNew": "Kutsu & uusi",
+    "createUserAndNewTooltip": "Shift + Enter",
+    "guardians": "Huoltajat",
     "inviteUser": "Kutsu käyttäjä",
     "inviteUserDescription": "Kutsu käyttäjä joukkueeseen",
     "inviteUserSuccess": "Käyttäjä kutsuttu",

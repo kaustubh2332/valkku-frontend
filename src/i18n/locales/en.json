@@ -15,6 +15,7 @@
     "loadingDescription": "Please wait while we verify your credentials",
     "retry": "Try Again"
   },
+  "cancel": "Cancel",
   "chooseTeam": {
     "createTeam": "New team",
     "noTeams": "No teams available",
@@ -123,7 +124,11 @@
     "title": "Create Account"
   },
   "userManagement": {
+    "addGuardian": "Add guardian",
     "addUser": "Add user",
+    "createUserAndNew": "Invite & new",
+    "createUserAndNewTooltip": "Shift + Enter",
+    "guardians": "Guardians",
     "inviteUser": "Invite user",
     "inviteUserDescription": "Invite user to team",
     "inviteUserSuccess": "User invited",

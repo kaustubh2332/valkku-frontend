@@ -60,7 +60,7 @@
             class="mt-4"
           >
             <v-card
-              v-for="n in 5"
+              v-for="n in 3"
               :key="n"
               class="mb-4"
               variant="outlined"
@@ -186,21 +186,30 @@
     </div>
   </div>
 
-  <Dialog
+  <BottomSheetModal
     v-model="inviteUserDialog"
+    height="95vh"
+    :title="$t('userManagement.inviteUser') + ' ' + userStore.currentTeam.teamName"
   >
-    <InviteUser />
-  </Dialog>
+    <InviteUser @user-invited="inviteUserDialog = false" />
+  </BottomSheetModal>
 </template>
 
 <script lang="ts">
+  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
   import UserCard from '@/components/users/UserCard.vue'
   import { useTeamStore } from '@/stores/team'
+  import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'UserManagement',
     components: {
+      BottomSheetModal,
       UserCard
+    },
+    setup() {
+      const userStore = useUserStore()
+      return { userStore }
     },
     data() {
       return {

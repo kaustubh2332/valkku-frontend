@@ -12,7 +12,7 @@
         :location="$vuetify.display.mobile ? 'top center' : 'bottom left'"
         :model-value="true"
         :timeout="notification.duration"
-        :variant="$vuetify.display.mobile ? 'tonal' : 'elevated'"
+        :variant="$vuetify.display.mobile ? 'elevated' : 'elevated'"
         @update:model-value="removeNotification(notification.id)"
       >
         <div v-if="$vuetify.display.mobile" class="mobile-notification-content">
@@ -125,13 +125,41 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 99999;
   pointer-events: none;
+  isolation: isolate;
 }
 
 .notification-container :deep(.v-snackbar) {
   pointer-events: auto;
   margin-bottom: 10px;
+  z-index: 99999 !important;
+}
+
+.notification-container :deep(.v-snackbar__wrapper) {
+  z-index: 99999 !important;
+}
+
+.notification-container :deep(.v-overlay) {
+  z-index: 99999 !important;
+}
+
+.notification-container :deep(.v-overlay__content) {
+  z-index: 99999 !important;
+}
+
+/* Ensure all notification elements are above everything */
+.notification-container :deep(*) {
+  z-index: 99999 !important;
+}
+
+/* Global override for any Vuetify snackbar z-index */
+:global(.v-snackbar) {
+  z-index: 99999 !important;
+}
+
+:global(.v-snackbar__wrapper) {
+  z-index: 99999 !important;
 }
 
 /* Mobile notification styles */

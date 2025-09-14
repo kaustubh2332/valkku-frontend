@@ -33,6 +33,7 @@
           <v-list-item
             v-bind="props"
             :active="$route.name === item.name"
+            color="primary"
             :prepend-icon="item.icon"
             :title="item.title"
             :to="{ name: item.name }"

@@ -1,6 +1,6 @@
 <template>
   <v-card
-    class="user-card mb-4 mx-1"
+    class="user-card mb-4 mx-2"
     :class="{ 'user-card--invite': isInvite }"
     elevation="3"
     hover
@@ -95,21 +95,6 @@
   min-height: 48px;
 }
 
-.user-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #01B0D8 0%, #1976D2 50%, #01B0D8 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.user-card--invite::before {
-  background: linear-gradient(90deg, #FF9800 0%, #F57C00 50%, #FF9800 100%);
-}
 
 .user-card:hover {
   transform: translateY(-1px);
@@ -121,9 +106,6 @@
   border-color: rgba(255, 152, 0, 0.2);
 }
 
-.user-card:hover::before {
-  opacity: 0.6;
-}
 
 .user-avatar-container {
   position: relative;
