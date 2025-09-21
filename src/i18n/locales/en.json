@@ -75,6 +75,8 @@
     },
     "noAccount": "Don't have an account? Sign up",
     "password": "Password",
+    "sessionExpired": "Session Expired",
+    "sessionExpiredDescription": "Your session has expired. Please sign in again to continue.",
     "submit": "Sign In",
     "title": "Sign in"
   },

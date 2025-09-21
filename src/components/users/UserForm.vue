@@ -6,7 +6,29 @@
   >
     <v-row>
       <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12">
+        <v-autocomplete
+          v-if="isGuardian || localUser.role === 'guardian'"
+          v-model="localUser.email"
+          v-model:search="emailSearch"
+          autofocus
+          :density="$vuetify.display.mobile ? 'compact' : 'default'"
+          :hide-details="$vuetify.display.mobile ? 'auto' : false"
+          :items="emailSuggestions"
+          :item-title="'title'"
+          :item-value="'value'"
+          :label="$t('signUp.email') + ' *'"
+          :menu-props="{ zIndex: dropdownZIndex }"
+          :no-filter="true"
+          clearable
+          required
+          :rules="emailRules"
+          type="email"
+          validate-on="input"
+          variant="outlined"
+          @blur="touchedFields.email = true"
+        />
         <v-text-field
+          v-else
           v-model="localUser.email"
           autofocus
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
@@ -146,7 +168,9 @@
           lastName: false,
           preferredLanguage: false,
           role: false
-        }
+      },
+      emailSearch: '',
+      emailSuggestions: []
       }
     },
     computed: {
@@ -218,6 +242,23 @@
           if (this.isSyncingFromProp) return
           this.$emit('update:user', { ...newVal })
         }
+      },
+      emailSearch(newVal) {
+        if (!(this.isGuardian || this.localUser.role === 'guardian')) return
+        const query = (newVal || '').trim().toLowerCase()
+        if (query.length < 3) {
+          this.emailSuggestions = []
+          return
+        }
+
+        // Get team users from current team in user store if available
+        const currentTeam = this.userStore?.currentTeam
+        const list = Array.isArray(currentTeam?.users) ? currentTeam.users : []
+
+        this.emailSuggestions = list
+          .filter(u => (u.email || '').toLowerCase().includes(query))
+          .slice(0, 6)
+          .map(u => ({ title: u.fullName ? `${u.fullName} <${u.email}>` : u.email, value: u.email }))
       }
     },
     mounted() {

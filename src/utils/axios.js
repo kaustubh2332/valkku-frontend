@@ -12,7 +12,6 @@ const api = axios.create({
 
 // ---- single-flight refresh ----
 let refreshPromise = null
-let refreshRetryCount = 0
 const MAX_REFRESH_RETRIES = 3
 
 function isAuthEndpoint(url = '') {
@@ -31,39 +30,42 @@ function tokenLikelyExpired(error) {
 async function refreshAccessToken() {
   if (!refreshPromise) {
     const userStore = useUserStore()
-    refreshPromise = api
-      .post('/auth/refresh') // cookie sent automatically
-      .then((res) => {
-        console.log('Refresh response:', res)
-        const newToken = res?.data?.token
-        if (!newToken) {
-          throw new Error('No access token in refresh response')
-        }
-
-        userStore.setToken(newToken)
-        refreshRetryCount = 0 // Reset retry count on success
-        return newToken
-      })
-      .catch((error) => {
-        refreshRetryCount++
-        console.log(`Refresh attempt ${refreshRetryCount} failed:`, error)
-
-        if (refreshRetryCount >= MAX_REFRESH_RETRIES) {
-          // clear auth state on final refresh failure
-          console.log('Max refresh retries reached, clearing auth state')
-          if (userStore.clearUser) {
-            userStore.clearUser()
+    refreshPromise = (async () => {
+      let lastError
+      for (let attempt = 1; attempt <= MAX_REFRESH_RETRIES; attempt++) {
+        try {
+          const res = await api.post('/auth/refresh') // cookie sent automatically
+          console.log('Refresh response:', res)
+          const newToken = res?.data?.token
+          if (!newToken) {
+            throw new Error('No access token in refresh response')
           }
-          if (userStore.setToken) {
-            userStore.setToken(null)
-          } else {
-            userStore.token = null
+          userStore.setToken(newToken)
+          return newToken
+        } catch (error) {
+          console.log(`Refresh attempt ${attempt} failed:`, error)
+          lastError = error
+          if (attempt === MAX_REFRESH_RETRIES) {
+            console.log('Max refresh retries reached, logging out user')
+            // Fully clear auth state and navigate to signin
+            if (typeof userStore.finishLogout === 'function') {
+              userStore.finishLogout(true)
+            } else {
+              // Fallback: clear token only
+              if (typeof userStore.setToken === 'function') {
+                userStore.setToken(null)
+              } else {
+                userStore.token = null
+              }
+            }
+            throw lastError
           }
-          refreshRetryCount = 0 // Reset for next session
         }
-        throw error
+      }
+    })()
+      .finally(() => {
+        refreshPromise = null
       })
-      .finally(() => { refreshPromise = null })
   }
   return refreshPromise
 }
@@ -135,7 +137,7 @@ api.interceptors.response.use(
       }
 
       if (!location.pathname.includes('/callback')) {
-        router.push('/signin')
+        router.push('/signin?exp=true')
       }
     } else if (status === 403) {
       console.error('Access forbidden')

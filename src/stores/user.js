@@ -132,7 +132,7 @@ export const useUserStore = defineStore('user', {
           })
       })
     },
-    finishLogout() {
+    finishLogout(expired = false) {
       if (this.batchTimer) {
         clearTimeout(this.batchTimer)
         this.batchTimer = null
@@ -157,7 +157,11 @@ export const useUserStore = defineStore('user', {
 
       // Redirect to home page using Vue Router
       console.log('Redirecting to home page', router)
-      router.push('/signin')
+      if(expired) {
+        router.push('/signin?exp=true')
+      } else {
+        router.push('/signin')
+      }
     },
     startPeriodicFetch() {
       // Clear any existing interval

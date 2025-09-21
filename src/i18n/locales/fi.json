@@ -75,6 +75,8 @@
     },
     "noAccount": "Eikö sinulla ole tiliä? Rekisteröidy",
     "password": "Salasana",
+    "sessionExpired": "Istunto vanhentunut",
+    "sessionExpiredDescription": "Istuntosi on vanhentunut. Kirjaudu sisään uudelleen jatkaaksesi.",
     "submit": "Kirjaudu sisään",
     "title": "Kirjaudu"
   },

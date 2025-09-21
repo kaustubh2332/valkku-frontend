@@ -54,6 +54,23 @@
         {{ $t('login.title') }}
       </v-card-title>
 
+      <!-- Session Expired Notification -->
+      <v-alert
+        v-if="isSessionExpired"
+        class="mb-6"
+        color="orange"
+        density="compact"
+        icon="mdi-clock-alert"
+        type="warning"
+        variant="tonal"
+      >
+        <div class="text-body-2">
+          <strong>{{ $t('login.sessionExpired') }}</strong>
+          <br>
+          {{ $t('login.sessionExpiredDescription') }}
+        </div>
+      </v-alert>
+
       <v-card-text class="text-center mb-6">
         <p class="text-body-1 mb-2">
           {{ $t('login.description') }}
@@ -139,6 +156,11 @@
           (v: string) => !!v || this.$t('login.errors.password_required'),
           (v: string) => (v && v.length >= 6) || this.$t('login.errors.password_min_length')
         ]
+      }
+    },
+    computed: {
+      isSessionExpired() {
+        return this.$route.query.exp === 'true'
       }
     },
     mounted() {
