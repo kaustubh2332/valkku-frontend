@@ -1,12 +1,10 @@
 // Plugins
-import Components from 'unplugin-vue-components/vite'
-import Vue from '@vitejs/plugin-vue'
-import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
-import Fonts from 'unplugin-fonts/vite'
-
-// Utilities
-import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import Vue from '@vitejs/plugin-vue'
+import Fonts from 'unplugin-fonts/vite'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
+import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
 // https://vitejs.dev/config/
 export default defineConfig({

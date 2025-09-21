@@ -128,7 +128,13 @@ api.interceptors.response.use(
 
     // Central handling
     if (status === 401) {
-      if (!location.pathname.includes('/callback') && !location.pathname.includes('/signin') && !location.pathname.includes('/signup')) {
+      // Do not redirect on auth endpoint failures (e.g., signup/signin errors)
+      // or when currently on public auth pages
+      if (isAuthEndpoint(url) || location.pathname.includes('/signup') || location.pathname.includes('/signin')) {
+        throw error
+      }
+
+      if (!location.pathname.includes('/callback')) {
         router.push('/signin')
       }
     } else if (status === 403) {

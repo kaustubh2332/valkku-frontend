@@ -256,13 +256,6 @@
             .finally(() => {
               this.isSubmitting = false
             })
-
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000))
-
-          // For now, just redirect to home
-          this.$router.push('/')
-
         } catch (error) {
           console.error('Sign up error:', error)
           // TODO: Show error message to user
