@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', {
 
         api.get(`/user/me${periodic ? '?periodic=true' : ''}`)
           .then((response) => {
-            if(!response.data || !response.data.success || !response.data.data) {
+            if(!response ||!response.data || !response.data.success || !response.data.data) {
               reject(new Error('Invalid response format from user endpoint'))
               return
             }
