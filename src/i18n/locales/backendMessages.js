@@ -54,5 +54,53 @@ export const backendMessages = {
   "invite_deleted_successfully": {
     "en": "Invite deleted",
     "fi": "Kutsu poistettu"
-  }
+  },
+  "invalid_invite": {
+    "en": "Invite expired or invalid",
+    "fi": "Kutsu on vanhentunut tai virheellinen"
+  },
+  "user_already_in_team_with_role": {
+    "en": "User is already in team with this role",
+    "fi": "Käyttäjä on jo joukkueessa tällä roolilla"
+  },
+  "guardian_already_invited_to_team_for_this_user": {
+    "en": "Guardian is already invited to team for this user",
+    "fi": "Huoltaja on jo kutsuttu tälle käyttäjälle"
+  },
+  "guardian_cannot_be_the_same_as_the_user": {
+    "en": "Guardian cannot be the same as the user",
+    "fi": "Huoltaja ei voi olla sama kuin käyttäjä"
+  },
+  "invite_for_other_email_address": {
+    "en": "Invite for other email address",
+    "fi": "Kutsu toiselle sähköpostille"
+  },
+  "force_password_change": {
+    "en": "Password change required",
+    "fi": "Salasanan vaihto vaaditaan"
+  },
+  "invalid_current_password": {
+    "en": "Invalid current password",
+    "fi": "Virheellinen nykyinen salasana"
+  },
+  "password_changed_successfully": {
+    "en": "Password changed successfully",
+    "fi": "Salasana vaihdettu onnistuneesti"
+  },
+  "user_already_invited_to_team_with_role": {
+    "en": "User is already invited to team with this role",
+    "fi": "Käyttäjä on jo kutsuttu joukkueeseen tällä roolilla"
+  },
+  "guardians_must_be_unique": {
+    "en": "Guardians must have unique email addresses",
+    "fi": "Huoltajilla sama sähköposti"
+  },
+  "guardian_cannot_be_the_same_as_the_guardian_of_email": {
+    "en": "Guardian cannot be the same as the guardian of this email address",
+    "fi": "Huoltaja ei voi olla sama kuin huoltaja tälle sähköpostille"
+  },
+  "internal_error": {
+    "en": "Something went wrong",
+    "fi": "Jotain meni vikaan"
+  },
 }

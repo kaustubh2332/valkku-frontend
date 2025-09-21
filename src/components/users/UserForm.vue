@@ -1,48 +1,17 @@
 <template>
   <v-form
     ref="form"
-    v-model="formValid"
+    v-model="formValidProxy"
     class="mt-4"
-    @keydown="handleKeydown"
   >
     <v-row>
-      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12" :md="6">
-        <v-text-field
-          v-model="localUser.firstName"
-          v-enterkeyhint="'next'"
-          autofocus
-          :density="$vuetify.display.mobile ? 'compact' : 'default'"
-          :hide-details="$vuetify.display.mobile ? 'auto' : false"
-          :label="$t('signUp.firstName')"
-          required
-          :rules="firstNameRules"
-          type="text"
-          validate-on="input"
-          variant="outlined"
-          @blur="touchedFields.firstName = true"
-        />
-      </v-col>
-      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12" :md="6">
-        <v-text-field
-          v-model="localUser.lastName"
-          :density="$vuetify.display.mobile ? 'compact' : 'default'"
-          enterkeyhint="next"
-          :hide-details="$vuetify.display.mobile ? 'auto' : false"
-          :label="$t('signUp.lastName')"
-          required
-          :rules="lastNameRules"
-          validate-on="input"
-          variant="outlined"
-          @blur="touchedFields.lastName = true"
-        />
-      </v-col>
       <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12">
         <v-text-field
           v-model="localUser.email"
+          autofocus
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
-          enterkeyhint="next"
           :hide-details="$vuetify.display.mobile ? 'auto' : false"
-          :label="$t('signUp.email')"
+          :label="$t('signUp.email') + ' *'"
           required
           :rules="emailRules"
           type="email"
@@ -51,108 +20,164 @@
           @blur="touchedFields.email = true"
         />
       </v-col>
-      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12" :md="6">
+      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
+        <v-text-field
+          v-model="localUser.firstName"
+          :density="$vuetify.display.mobile ? 'compact' : 'default'"
+          :hide-details="$vuetify.display.mobile ? 'auto' : false"
+          :hint="$t('userManagement.nameHint')"
+          :label="`${$t('signUp.firstName')} (${$t('optional')})`"
+          persistent-hint
+          variant="outlined"
+          @blur="touchedFields.firstName = true"
+        />
+      </v-col>
+      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
+        <v-text-field
+          v-model="localUser.lastName"
+          :density="$vuetify.display.mobile ? 'compact' : 'default'"
+          :hide-details="$vuetify.display.mobile ? 'auto' : false"
+          :label="`${$t('signUp.lastName')} (${$t('optional')})`"
+          variant="outlined"
+          @blur="touchedFields.lastName = true"
+        />
+      </v-col>
+      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" :cols="isGuardian ? 12 : 6">
         <v-select
           v-model="localUser.preferredLanguage"
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
-          enterkeyhint="next"
           :hide-details="$vuetify.display.mobile ? 'auto' : false"
           :items="languageOptions"
-          :label="$t('signUp.preferredLanguage')"
-          :menu-props="{ zIndex: 30000 }"
-          required
-          :rules="languageRules"
-          validate-on="input"
+          :label="$t('signUp.preferredLanguage') + ' *'"
+          :menu-props="{ zIndex: dropdownZIndex }"
           variant="outlined"
           @blur="touchedFields.preferredLanguage = true"
         />
       </v-col>
-      <v-col v-if="!guardian" :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12" :md="6">
+      <v-col v-if="!isGuardian" :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
         <v-select
           v-model="localUser.role"
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
           enterkeyhint="done"
           :hide-details="$vuetify.display.mobile ? 'auto' : false"
           :items="roleOptions"
-          :label="$t('userManagement.role')"
-          :menu-props="{ zIndex: 30000 }"
+          :label="$t('userManagement.role') + ' *'"
+          :menu-props="{ zIndex: dropdownZIndex }"
           required
           :rules="roleRules"
           validate-on="input"
           variant="outlined"
           @blur="touchedFields.role = true"
-        />
+        >
+          <template #selection="{ item }">
+            <div class="d-flex justify-space-between align-center w-100">
+              <span>{{ item.title }}</span>
+            </div>
+          </template>
+          <template #item="{ props, item }">
+            <v-list-item v-bind="props">
+              <template #title>
+                <div class="d-flex justify-space-between align-center w-100">
+                  <span>{{ item.title }}</span>
+                  <v-spacer />
+                  <v-hotkey v-if="!$vuetify.display.mobile" class="text-caption text-disabled" :keys="getRoleShortcut(item.value)" />
+                </div>
+              </template>
+            </v-list-item>
+          </template>
+        </v-select>
       </v-col>
     </v-row>
   </v-form>
 </template>
 
 <script lang="ts">
+  import { useUserStore } from '@/stores/user'
+
   export default {
     name: 'UserForm',
     props: {
       user: {
         type: Object,
-        required: true,
+        required: false,
         default: () => ({
+          email: '',
           firstName: '',
           lastName: '',
-          email: '',
           preferredLanguage: 'en',
           role: 'athlete'
         })
       },
-      guardian: {
+      formValid: {
+        type: Boolean,
+        default: false
+      },
+      dropdownZIndex: {
+        type: Number,
+        default: 30_000
+      },
+      isGuardian: {
+        type: Boolean,
+        default: false
+      },
+      isModal: {
         type: Boolean,
         default: false
       }
     },
     emits: ['update:user', 'update:formValid', 'keydown'],
+    setup() {
+      const userStore = useUserStore()
+      return { userStore }
+    },
     data() {
       return {
-        formValid: false,
+        isSyncingFromProp: false,
+        localUser: {
+          email: this.user?.email || '',
+          firstName: this.user?.firstName || '',
+          lastName: this.user?.lastName || '',
+          preferredLanguage: this.user?.preferredLanguage || 'en',
+          role: this.user?.role || 'athlete'
+        },
         touchedFields: {
+          email: false,
           firstName: false,
           lastName: false,
-          email: false,
           preferredLanguage: false,
           role: false
         }
       }
     },
     computed: {
-      localUser: {
+      formValidProxy: {
         get() {
-          return this.user
+          return this.formValid
         },
-        set(value) {
-          this.$emit('update:user', value)
+        set(value: boolean) {
+          this.$emit('update:formValid', value)
         }
       },
-      languageOptions() {
-        return [
-          { title: 'English', value: 'en' },
-          { title: 'Suomi', value: 'fi' }
-        ]
+      defaultPreferredLanguage() {
+        return this.userStore.user?.preferredLanguage || 'en'
+      },
+      isMac() {
+        return navigator.platform.toUpperCase().includes('MAC')
+      },
+      modifierKey() {
+        return this.isMac ? 'cmd' : 'ctrl'
       },
       roleOptions() {
         return [
           { title: this.$t('roles.admin'), value: 'admin' },
           { title: this.$t('roles.coach'), value: 'coach' },
-          { title: this.$t('roles.athlete'), value: 'athlete' },
-          { title: this.$t('roles.guardian'), value: 'guardian' },
+          { title: this.$t('roles.athlete'), value: 'athlete' }
         ]
       },
-      firstNameRules() {
+      languageOptions() {
         return [
-          (v: string) => !!v || this.$t('signUp.errors.firstName_required'),
-          (v: string) => !this.touchedFields.firstName || !v || v.length >= 2 || this.$t('signUp.errors.firstName_min_length')
-        ]
-      },
-      lastNameRules() {
-        return [
-          (v: string) => !!v || this.$t('signUp.errors.lastName_required'),
-          (v: string) => !this.touchedFields.lastName || !v || v.length >= 2 || this.$t('signUp.errors.lastName_min_length')
+          { title: 'English', value: 'en' },
+          { title: 'Suomi', value: 'fi' }
         ]
       },
       emailRules() {
@@ -161,44 +186,127 @@
           (v: string) => !this.touchedFields.email || !v || /.+@.+\..+/.test(v) || this.$t('signUp.errors.email_invalid')
         ]
       },
-      languageRules() {
-        return [
-          (v: string) => !!v || this.$t('signUp.errors.language_required')
-        ]
-      },
       roleRules() {
         return [
           (v: string) => !!v || this.$t('signUp.errors.role_required')
         ]
       }
     },
+    watch: {
+      user: {
+        deep: true,
+        immediate: true,
+        handler(newUser) {
+          if (!newUser) return
+          // Sync prop to local copy without emitting
+          this.isSyncingFromProp = true
+          this.localUser = {
+            email: newUser.email || '',
+            firstName: newUser.firstName || '',
+            lastName: newUser.lastName || '',
+            preferredLanguage: newUser.preferredLanguage || 'en',
+            role: newUser.role || 'athlete'
+          }
+          this.$nextTick(() => {
+            this.isSyncingFromProp = false
+          })
+        }
+      },
+      localUser: {
+        deep: true,
+        handler(newVal) {
+          if (this.isSyncingFromProp) return
+          this.$emit('update:user', { ...newVal })
+        }
+      }
+    },
+    mounted() {
+      // Set default preferred language if not already set or if it's the default 'en'
+      if (!this.localUser.preferredLanguage || this.localUser.preferredLanguage === 'en') {
+        this.localUser = {
+          ...this.localUser,
+          preferredLanguage: this.defaultPreferredLanguage
+        }
+      }
+
+      // Add document-level keydown listener for role shortcuts
+      document.addEventListener('keydown', this.handleKeydown)
+    },
+    beforeUnmount() {
+      // Remove document-level keydown listener
+      document.removeEventListener('keydown', this.handleKeydown)
+    },
     methods: {
       handleKeydown(event) {
-        this.$emit('keydown', event)
+        // Handle role shortcuts only for non-guardian forms
+        if (!this.isGuardian && (event.metaKey || event.ctrlKey)) {
+          const key = event.key.toLowerCase()
+          if (key === 'a') {
+            event.preventDefault()
+            event.stopPropagation()
+            this.selectRole('athlete')
+            return
+          }
+          if (key === 'c') {
+            event.preventDefault()
+            event.stopPropagation()
+            this.selectRole('coach')
+            return
+          }
+          if (key === 'm') {
+            event.preventDefault()
+            event.stopPropagation()
+            this.selectRole('admin')
+            return
+          }
+        }
+
+        // For guardian forms, emit the event so parent can handle it
+        if (this.isGuardian) {
+          this.$emit('keydown', event)
+        }
+      },
+      selectRole(role) {
+        if (!this.isGuardian) {
+          this.localUser = { ...this.localUser, role }
+        }
       },
       resetForm() {
         this.touchedFields = {
+          email: false,
           firstName: false,
           lastName: false,
-          email: false,
           preferredLanguage: false,
           role: false
         }
         this.$refs.form?.resetValidation()
       },
-      validate() {
-        return this.$refs.form?.validate()
+      async validate() {
+        // Mark fields as touched so rules that depend on it will run
+        this.touchedFields = {
+          email: true,
+          firstName: true,
+          lastName: true,
+          preferredLanguage: true,
+          role: true
+        }
+        await this.$nextTick()
+        const result = await this.$refs.form?.validate()
+        return typeof result === 'object' ? result?.valid : result
       },
       resetValidation() {
         this.$refs.form?.resetValidation()
       },
       getFormValid() {
         return this.formValid
-      }
-    },
-    watch: {
-      formValid(newVal) {
-        this.$emit('update:formValid', newVal)
+      },
+      getRoleShortcut(role) {
+        const shortcuts = {
+          athlete: `${this.modifierKey}+a`,
+          coach: `${this.modifierKey}+c`,
+          admin: `${this.modifierKey}+m`
+        }
+        return shortcuts[role] || ''
       }
     }
   }

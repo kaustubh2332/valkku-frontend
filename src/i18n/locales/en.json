@@ -20,7 +20,7 @@
     "createTeam": "New team",
     "noTeams": "No teams available",
     "selectTeam": "Select team",
-    "success": "Team changes"
+    "success": "Team changed"
   },
   "createTeam": {
     "description": "Give your teams name to get started!",
@@ -54,7 +54,11 @@
     "goodEvening": "Evening",
     "goodMorning": "Morning",
     "goodNight": "Evening",
+    "team": "Team",
     "welcome": "Welcome"
+  },
+  "join": {
+    "success": "Joined team"
   },
   "language": {
     "english": "English",
@@ -74,6 +78,7 @@
     "submit": "Sign In",
     "title": "Sign in"
   },
+  "optional": "optional",
   "roles": {
     "admin": "Admin",
     "athlete": "Athlete",
@@ -86,11 +91,13 @@
     "changePassword": "Change Password",
     "emojiClicked": "Emoji clicked {count} times",
     "language": "Language",
+    "language_updated": "Language updated",
     "profile": "Profile",
     "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard.",
     "title": "Settings",
     "version": "Version"
   },
+  "shortcuts": "Shortcuts",
   "sidebar": {
     "expand": "Expand",
     "home": "Home",
@@ -124,23 +131,42 @@
     "title": "Create Account"
   },
   "userManagement": {
+    "active": "Active",
     "addGuardian": "Add guardian",
     "addUser": "Add user",
+    "athletes": "Athletes",
     "createUserAndNew": "Invite & new",
     "createUserAndNewTooltip": "Shift + Enter",
+    "guardianEmail": "Guardian email",
+    "guardianDetails": "Guardian details",
     "guardians": "Guardians",
+    "inviteExpires": "Invite valid until",
     "inviteUser": "Invite user",
     "inviteUserDescription": "Invite user to team",
     "inviteUserSuccess": "User invited",
+    "invited": "Invited",
+    "invitedOn": "Invited",
+    "joinedOn": "Joined team",
+    "managers": "Managers",
+    "nameHint": "User adds their name if left blank",
+    "noAthletes": "No athletes found",
+    "noAthletesDescription": "There are no athletes in this team yet.",
     "noInvites": "No pending invites",
     "noInvitesDescription": "There are no pending invites for this team.",
+    "noManagers": "No managers found",
+    "noManagersDescription": "There are no managers in this team yet.",
     "noUsers": "No users found",
     "noUsersDescription": "There are no users in this team yet.",
     "pendingInvite": "Pending Invite",
     "pendingInvites": "Invites",
+    "removeInvite": "Remove invite",
+    "removeUser": "Remove user",
     "role": "Role",
+    "roleShortcuts": "",
+    "roles": "Roles",
     "teamMember": "Team Member",
     "teamMembers": "Members",
-    "title": "Users"
+    "title": "Users",
+    "userDetails": "User details"
   }
 }

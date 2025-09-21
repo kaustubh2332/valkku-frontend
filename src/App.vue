@@ -36,6 +36,11 @@
       }
     },
     mounted() {
+      // Auto-detect browser language if no token (user not logged in)
+      if (!this.userStore.token) {
+        this.detectAndSetLanguage()
+      }
+
       // Initialize user data on app mount
       this.userStore.fetchUser()
       this.userStore.startPeriodicFetch()
@@ -47,6 +52,22 @@
     methods: {
       openMobileSidebar() {
         this.$refs.sidebar.drawer = true
+      },
+      detectAndSetLanguage() {
+        // Get browser language
+        const browserLang = navigator.language || navigator.languages?.[0] || 'en'
+        const localStorageLang = window.localStorage.getItem('valkku:locale')
+
+        // Extract language code (e.g., 'fi' from 'fi-FI')
+        const langCode = browserLang.split('-')[0].toLowerCase()
+
+        // Set to English if not Finnish
+        const targetLocale = localStorageLang || (langCode === 'fi' ? 'fi' : 'en')
+
+        // Only change if different from current locale
+        if (this.$i18n.locale !== targetLocale) {
+          this.userStore.changeLocale(targetLocale)
+        }
       }
     }
   }
@@ -73,7 +94,7 @@
     position: absolute;
     right: 16px;
     top: calc(16px + env(safe-area-inset-top, 0px));
-    z-index: 1000;
+    z-index: 20000;
 }
 
 .mobile-bottom-spacing {

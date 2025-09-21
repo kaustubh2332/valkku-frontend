@@ -22,6 +22,8 @@
       >
         <v-text-field
           v-model="teamName"
+          autocomplete="off"
+          autofocus
           class="mb-6"
           :label="$t('createTeam.team_name')"
           required
@@ -84,7 +86,8 @@
           .then((response) => {
             this.userStore.setUser(response.data.data.user)
             this.userStore.setCurrentTeam(response.data.data.team.id)
-            this.userStore.setUser(response.data.data.user)
+            this.userStore.setCurrentRole(response.data.data.team.roles[0].role)
+            this.userStore.setToken(response.data.data.token)
             this.$router.push({
               path: '/',
               query: {

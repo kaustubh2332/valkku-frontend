@@ -68,7 +68,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 99999;
+  z-index: 60000;
   animation: fadeIn 0.3s ease-in-out;
 }
 

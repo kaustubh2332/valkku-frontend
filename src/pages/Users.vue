@@ -1,19 +1,48 @@
 <template>
   <div>
-    <div class="text-h4 my-4">
+    <div class="text-h4 mt-4 mb-8">
       {{ $t('userManagement.title') }}
     </div>
     <AppToolbar inline>
-      <ChooseTeamBtn
-        :block="$vuetify.display.mobile"
+      <!-- <ChooseTeamBtn
+        variant="text"
         @change="onTeamChange"
-      />
+      /> -->
+      <v-tabs
+        v-model="activeTab"
+        align-tabs="start"
+        color="primary"
+      >
+        <v-tab :value="0">
+          {{ $t('userManagement.managers') }}
+          <v-chip
+            v-if="!$vuetify.display.mobile"
+            class="ml-2"
+            color="primary"
+            size="x-small"
+          >
+            {{ managerUsers.length }}
+          </v-chip>
+        </v-tab>
+        <v-tab :value="1">
+          {{ $t('userManagement.athletes') }}
+          <v-chip
+            v-if="!$vuetify.display.mobile"
+            class="ml-2"
+            color="primary"
+            size="x-small"
+          >
+            {{ athleteUsers.length }}
+          </v-chip>
+        </v-tab>
+      </v-tabs>
       <template #append>
         <v-btn
           v-tooltip:bottom="!$vuetify.display.mobile ? $t('userManagement.addUser') : null"
           color="primary"
           fab
           small
+          variant="tonal"
           @click="inviteUserDialog = true"
         >
           <v-icon :class="{ 'mr-2': !$vuetify.display.mobile }">mdi-plus</v-icon>
@@ -23,38 +52,11 @@
     </AppToolbar>
 
     <!-- Tabs -->
-    <div class="mt-6">
-      <v-tabs
-        v-model="activeTab"
-        align-tabs="start"
-        color="primary"
-      >
-        <v-tab :value="0">
-          {{ $t('userManagement.teamMembers') }}
-          <v-chip
-            class="ml-2"
-            color="primary"
-            size="x-small"
-          >
-            {{ teamUsers.length }}
-          </v-chip>
-        </v-tab>
-        <v-tab :value="1">
-          {{ $t('userManagement.pendingInvites') }}
-          <v-chip
-            class="ml-2"
-            color="orange"
-            size="x-small"
-          >
-            {{ teamInvites.length }}
-          </v-chip>
-        </v-tab>
-      </v-tabs>
-
-      <v-window v-model="activeTab">
-        <!-- Team Members Tab -->
+    <div class="mt-4">
+      <v-window v-model="activeTab" :touch="false">
+        <!-- Managers Tab -->
         <v-window-item :value="0">
-          <!-- Loading Skeleton for Team Members -->
+          <!-- Loading Skeleton for Managers -->
           <LoadingWrapper
             v-if="isLoadingTeamUsers"
             class="mt-4"
@@ -88,12 +90,13 @@
             </v-card>
           </LoadingWrapper>
 
-          <!-- Team Members Content -->
-          <div v-else-if="teamUsers.length > 0" class="mt-4">
-            <UserCard
-              v-for="user in teamUsers"
-              :key="user.id"
-              :user="user"
+          <!-- Managers Content -->
+          <div v-else-if="managerUsers.length > 0" class="mt-4">
+            <UserTable
+              :show-guardians="false"
+              :team-users="teamUsers"
+              :users="managerUsers"
+              @row-click="handleUserCardClick"
             />
           </div>
           <div v-else class="mt-4">
@@ -104,24 +107,24 @@
                   color="grey-lighten-1"
                   size="64"
                 >
-                  mdi-account-group
+                  mdi-account-supervisor
                 </v-icon>
                 <div class="text-h6 text-medium-emphasis mb-2">
-                  {{ $t('userManagement.noUsers') }}
+                  {{ $t('userManagement.noManagers') }}
                 </div>
                 <div class="text-body-2 text-medium-emphasis">
-                  {{ $t('userManagement.noUsersDescription') }}
+                  {{ $t('userManagement.noManagersDescription') }}
                 </div>
               </v-card-text>
             </v-card>
           </div>
         </v-window-item>
 
-        <!-- Pending Invites Tab -->
+        <!-- Athletes Tab -->
         <v-window-item :value="1">
-          <!-- Loading Skeleton for Pending Invites -->
+          <!-- Loading Skeleton for Athletes -->
           <LoadingWrapper
-            v-if="isLoadingTeamInvites"
+            v-if="isLoadingTeamUsers"
             class="mt-4"
           >
             <v-card
@@ -153,13 +156,13 @@
             </v-card>
           </LoadingWrapper>
 
-          <!-- Pending Invites Content -->
-          <div v-else-if="teamInvites.length > 0" class="mt-4">
-            <UserCard
-              v-for="invite in teamInvites"
-              :key="invite.id"
-              :is-invite="true"
-              :user="invite"
+          <!-- Athletes Content -->
+          <div v-else-if="athleteUsers.length > 0" class="mt-4">
+            <UserTable
+              :show-guardians="true"
+              :team-users="teamUsers"
+              :users="athleteUsers"
+              @row-click="handleUserCardClick"
             />
           </div>
           <div v-else class="mt-4">
@@ -170,18 +173,19 @@
                   color="grey-lighten-1"
                   size="64"
                 >
-                  mdi-account-clock
+                  mdi-run
                 </v-icon>
                 <div class="text-h6 text-medium-emphasis mb-2">
-                  {{ $t('userManagement.noInvites') }}
+                  {{ $t('userManagement.noAthletes') }}
                 </div>
                 <div class="text-body-2 text-medium-emphasis">
-                  {{ $t('userManagement.noInvitesDescription') }}
+                  {{ $t('userManagement.noAthletesDescription') }}
                 </div>
               </v-card-text>
             </v-card>
           </div>
         </v-window-item>
+
       </v-window>
     </div>
   </div>
@@ -189,24 +193,34 @@
   <BottomSheetModal
     v-model="inviteUserDialog"
     height="95vh"
-    :title="$t('userManagement.inviteUser') + ' ' + userStore.currentTeam.teamName"
+    :title="$t('userManagement.inviteUser') + ' - ' + userStore.currentTeam.teamName"
   >
-    <InviteUser @user-invited="inviteUserDialog = false" />
+    <InviteUser :is-open="inviteUserDialog" @user-invited="handleUserInvited" />
+  </BottomSheetModal>
+
+  <BottomSheetModal
+    v-model="userDetailDialog"
+    height="95vh"
+    :title="$t('userManagement.userDetails')"
+    @update:model-value="closeUserDetail"
+  >
+    <UserDetailsCard
+      v-if="selectedUser"
+      :team-users="teamUsers"
+      :user="selectedUser"
+      @guardian-invited="handleGuardianInvited"
+      @remove-invite="handleRemoveInvite"
+      @remove-user="handleRemoveUser"
+    />
   </BottomSheetModal>
 </template>
 
 <script lang="ts">
-  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
-  import UserCard from '@/components/users/UserCard.vue'
   import { useTeamStore } from '@/stores/team'
   import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'UserManagement',
-    components: {
-      BottomSheetModal,
-      UserCard
-    },
     setup() {
       const userStore = useUserStore()
       return { userStore }
@@ -215,46 +229,165 @@
       return {
         teamStore: useTeamStore(),
         inviteUserDialog: false,
+        userDetailDialog: false,
+        userDetailDialogIsInvite: false,
+        selectedUser: null,
         activeTab: 0
       }
     },
     computed: {
       teamUsers() {
-        return this.sortUsersByRole(this.teamStore.teamUsers)
+        // Map roles to include status and compute invite/active state per user
+        const users = (this.teamStore.teamUsers || []).map(u => {
+          const roles = (u.roles || []).map(r => ({ ...r, status: r.status || 'active' }))
+          const hasActive = roles.some(r => r.status === 'active')
+          return {
+            ...u,
+            roles,
+            isInvite: !hasActive
+          }
+        })
+        return this.sortUsersByRole(users)
+      },
+      managerUsers() {
+        // Filter users who have manager roles (owner, admin, coach)
+        const managerRoles = new Set(['owner', 'admin', 'coach'])
+        return this.teamUsers.filter(user =>
+          user.roles.some(role => managerRoles.has(role.role))
+        )
+      },
+      athleteUsers() {
+        // Filter users who have athlete role
+        return this.teamUsers.filter(user =>
+          user.roles.some(role => role.role === 'athlete')
+        )
       },
       isLoadingTeamUsers() {
         return this.teamStore.loadingTeamUsers
       },
-      teamInvites() {
-        return this.sortUsersByRole(this.teamStore.teamInvites)
-      },
       isLoadingTeamInvites() {
-        return this.teamStore.loadingTeamInvites
+        return false
       }
     },
-    created() {
-      this.teamStore.fetchTeamUsers()
-      this.teamStore.fetchTeamInvites()
+    async created() {
+      await this.teamStore.fetchTeamUsers()
+
+      // Check if we have a userId in the route and open the modal
+      const userId = this.$route.params.userId
+      if (userId) {
+        this.openUserDetail(userId)
+      }
     },
     methods: {
-      onTeamChange() {
-        this.teamStore.fetchTeamUsers()
-        this.teamStore.fetchTeamInvites()
+      guardiansFor(user) {
+        const userId = user.userId || user.id
+        return this.teamUsers.filter(u => (u.roles || []).some(r => r.role === 'guardian' && r.guardianOf === userId))
+      },
+      guardiansPreview(user) {
+        return this.guardiansFor(user).slice(0, 3)
+      },
+      guardiansOverflowCount(user) {
+        const count = this.guardiansFor(user).length
+        return Math.max(0, count - 3)
+      },
+      isUserInvited(user) {
+        return (user.roles || []).some(r => r.status !== 'active')
+      },
+      async onTeamChange() {
+        await this.teamStore.fetchTeamUsers()
+        await this.teamStore.fetchTeamInvites()
+
+        // Check if we have a userId in the route and open the modal
+        const userId = this.$route.params.userId
+        if (userId) {
+          this.openUserDetail(userId)
+        }
+      },
+      openUserDetail(userId, isInvite) {
+        // Find user in team users or invites
+        const user = this.teamUsers.find(u => u.userId === userId || u.id === userId) ||
+          this.teamInvites.find(u => u.userId === userId || u.id === userId)
+
+        if (user) {
+          this.selectedUser = user
+          this.userDetailDialog = true
+          this.userDetailDialogIsInvite = isInvite
+        }
+      },
+      closeUserDetail() {
+        this.userDetailDialog = false
+        this.selectedUser = null
+        // Navigate back to /users only if we have a userId in the route
+        if (this.$route.params.userId) {
+          this.$router.push('/users')
+        }
+      },
+      handleUserCardClick(user, isInvite) {
+        console.log('invite', user)
+        // Just open the modal without navigation to avoid scroll issues
+        this.openUserDetail(user.userId || user.id, isInvite)
+      },
+      handleRemoveUser(user) {
+        // TODO: Implement remove user functionality
+        console.log('Remove user:', user)
+        this.closeUserDetail()
+      },
+      handleRemoveInvite(invite) {
+        // TODO: Implement remove invite functionality
+        console.log('Remove invite:', invite)
+        this.closeUserDetail()
+      },
+      async handleGuardianInvited() {
+        // Refresh team users to show the new guardian
+        await this.teamStore.fetchTeamUsers()
+      },
+      async handleUserInvited() {
+        await this.teamStore.fetchTeamUsers()
+        this.inviteUserDialog = false
       },
       sortUsersByRole(users) {
-        const roleOrder = ['owner', 'admin', 'athlete', 'guardian']
+        const roleOrder = ['owner', 'admin', 'coach', 'athlete']
+
+        // Determine primary role for sorting: highest priority role present
+        const getPrimaryRoleOrder = (user) => {
+          const roles = user.roles || []
+          for (const roleName of roleOrder) {
+            if (roles.some(r => r.role === roleName)) {
+              return roleOrder.indexOf(roleName)
+            }
+          }
+          return roleOrder.length
+        }
 
         return [...users].sort((a, b) => {
-          const aIndex = roleOrder.indexOf(a.role)
-          const bIndex = roleOrder.indexOf(b.role)
+          const aOrder = getPrimaryRoleOrder(a)
+          const bOrder = getPrimaryRoleOrder(b)
+          if (aOrder !== bOrder) return aOrder - bOrder
 
-          // If role not found in order, put it at the end
-          const aOrder = aIndex === -1 ? roleOrder.length : aIndex
-          const bOrder = bIndex === -1 ? roleOrder.length : bIndex
+          // Secondary sort: invited users after active within same role priority
+          const aInvited = a.isInvite ? 1 : 0
+          const bInvited = b.isInvite ? 1 : 0
+          if (aInvited !== bInvited) return aInvited - bInvited
 
-          return aOrder - bOrder
+          // Tertiary: name
+          const aName = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase()
+          const bName = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase()
+          return aName.localeCompare(bName)
         })
       }
     }
   }
 </script>
+
+<style>
+  .user-table thead th {
+    font-weight: 600;
+    color: rgba(0,0,0,0.7);
+  }
+  .user-table .table-row {
+    cursor: pointer;
+  }
+  .user-table .table-row:hover {
+    background: rgba(0,0,0,0.02);
+  }
+</style>

@@ -3,7 +3,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 // Import your page components
 import Home from '@/pages/Home.vue'
 import Settings from '@/pages/Settings.vue'
-import SignIn from '@/pages/Signin.vue'
+import SignIn from '@/pages/SignIn.vue'
 import Users from '@/pages/Users.vue'
 
 import { useUserStore } from '@/stores/user'
@@ -21,16 +21,23 @@ const routes = [
     name: 'SignIn',
     meta: {
       hideSidebar: true,
-      allowWithoutAuth: true
+      allowWithoutAuth: true,
+      disallowWithAuth: true
     },
     component: SignIn
+  },
+  {
+    path: '/join',
+    name: 'Join',
+    component: () => import('@/pages/Join.vue')
   },
   {
     path: '/signup',
     name: 'SignUp',
     meta: {
       hideSidebar: true,
-      allowWithoutAuth: true
+      allowWithoutAuth: true,
+      disallowWithAuth: true
     },
     component: () => import('@/pages/SignUp.vue')
   },
@@ -54,6 +61,11 @@ const routes = [
   {
     path: '/users',
     name: 'Users',
+    component: Users
+  },
+  {
+    path: '/users/:userId',
+    name: 'UserDetail',
     component: Users
   },
   {
@@ -85,6 +97,11 @@ function beforeEachGuard(to, from, next) {
     return
   }
 
+  if(token && to.meta.disallowWithAuth) {
+    next('/')
+    return
+  }
+
   if(token && !user && to.path !== '/callback') {
     next({
       path: '/callback',
@@ -104,8 +121,6 @@ function beforeEachGuard(to, from, next) {
     next('/create-team')
     return
   }
-
-  // TODO: (LATER) IF NO TEAMS ASK FOR CODE
 
   next()
 }

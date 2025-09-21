@@ -1,5 +1,6 @@
 // src/lib/api.js
 import axios from 'axios'
+import router from '@/router'
 import { useUserStore } from '@/stores/user'
 
 const api = axios.create({
@@ -11,8 +12,14 @@ const api = axios.create({
 
 // ---- single-flight refresh ----
 let refreshPromise = null
+let refreshRetryCount = 0
+const MAX_REFRESH_RETRIES = 3
+
 function isAuthEndpoint(url = '') {
   return url.includes('/auth/refresh') || url.includes('/auth/login') || url.includes('/auth/signup') || url.includes('/auth/logout')
+}
+function isAutoFetchUserEndpoint(url = '') {
+  return url.includes('/user/me?periodic=true')
 }
 function tokenLikelyExpired(error) {
   console.log('Error:', error)
@@ -27,26 +34,32 @@ async function refreshAccessToken() {
     refreshPromise = api
       .post('/auth/refresh') // cookie sent automatically
       .then((res) => {
+        console.log('Refresh response:', res)
         const newToken = res?.data?.token
         if (!newToken) {
           throw new Error('No access token in refresh response')
         }
-        if (userStore.setToken) {
-          userStore.setToken(newToken)
-        } else {
-          userStore.token = newToken
-        }
+
+        userStore.setToken(newToken)
+        refreshRetryCount = 0 // Reset retry count on success
         return newToken
       })
       .catch((error) => {
-        // clear auth state on refresh failure
-        if (userStore.clearUser) {
-          userStore.clearUser()
-        }
-        if (userStore.setToken) {
-          userStore.setToken(null)
-        } else {
-          userStore.token = null
+        refreshRetryCount++
+        console.log(`Refresh attempt ${refreshRetryCount} failed:`, error)
+
+        if (refreshRetryCount >= MAX_REFRESH_RETRIES) {
+          // clear auth state on final refresh failure
+          console.log('Max refresh retries reached, clearing auth state')
+          if (userStore.clearUser) {
+            userStore.clearUser()
+          }
+          if (userStore.setToken) {
+            userStore.setToken(null)
+          } else {
+            userStore.token = null
+          }
+          refreshRetryCount = 0 // Reset for next session
         }
         throw error
       })
@@ -65,17 +78,10 @@ api.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  // custom header
-  const currentTeamId = userStore.currentTeamId
-  if (currentTeamId) {
-    config.headers = config.headers || {}
-    config.headers['x-current-team-id'] = currentTeamId
-  }
-
   return config
 })
 
-// ---- response interceptor (auto-refresh + retry once) ----
+// ---- response interceptor (auto-refresh + retry up to 3 times) ----
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -88,31 +94,42 @@ api.interceptors.response.use(
     console.log('URL:', url)
     console.log('Is auth endpoint:', isAuthEndpoint(url))
     console.log('Token likely expired:', tokenLikelyExpired(error))
+    console.log('Is auto fetch user endpoint:', isAutoFetchUserEndpoint(url))
 
-    // Only attempt refresh on token-expired 401s, not on auth endpoints, and only once
+    if(isAutoFetchUserEndpoint(url)) {
+      return
+    }
+
+    // Only attempt refresh on token-expired 401s, not on auth endpoints
     if (
       status === 401 &&
-      !original._retry &&
       !isAuthEndpoint(url) &&
       tokenLikelyExpired(error)
     ) {
-      console.log('Refreshing access token')
-      original._retry = true
-      try {
-        const newToken = await refreshAccessToken()
-        original.headers = original.headers || {}
-        original.headers.Authorization = `Bearer ${newToken}`
-        return api.request(original)
-      } catch (error) {
-        console.error('Error refreshing access token:', error)
-        // fall through to redirect below
+      // Check if we've already tried refreshing for this request
+      if (original._refreshAttempted) {
+        console.log('Refresh already attempted for this request')
+      } else {
+        console.log('Attempting to refresh access token')
+        original._refreshAttempted = true
+
+        try {
+          const newToken = await refreshAccessToken()
+          original.headers = original.headers || {}
+          original.headers.Authorization = `Bearer ${newToken}`
+          return api.request(original)
+        } catch (refreshError) {
+          console.error('Error refreshing access token:', refreshError)
+          // If refresh failed and we've reached max retries, the user will be logged out
+          // by the refreshAccessToken function, so we can proceed to redirect
+        }
       }
     }
 
     // Central handling
     if (status === 401) {
       if (!location.pathname.includes('/callback') && !location.pathname.includes('/signin') && !location.pathname.includes('/signup')) {
-        location.href = '/#/signin'
+        router.push('/signin')
       }
     } else if (status === 403) {
       console.error('Access forbidden')
@@ -129,7 +146,3 @@ api.interceptors.response.use(
 )
 
 export default api
-
-export function setupAxiosAuth() {
-  // Interceptors are attached by importing this module.
-}

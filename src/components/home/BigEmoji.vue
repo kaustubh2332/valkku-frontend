@@ -163,7 +163,7 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 9_999_999;
+  z-index: 60000;
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, width 0.3s ease-in-out;
 
   /* Custom styling */

@@ -125,7 +125,7 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 99999;
+  z-index: 60000;
   pointer-events: none;
   isolation: isolate;
 }
@@ -133,33 +133,33 @@
 .notification-container :deep(.v-snackbar) {
   pointer-events: auto;
   margin-bottom: 10px;
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 .notification-container :deep(.v-snackbar__wrapper) {
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 .notification-container :deep(.v-overlay) {
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 .notification-container :deep(.v-overlay__content) {
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 /* Ensure all notification elements are above everything */
 .notification-container :deep(*) {
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 /* Global override for any Vuetify snackbar z-index */
 :global(.v-snackbar) {
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 :global(.v-snackbar__wrapper) {
-  z-index: 99999 !important;
+  z-index: 60000 !important;
 }
 
 /* Mobile notification styles */

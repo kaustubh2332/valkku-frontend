@@ -9,7 +9,7 @@ const messages = {
 
 const i18n = createI18n({
   legacy: false, // Use Composition API
-  locale: localStorage.getItem('locale') || 'en', // Default locale or saved locale
+  locale: localStorage.getItem('valkku:locale') || 'en', // Default locale or saved locale
   fallbackLocale: 'en', // Fallback locale
   messages
 })

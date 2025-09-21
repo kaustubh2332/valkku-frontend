@@ -96,7 +96,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 20050;
   padding-bottom: 0px; /* Fallback for devices without safe-area-inset support */
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

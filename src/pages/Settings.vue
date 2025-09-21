@@ -5,15 +5,16 @@
 
   <!-- Language Settings -->
   <v-card
-    class="mb-4"
+    flat
   >
     <v-card-text class="pa-6">
       <div class="text-h6 mb-4">
-        <v-icon class="me-2" color="primary">mdi-translate</v-icon>
+        <v-icon class="me-2">mdi-translate</v-icon>
         {{ $t('settings.language') }}
       </div>
       <v-radio-group
         v-model="selectedLanguage"
+        hide-details
         @update:model-value="setLocale"
       >
         <v-radio
@@ -27,21 +28,22 @@
       </v-radio-group>
     </v-card-text>
   </v-card>
-
+  <v-divider />
   <!-- Account Settings -->
   <v-card
     class="mb-4"
+    flat
   >
     <v-card-text class="pa-6">
       <div class="text-h6 mb-4">
-        <v-icon class="me-2" color="primary">mdi-account-cog</v-icon>
+        <v-icon class="me-2">mdi-account-cog-outline</v-icon>
         {{ $t('settings.account') }}
       </div>
       <v-btn
         :loading="loadingPwChangeUri"
         @click="changePassword"
       >
-        <v-icon class="me-2" color="primary">mdi-key</v-icon>
+        <v-icon class="me-2">mdi-key</v-icon>
         {{ $t('settings.changePassword') }}
       </v-btn>
       <br>
@@ -49,7 +51,7 @@
         class="mt-4"
         @click="startLogout"
       >
-        <v-icon class="me-2" color="primary">mdi-logout</v-icon>
+        <v-icon class="me-2">mdi-logout</v-icon>
         {{ $t('app.logout') }}
       </v-btn>
     </v-card-text>
@@ -62,14 +64,15 @@
 </template>
 
 <script lang="ts">
+  import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
-
   export default {
     name: 'Settings',
     data() {
       return {
         userStore: useUserStore(),
+        notificationStore: useNotificationStore(),
         selectedLanguage: this.$i18n.locale,
         loadingPwChangeUri: false
       }
@@ -86,9 +89,13 @@
       }
     },
     methods: {
-      setLocale(locale: string) {
-        this.$i18n.locale = locale
-        localStorage.setItem('locale', locale)
+      async setLocale(locale: string) {
+        const result = await this.userStore.changeLocale(locale)
+        if (result.success) {
+          this.notificationStore.success(this.$t('settings.language_updated'))
+        } else {
+          this.notificationStore.handleBackendError(result.error)
+        }
       },
       startLogout() {
         this.userStore.logout()

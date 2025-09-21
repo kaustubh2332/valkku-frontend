@@ -32,7 +32,7 @@
         <template #activator="{ props }">
           <v-list-item
             v-bind="props"
-            :active="$route.name === item.name"
+            :active="item.path === '/' ? $route.path === '/' : $route.path.startsWith(item.path)"
             color="primary"
             :prepend-icon="item.icon"
             :title="item.title"
@@ -97,16 +97,19 @@
         return [
           {
             name: 'Home',
+            path: '/',
             icon: 'mdi-home',
             title: this.$t('sidebar.home')
           },
           {
             name: 'Users',
+            path: '/users',
             icon: 'mdi-account-group',
             title: this.$t('sidebar.userManagement')
           },
           {
             name: 'Settings',
+            path: '/settings',
             icon: 'mdi-cog',
             title: this.$t('sidebar.settings')
           },

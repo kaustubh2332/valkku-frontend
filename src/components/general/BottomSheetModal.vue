@@ -8,6 +8,8 @@
         'modal-overlay--closing': isClosing,
         'modal-overlay--nested': nested
       }"
+      :data-modal-id="modalId"
+      :style="{ zIndex: modalZIndex, '--dropdown-z-index': dropdownZIndex }"
       @click="handleOverlayClick"
     >
       <div
@@ -25,6 +27,7 @@
           }"
           :style="{
             height: height,
+            zIndex: contentZIndex,
             ...(isDragging || translateY !== 0 ? { transform: `translateY(${translateY}px)` } : {})
           }"
         >
@@ -50,6 +53,7 @@
               class="close-button-mobile"
               icon="mdi-close"
               size="small"
+              :style="{ zIndex: closeButtonZIndex }"
               variant="text"
               @click.stop="close"
               @touchend.stop
@@ -77,19 +81,38 @@
           max-height="90vh"
           max-width="100vw"
           min-width="800"
-          style="width: 90% !important;"
+          :style="{ width: '90% !important', zIndex: contentZIndex }"
           width="90%"
         >
-          <v-card-title class="d-flex align-center justify-space-between">
+          <!-- Desktop title -->
+          <v-card-title v-if="title" class="desktop-title">
             <slot name="title">
               <span>{{ title }}</span>
             </slot>
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              @click="close"
-            />
           </v-card-title>
+
+          <!-- Fixed close button -->
+          <v-tooltip v-if="!$vuetify.display.mobile" location="bottom" :z-index="dropdownZIndex">
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                class="desktop-close-button"
+                icon="mdi-close"
+                variant="text"
+                @click="close"
+              />
+            </template>
+            <div class="d-flex align-center">
+              <v-hotkey :keys="'esc'" />
+            </div>
+          </v-tooltip>
+          <v-btn
+            v-else
+            class="desktop-close-button"
+            icon="mdi-close"
+            variant="text"
+            @click="close"
+          />
 
           <v-card-text class="desktop-modal-content">
             <slot />
@@ -123,6 +146,10 @@
       nested: {
         type: Boolean,
         default: false
+      },
+      nestingLevel: {
+        type: Number,
+        default: 0
       }
     },
     emits: ['update:modelValue', 'close'],
@@ -139,10 +166,25 @@
         isAnimating: false,
         contentStartY: null,
         contentDragStarted: false,
-        isClosing: false
+        isClosing: false,
+        modalId: Math.random().toString(36).slice(2, 11)
       }
     },
     computed: {
+      modalZIndex() {
+        const baseZIndex = 25_000
+        const nestingIncrement = 10_000
+        return baseZIndex + (this.nestingLevel * nestingIncrement)
+      },
+      contentZIndex() {
+        return this.modalZIndex + 1
+      },
+      closeButtonZIndex() {
+        return this.modalZIndex + 10
+      },
+      dropdownZIndex() {
+        return this.modalZIndex + 1000
+      },
       isOpen: {
         get() {
           return this.modelValue
@@ -159,11 +201,16 @@
             this.setupMobileModal()
           })
           this.preventBodyScroll()
+          this.registerEscapeHandler()
         } else {
           this.resetPosition()
           this.restoreBodyScroll()
+          this.unregisterEscapeHandler()
         }
       }
+    },
+    beforeUnmount() {
+      this.unregisterEscapeHandler()
     },
     methods: {
       setupMobileModal() {
@@ -211,17 +258,13 @@
 
       handleTouchStart(event) {
         if (!this.$vuetify.display.mobile) return
-        console.log('touch start')
 
         this.isDragging = true
         this.startY = event.touches[0].clientY
-        console.log('startY', this.startY)
         this.lastTouchY = this.startY
-        console.log('lastTouchY', this.lastTouchY)
 
         // We don't need initialTranslateY since we're just tracking delta from start
         this.initialTranslateY = 0
-        console.log('initialTranslateY:', this.initialTranslateY)
 
         this.touchStartTime = Date.now()
 
@@ -237,9 +280,7 @@
         event.stopPropagation()
 
         const currentY = event.touches[0].clientY
-        console.log('currentY:', currentY)
         const deltaY = currentY - this.startY
-        console.log('deltaY:', deltaY)
 
         // translateY should be the delta from the starting position
         this.translateY = deltaY
@@ -255,18 +296,12 @@
         const endY = event.changedTouches[0].clientY
         const actualDragDistance = endY - this.startY
 
-        console.log('Touch end - startY:', this.startY, 'endY:', endY, 'dragDistance:', actualDragDistance)
-
         const threshold = window.innerHeight * 0.2 // 20% of screen height
         const touchDuration = Date.now() - this.touchStartTime
         const velocity = actualDragDistance / touchDuration
 
-        console.log('Threshold:', threshold, 'Velocity:', velocity)
-
         // Only close if we've actually dragged down significantly
         const shouldClose = actualDragDistance > threshold || velocity > 0.5
-
-        console.log('Should close:', shouldClose)
 
         if (shouldClose) {
           // Continue the drag motion smoothly to the bottom
@@ -340,21 +375,34 @@
       },
 
       preventBodyScroll() {
-        // Prevent body scroll when modal is open
+        // Prevent body scroll when modal is open; support nested modals
+        const lockCount = Number.parseInt(document.body.getAttribute('data-scroll-lock') || '0') + 1
+        document.body.setAttribute('data-scroll-lock', String(lockCount))
+        if (lockCount > 1) return
+
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0
+        document.body.setAttribute('data-scroll-y', String(scrollY))
         document.body.style.overflow = 'hidden'
         document.body.style.position = 'fixed'
         document.body.style.width = '100%'
-        document.body.style.top = `-${window.scrollY}px`
+        document.body.style.top = `-${scrollY}px`
       },
 
       restoreBodyScroll() {
-        // Restore body scroll when modal is closed
-        const scrollY = document.body.style.top
+        // Restore body scroll when modal is closed; support nested modals
+        const lockCount = Math.max(0, Number.parseInt(document.body.getAttribute('data-scroll-lock') || '0') - 1)
+        document.body.setAttribute('data-scroll-lock', String(lockCount))
+        if (lockCount > 0) return
+
+        const scrollYAttr = document.body.getAttribute('data-scroll-y')
+        const scrollY = Number.parseInt(scrollYAttr || '0')
         document.body.style.overflow = ''
         document.body.style.position = ''
         document.body.style.width = ''
         document.body.style.top = ''
-        window.scrollTo(0, Number.parseInt(scrollY || '0') * -1)
+        // Restore after styles are cleared
+        window.scrollTo(0, scrollY)
+        document.body.removeAttribute('data-scroll-y')
       },
 
       handleContentTouchStart(event) {
@@ -413,7 +461,101 @@
         if (event.target === event.currentTarget) {
           this.close()
         }
-      }
+      },
+
+      setupGlobalEscapeListener() {
+        if (!(window as any).modalGlobalEscapeHandler) {
+          (window as any).modalGlobalEscapeHandler = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return
+
+            // Prevent rapid repeat from closing multiple modals
+            if ((window as any).modalEscLocked) {
+              event.preventDefault()
+              event.stopPropagation()
+              return
+            }
+
+            const overlays = Array.from(document.querySelectorAll('.modal-overlay')) as HTMLElement[]
+            if (overlays.length === 0) return
+
+            // Find overlay with highest z-index
+            let topOverlay: HTMLElement | null = null
+            let maxZ = -Infinity
+            for (const el of overlays) {
+              const z = Number.parseInt(window.getComputedStyle(el).zIndex || '0') || 0
+              if (z >= maxZ) {
+                maxZ = z
+                topOverlay = el
+              }
+            }
+
+            if (!topOverlay) return
+            const modalId = (topOverlay as any).dataset && (topOverlay as any).dataset.modalId
+            const registry = (window as any).openModalsRegistry || {}
+            const instance = modalId ? registry[modalId] : null
+            if (instance && instance.isOpen) {
+              ;(window as any).modalEscLocked = true
+              setTimeout(() => { (window as any).modalEscLocked = false }, 300)
+              event.preventDefault()
+              event.stopPropagation()
+              instance.close()
+            }
+          }
+          document.addEventListener('keydown', (window as any).modalGlobalEscapeHandler)
+        }
+      },
+
+      cleanupGlobalEscapeListener() {
+        if ((window as any).openModalsRegistry) {
+          const ids = Object.keys((window as any).openModalsRegistry)
+          if (ids.length === 0 && (window as any).modalGlobalEscapeHandler) {
+            document.removeEventListener('keydown', (window as any).modalGlobalEscapeHandler)
+            ;(window as any).modalGlobalEscapeHandler = null
+          }
+        }
+      },
+
+      registerEscapeHandler() {
+        if (!(window as any).openModalsRegistry) {
+          (window as any).openModalsRegistry = {}
+        }
+        ;(window as any).openModalsRegistry[this.modalId] = this
+        this.setupGlobalEscapeListener()
+      },
+
+      unregisterEscapeHandler() {
+        if ((window as any).openModalsRegistry) {
+          delete (window as any).openModalsRegistry[this.modalId]
+        }
+        this.cleanupGlobalEscapeListener()
+      },
+
+      isTopmostModal() {
+        // Get all modal overlays
+        const allModals = document.querySelectorAll('.modal-overlay')
+        if (allModals.length === 0) return true
+        if (allModals.length === 1) return true
+
+        // Get this modal's overlay
+        const thisModalOverlay = this.$el && this.$el.closest ? this.$el.closest('.modal-overlay') : null
+        if (!thisModalOverlay) return false
+
+        // Get this modal's z-index
+        const thisZIndex = Number.parseInt(window.getComputedStyle(thisModalOverlay).zIndex) || 0
+
+        // Check if any other modal has a higher z-index
+        for (const modal of Array.from(allModals)) {
+          if (modal === thisModalOverlay) continue
+
+          const modalZIndex = Number.parseInt(window.getComputedStyle(modal).zIndex) || 0
+          if (modalZIndex > thisZIndex) {
+            return false
+          }
+        }
+
+        return true
+      },
+
     }
   }
 </script>
@@ -425,7 +567,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,7 +576,6 @@
 
 .modal-overlay--nested {
   background-color: transparent;
-  z-index: 40000;
 }
 
 .modal-overlay--mobile {
@@ -467,7 +607,6 @@
   background: white;
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 10001;
   will-change: transform;
   transform: translateY(100%);
   transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -475,7 +614,7 @@
 }
 
 .modal-overlay--nested .bottom-sheet-mobile {
-  z-index: 40001;
+  z-index: 30_001;
 }
 
 .bottom-sheet-mobile--open {
@@ -529,13 +668,9 @@
   opacity: 0.7;
   transition: opacity 0.2s ease;
   touch-action: manipulation;
-  z-index: 10;
   pointer-events: auto;
 }
 
-.modal-overlay--nested .close-button-mobile {
-  z-index: 40010;
-}
 
 .close-button-mobile:hover {
   opacity: 1;
@@ -568,17 +703,31 @@
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   margin: 0 auto;
-  z-index: 10001;
+  position: relative;
 }
 
-.modal-overlay--nested .bottom-sheet-desktop {
-  z-index: 40001;
+.desktop-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+.desktop-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .desktop-modal-content {
-  max-height: calc(90vh - 120px); /* Subtract space for title and padding */
+  max-height: 90vh;
   overflow-y: auto;
   overflow-x: visible;
+  padding-top: 16px;
 }
 
 /* Custom scrollbar for desktop modal content */
@@ -640,13 +789,13 @@
   overflow: visible !important;
 }
 
-/* Nested modal v-select dropdowns need higher z-index */
-.modal-overlay--nested :deep(.v-select .v-list) {
-  z-index: 40002 !important;
+/* Dynamic z-index for v-select dropdowns based on nesting level */
+:deep(.v-select .v-list) {
+  z-index: var(--dropdown-z-index) !important;
 }
 
-.modal-overlay--nested :deep(.v-select .v-overlay) {
-  z-index: 40002 !important;
+:deep(.v-select .v-overlay) {
+  z-index: var(--dropdown-z-index) !important;
 }
 
 
@@ -661,5 +810,31 @@
 
 :deep(.v-dialog .v-overlay__content > .v-card) {
   margin: 0;
+}
+
+/* Ensure dropdowns appear above modal content */
+:deep(.v-menu .v-overlay__content) {
+  z-index: 30000 !important;
+}
+
+:deep(.v-select .v-field__overlay) {
+  z-index: 30000 !important;
+}
+
+:deep(.v-list) {
+  z-index: 30000 !important;
+}
+
+/* Additional Vuetify dropdown overrides */
+:deep(.v-overlay) {
+  z-index: 30000 !important;
+}
+
+:deep(.v-overlay__content) {
+  z-index: 30000 !important;
+}
+
+:deep(.v-menu__content) {
+  z-index: 30000 !important;
 }
 </style>

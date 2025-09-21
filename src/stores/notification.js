@@ -78,11 +78,6 @@ export const useNotificationStore = defineStore('notification', {
     },
 
     handleBackendError(err, options = {}) {
-      console.log('handleBackendError', err.response.code)
-      console.log('handleBackendError', err.response.data)
-      // err.response.data.messageCode
-      // Get current language from i18n instance
-
       const currentLanguage = i18n.global.locale.value || 'en'
 
       // Extract messageCode from error

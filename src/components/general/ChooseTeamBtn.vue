@@ -1,69 +1,81 @@
 <template>
-  <v-menu
-    :style="{ maxWidth: 'min(600px, 90vw)' }"
-  >
-    <template #activator="{ props }">
-      <v-btn
-        v-tooltip:right="isMobile ? null : $t('chooseTeam.selectTeam')"
-        v-bind="props"
-        :block="block"
-        :disabled="!hasTeams"
-      >
-        <v-icon start>mdi-account-group</v-icon>
-        {{ truncatedCurrentTeamName || $t('chooseTeam.selectTeam') }}
-        <v-icon end>mdi-chevron-down</v-icon>
-      </v-btn>
-    </template>
-
-    <v-list
-      class="team-menu-list"
-      :style="{ maxWidth: 'min(600px, 90vw)' }"
+  <div :class="$attrs.class">
+    <v-menu
+      :style="{ maxWidth: 'min(800px, 95vw)' }"
     >
-      <v-list-item
-        v-for="team in teams"
-        :key="team.id"
-        :active="team.id === currentTeamId"
-        :value="team.id"
-        @click="selectTeam(team)"
-      >
-        <div class="d-flex align-center justify-space-between">
-          {{ truncateTeamName(team.teamName) }}
-          <RoleChip
-            icon
-            :role="team.role"
+      <template #activator="{ props }">
+        <v-btn
+          v-tooltip:right="isMobile ? null : $t('chooseTeam.selectTeam')"
+          v-bind="props"
+          :block="block"
+          :color="color"
+          :disabled="!hasTeams"
+          rowed
+          :variant="variant as any"
+        >
+          <TeamRoleDisplay
+            v-if="currentTeamName && currentRole"
+            :role-name="currentRole.role"
+            rowed
+            :team-name="truncatedCurrentTeamName || $t('chooseTeam.selectTeam')"
           />
-        </div>
-      </v-list-item>
+          <v-icon end>mdi-chevron-down</v-icon>
+        </v-btn>
+      </template>
 
-      <v-list-item
-        v-if="!hasTeams"
-        disabled
+      <v-list
+        class="team-menu-list"
+        :style="{ maxWidth: 'min(800px, 95vw)' }"
       >
-        <v-list-item-title>{{ $t('chooseTeam.noTeams') }}</v-list-item-title>
-      </v-list-item>
-
-      <v-divider v-if="hasTeams && main" />
-
-      <v-list-item
-        v-if="main"
-        @click="createTeam"
-      >
-        <template #prepend>
-          <v-icon>mdi-plus</v-icon>
+        <template v-for="team in teams" :key="team.teamId">
+          <v-list-item
+            v-for="role in team.roles"
+            :key="`${team.teamId}-${role.role}`"
+            :active="team.teamId === currentTeamId && role.role === currentRoleId"
+            class="px-1"
+            :value="`${team.teamId}-${role.role}`"
+            @click="selectTeamAndRole(team, role)"
+          >
+            <div class="d-flex align-center justify-space-between w-100">
+              <TeamRoleDisplay
+                class="flex-shrink-0 ml-2 mt-0"
+                :role-name="role.role"
+                :team-name="team.teamName"
+              />
+            </div>
+          </v-list-item>
         </template>
-        <v-list-item-title>{{ $t('chooseTeam.createTeam') }}</v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-menu>
 
-  <BottomSheetModal
-    v-model="createTeamDialog"
-    height="90vh"
-  >
-    <CreateTeam
-      @close="createTeamDialog = false"
-    />
-  </BottomSheetModal>
+        <v-list-item
+          v-if="!hasTeams"
+          disabled
+        >
+          <v-list-item-title>{{ $t('chooseTeam.noTeams') }}</v-list-item-title>
+        </v-list-item>
+
+        <v-divider v-if="hasTeams && main" />
+
+        <v-list-item
+          v-if="main"
+          @click="createTeam"
+        >
+          <template #prepend>
+            <v-icon>mdi-plus</v-icon>
+          </template>
+          <v-list-item-title>{{ $t('chooseTeam.createTeam') }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+
+    <BottomSheetModal
+      v-model="createTeamDialog"
+      height="90vh"
+    >
+      <CreateTeam
+        @close="createTeamDialog = false"
+      />
+    </BottomSheetModal>
+  </div>
 </template>
 
 <script lang="ts">
@@ -75,7 +87,8 @@
   export default {
     name: 'ChooseTeamBtn',
     components: {
-      CreateTeam
+      CreateTeam,
+      TeamRoleDisplay: () => import('./TeamRoleDisplay.vue')
     },
     props: {
       main: {
@@ -85,6 +98,14 @@
       block: {
         type: Boolean,
         default: false
+      },
+      variant: {
+        type: String,
+        default: 'elevated'
+      },
+      color: {
+        type: String,
+        default: ''
       }
     },
     emits: ['change'],
@@ -107,13 +128,20 @@
       teams() {
         return this.user?.teams || []
       },
+      currentTeam() {
+        return this.userStore.currentTeam
+      },
       currentTeamId() {
         return this.userStore.currentTeamId
       },
+      currentRoleId() {
+        return this.userStore.currentRoleId
+      },
       currentTeamName() {
-        if (!this.currentTeamId || this.teams.length === 0) return null
-        const currentTeam = this.teams.find(team => team.teamId === this.currentTeamId)
-        return currentTeam?.teamName || null
+        return this.currentTeam?.teamName || null
+      },
+      currentRole() {
+        return this.userStore.currentRole
       },
       hasTeams() {
         return this.teams.length > 0
@@ -131,18 +159,18 @@
         if (!name) return ''
         return name.length > 17 ? name.slice(0, 17) + '...' : name
       },
-      async selectTeam(team) {
-        if (team.id === this.currentTeamId) return
+      async selectTeamAndRole(team, role) {
+        if (team.teamId === this.currentTeamId && role.role === this.currentRoleId) return
 
         try {
-          // Update user store with new current team
-          this.userStore.setCurrentTeam(team.teamId)
+          // Update user store with new current team and role
+          this.userStore.setCurrentTeamAndRole(team.teamId, role.role)
           if(this.main) {
-            this.info(`${this.$t('chooseTeam.success')}: ${team.teamName}`)
+            this.info(`${this.$t('chooseTeam.success')}: ${team.teamName} (${this.$t(`roles.${role.role}`)})`)
           }
 
           this.$nextTick(() => {
-            this.$emit('change', team)
+            this.$emit('change', { team, role })
             if(this.main) {
               this.$router.push({
                 path: '/',
@@ -151,7 +179,7 @@
             }
           })
         } catch (error) {
-          console.error('Error switching team:', error)
+          console.error('Error switching team and role:', error)
           // TODO: Show error message to user
         }
       },
@@ -165,6 +193,6 @@
 <style scoped>
 .team-menu-list {
   width: 100% !important;
-  max-width: min(600px, 90vw) !important;
+  max-width: min(800px, 95vw) !important;
 }
 </style>

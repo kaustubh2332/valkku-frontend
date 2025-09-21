@@ -54,7 +54,11 @@
     "goodEvening": "Iltaa",
     "goodMorning": "Huomenta",
     "goodNight": "Iltaa",
+    "team": "Joukkue",
     "welcome": "Tervetuloa"
+  },
+  "join": {
+    "success": "Liitytty joukkueeseen"
   },
   "language": {
     "english": "English",
@@ -74,6 +78,7 @@
     "submit": "Kirjaudu sisään",
     "title": "Kirjaudu"
   },
+  "optional": "valinnainen",
   "roles": {
     "admin": "Admin",
     "athlete": "Urheilija",
@@ -86,11 +91,13 @@
     "changePassword": "Vaihda salasana",
     "emojiClicked": "Emojia klikattu {count} kertaa",
     "language": "Kieli",
+    "language_updated": "Kieli päivitetty",
     "profile": "Profiili",
     "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa.",
     "title": "Asetukset",
     "version": "Versio"
   },
+  "shortcuts": "Pikanäppäimet",
   "sidebar": {
     "expand": "Laajenna",
     "home": "Koti",
@@ -124,23 +131,42 @@
     "title": "Luo tili"
   },
   "userManagement": {
+    "active": "Aktiivinen",
     "addGuardian": "Lisää huoltaja",
     "addUser": "Lisää käyttäjä",
+    "athletes": "Urheilijat",
     "createUserAndNew": "Kutsu & uusi",
     "createUserAndNewTooltip": "Shift + Enter",
+    "guardianEmail": "Huoltajan sähköpostiosoite",
+    "guardianDetails": "Huoltajan tiedot",
     "guardians": "Huoltajat",
+    "inviteExpires": "Kutsu vanhentuu",
     "inviteUser": "Kutsu käyttäjä",
     "inviteUserDescription": "Kutsu käyttäjä joukkueeseen",
     "inviteUserSuccess": "Käyttäjä kutsuttu",
+    "invited": "Kutsuttu",
+    "invitedOn": "Kutsuttu",
+    "joinedOn": "Liittynyt joukkueeseen",
+    "managers": "Toimihenkilöt",
+    "nameHint": "Käyttäjä lisää nimensä, jos jätetään tyhjäksi",
+    "noAthletes": "Urheilijoita ei löytynyt",
+    "noAthletesDescription": "Tässä joukkueessa ei ole vielä urheilijoita.",
     "noInvites": "Ei odottavia kutsuja",
     "noInvitesDescription": "Tälle joukkueelle ei ole odottavia kutsuja.",
+    "noManagers": "Toimihenkilöitä ei löytynyt",
+    "noManagersDescription": "Tässä joukkueessa ei ole vielä toimihenkilöitä.",
     "noUsers": "Käyttäjiä ei löytynyt",
     "noUsersDescription": "Tässä joukkueessa ei ole vielä käyttäjiä.",
     "pendingInvite": "Odottaa kutsua",
     "pendingInvites": "Kutsut",
+    "removeInvite": "Peru kutsu",
+    "removeUser": "Poista käyttäjä",
     "role": "Rooli",
+    "roleShortcuts": "",
+    "roles": "Roolit",
     "teamMember": "Joukkueen jäsen",
     "teamMembers": "Jäsenet",
-    "title": "Käyttäjänhallinta"
+    "title": "Käyttäjänhallinta",
+    "userDetails": "Käyttäjän tiedot"
   }
 }

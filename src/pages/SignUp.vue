@@ -164,7 +164,7 @@
       const notificationStore = useNotificationStore()
       const userStore = useUserStore()
 
-      return { error: notificationStore.error, userStore }
+      return { error: notificationStore.error, userStore, handleBackendError: notificationStore.handleBackendError }
     },
     data() {
       return {
@@ -213,8 +213,13 @@
       }
     },
     watch: {
-      selectedLanguage(newLang) {
-        this.$i18n.locale = newLang
+      async selectedLanguage(newLang) {
+        await this.userStore.changeLocale(newLang)
+      }
+    },
+    created() {
+      if(window.localStorage.getItem('valkku:locale')) {
+        this.selectedLanguage = window.localStorage.getItem('valkku:locale')
       }
     },
     methods: {
@@ -246,7 +251,7 @@
               this.$router.push('/')
             })
             .catch((error) => {
-              this.error(error)
+              this.handleBackendError(error)
             })
             .finally(() => {
               this.isSubmitting = false

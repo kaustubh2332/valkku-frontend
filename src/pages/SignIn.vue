@@ -141,6 +141,11 @@
         ]
       }
     },
+    mounted() {
+      if(window.localStorage.getItem('valkku:locale')) {
+        this.setLocale(window.localStorage.getItem('valkku:locale'))
+      }
+    },
     methods: {
       async submitForm() {
         if (!this.formValid) return
@@ -159,9 +164,8 @@
       goToRegister() {
         this.$router.push('/signup')
       },
-      setLocale(locale: string) {
-        this.$i18n.locale = locale
-        localStorage.setItem('locale', locale)
+      async setLocale(locale: string) {
+        await this.userStore.changeLocale(locale)
         this.languageMenu = false
       }
     }
@@ -173,6 +177,6 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  z-index: 10;
+  z-index: 20010;
 }
 </style>

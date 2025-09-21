@@ -1,10 +1,11 @@
 <template>
   <!-- Confetti trigger element at top of page -->
-  <div id="confetti-trigger" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 9999;" />
+  <div id="confetti-trigger" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 20050;" />
   <div class="d-flex text-h4 text-md-h3 text-sm-h4 text-xs-h4 mt-4">
     {{ greeting }}, {{ userStore.firstName }}!
     <BigEmoji />
   </div>
+  <!-- <TeamRoleDisplay v-if="userStore.user?.teams?.length > 0" /> -->
 
   <Loading v-if="isLoading" />
   <v-row
@@ -12,7 +13,7 @@
     class="my-8"
   >
     <v-col>
-      <StunningButton
+      <!-- <StunningButton
         block
         color="primary"
         :glow="true"
@@ -20,19 +21,29 @@
         icon="mdi-plus"
         :text="$t('home.addEvent')"
         @click="handleGetStarted"
-      />
+      /> -->
+      <v-btn
+        block
+        color="primary"
+        size="x-large"
+        :text="$t('home.addEvent')"
+        variant="tonal"
+        @click="handleGetStarted"
+      >
+        <v-icon class="mr-2">mdi-plus</v-icon>
+        {{ $t('home.addEvent') }}
+      </v-btn>
     </v-col>
     <v-col>
-      <StunningButton
+      <v-btn
         block
-        color="secondary"
-        disabled
-        :glow="true"
-        :gradient="true"
-        icon="mdi-compass"
-        text="Explore Features"
-        trailing-icon="mdi-arrow-right"
-      />
+        size="x-large"
+        variant="tonal"
+      >
+        <v-icon class="mr-2">mdi-compass</v-icon>
+        Mene johkin!
+        <v-icon class="ml-2">mdi-arrow-right</v-icon>
+      </v-btn>
     </v-col>
   </v-row>
 
@@ -188,4 +199,5 @@
     min-width: 240px;
   }
 }
+
 </style>

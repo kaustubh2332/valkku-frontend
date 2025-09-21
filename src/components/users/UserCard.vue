@@ -1,86 +1,122 @@
 <template>
-  <v-card
-    class="user-card mb-4 mx-2"
-    :class="{ 'user-card--invite': isInvite }"
-    elevation="3"
-    hover
+  <div
+    class="user-card"
+    :class="{ 'user-card--invite': isInvitedUser }"
+    @click="handleClick"
   >
-    <v-card-text class="d-flex align-center pa-2">
-      <div class="user-avatar-container mr-2">
-        <v-avatar
-          class="user-avatar"
-          :color="avatarColor"
-          size="40"
-        >
-          <v-icon
-            v-if="isInvite"
-            color="white"
-            size="20"
-          >
-            mdi-account-clock
-          </v-icon>
-          <span
-            v-else
-            class="text-white text-body-2 font-weight-bold"
-          >
-            {{ userInitials }}
-          </span>
-        </v-avatar>
-        <div
-          v-if="!isInvite"
-          class="user-status-indicator"
-          :class="`user-status-indicator--${user.role}`"
+    <div class="user-card-content d-flex align-center pa-3">
+      <div class="user-avatar-container mr-3">
+        <UserAvatar
+          size="36"
+          :user="user"
         />
       </div>
 
-      <div class="flex-grow-1 user-info">
-        <div class="text-h6 font-weight-medium mb-0 user-name">
+      <div class="flex-grow-1 user-info min-width-0">
+        <div class="text-subtitle-1 font-weight-medium mb-0 user-name text-truncate">
           {{ fullName }}
+          <v-chip
+            v-if="isInvitedUser"
+            class="ml-2"
+            label
+            size="x-small"
+            variant="outlined"
+          >{{ $t('userManagement.invited') }}</v-chip>
         </div>
-        <div class="text-caption text-medium-emphasis user-email">
+        <div class="text-caption text-medium-emphasis user-email text-truncate">
           {{ email }}
+        </div>
+        <div
+          v-if="isAthlete && guardians.length > 0"
+          class="guardians-row d-flex align-center mt-1"
+        >
+          <v-icon
+            class="mr-1 guardians-icon"
+            size="14"
+          >mdi-account-heart</v-icon>
+          <div class="d-flex align-center guardians-avatars">
+            <UserAvatar
+              v-for="g in guardiansPreview"
+              :key="g.id"
+              class="mr-1"
+              size="18"
+              :user="g"
+            />
+            <span
+              v-if="guardiansOverflowCount > 0"
+              class="text-caption text-medium-emphasis ml-1"
+            >+{{ guardiansOverflowCount }}</span>
+          </div>
         </div>
       </div>
 
       <div class="user-actions">
-        <RoleChip :role="user.role" />
+        <div class="roles-container">
+          <RoleChip
+            v-for="userRole in userRoles"
+            :key="userRole.role"
+            class="mr-1"
+            :role="userRole.role"
+          />
+        </div>
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
-  import RoleChip from '@/components/general/RoleChip.vue'
-
   export default {
     name: 'UserCard',
-    components: {
-      RoleChip
-    },
     props: {
       user: {
         type: Object,
         required: true
       },
-      isInvite: {
-        type: Boolean,
-        default: false
+      teamUsers: {
+        type: Array,
+        default: () => []
       }
     },
+    emits: ['click'],
     computed: {
       fullName() {
-        return `${this.user.firstName || ''} ${this.user.lastName || ''}`.trim() || 'Unknown User'
+        return `${this.user.firstName || ''} ${this.user.lastName || ''}`.trim() || this.user.email
       },
       email() {
         return this.user.email || 'No email'
       },
-      userInitials() {
-        const firstName = this.user.firstName?.charAt(0)?.toUpperCase() || ''
-        const lastName = this.user.lastName?.charAt(0)?.toUpperCase() || ''
-        return firstName + lastName || 'U'
+      userRoles() {
+        return this.user.roles || []
       },
-      avatarColor() {
-        return this.isInvite ? 'orange' : 'primary'
+      hasActiveRole() {
+        return (this.user.roles || []).some(r => r.status === 'active')
+      },
+      isInvitedUser() {
+        return !this.hasActiveRole
+      },
+      primaryRole() {
+        return this.userRoles.length > 0 ? this.userRoles[0].role : 'athlete'
+      },
+      isAthlete() {
+        return (this.user.roles || []).some(r => r.role === 'athlete')
+      },
+      guardians() {
+        const userId = this.user.userId || this.user.id
+        if (!userId) return []
+        return (this.teamUsers || []).filter(u =>
+          (u.roles || []).some(r => r.role === 'guardian' && r.guardianOf === userId)
+        )
+      },
+      guardiansPreview() {
+        return this.guardians.slice(0, 2)
+      },
+      guardiansOverflowCount() {
+        return Math.max(0, this.guardians.length - 2)
+      }
+    },
+    methods: {
+      handleClick() {
+        this.$emit('click', this.user)
       }
     }
   }
@@ -88,45 +124,31 @@
 
 <style scoped>
 .user-card {
-  border-radius: 12px !important;
   transition: all 0.2s ease;
   position: relative;
-  overflow: hidden;
-  min-height: 48px;
+  min-height: 60px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
-
 
 .user-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: rgba(1, 176, 216, 0.2);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
-.user-card--invite:hover {
-  border-color: rgba(255, 152, 0, 0.2);
+.user-card:last-child {
+  border-bottom: none;
 }
-
 
 .user-avatar-container {
   position: relative;
 }
 
-.user-avatar {
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.user-card:hover .user-avatar {
-  transform: scale(1.02);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-}
-
 .user-status-indicator {
   position: absolute;
-  bottom: 1px;
-  right: 1px;
-  width: 12px;
-  height: 12px;
+  bottom: 0px;
+  right: 0px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   border: 2px solid white;
   transition: all 0.3s ease;
@@ -158,51 +180,48 @@
 }
 
 .user-info {
-  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .user-name {
-  color: #1976D2;
-  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.9);
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
 .user-card--invite .user-name {
-  color: #FF9800;
-}
-
-.user-card:hover .user-name {
-  transform: translateX(2px);
+  color: rgba(0, 0, 0, 0.9);
 }
 
 .user-email {
-  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
 }
 
-.user-card:hover .user-email {
-  transform: translateX(2px);
+.user-actions {
+  flex-shrink: 0;
+  min-width: fit-content;
 }
 
-.user-meta {
+.roles-container {
   display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   align-items: center;
-  transition: all 0.2s ease;
 }
 
-.user-card:hover .user-meta {
-  transform: translateX(2px);
+.invited-chip {
+  opacity: 0.9;
 }
+
 
 
 /* Mobile responsiveness */
 @media (max-width: 600px) {
   .user-card {
-    margin: 0 2px 6px 2px;
-    min-height: 40px;
-  }
-
-  .user-avatar {
-    width: 28px !important;
-    height: 28px !important;
+    min-height: 50px;
   }
 
   .user-name {
@@ -210,29 +229,17 @@
   }
 
   .user-email {
-    font-size: 0.75rem !important;
+    font-size: 0.8rem !important;
   }
-
 
   .user-status-indicator {
     width: 8px;
     height: 8px;
     border-width: 1px;
   }
-}
 
-/* Light theme - ensure proper light background */
-.user-card {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-.user-card:hover {
-  background: rgba(255, 255, 255, 1) !important;
-  border-color: rgba(1, 176, 216, 0.2) !important;
-}
-
-.user-card--invite:hover {
-  border-color: rgba(255, 152, 0, 0.2) !important;
+  .roles-container {
+    gap: 2px;
+  }
 }
 </style>
