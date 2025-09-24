@@ -108,8 +108,6 @@
             userId: this.user.sub
           })
 
-          console.log(response.data.data)
-
           // Redirect to the generated password change URL
           window.location.href = response.data.data.url
         } catch (error) {

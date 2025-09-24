@@ -21,9 +21,7 @@ function isAutoFetchUserEndpoint(url = '') {
   return url.includes('/user/me?periodic=true')
 }
 function tokenLikelyExpired(error) {
-  console.log('Error:', error)
   const code = error?.response?.data?.code || error?.response?.data?.messageCode
-  console.log('Code:', code)
   return code === 'token_expired' || code === 'unauthorized'
 }
 
@@ -35,7 +33,6 @@ async function refreshAccessToken() {
       for (let attempt = 1; attempt <= MAX_REFRESH_RETRIES; attempt++) {
         try {
           const res = await api.post('/auth/refresh') // cookie sent automatically
-          console.log('Refresh response:', res)
           const newToken = res?.data?.token
           if (!newToken) {
             throw new Error('No access token in refresh response')
@@ -43,10 +40,8 @@ async function refreshAccessToken() {
           userStore.setToken(newToken)
           return newToken
         } catch (error) {
-          console.log(`Refresh attempt ${attempt} failed:`, error)
           lastError = error
           if (attempt === MAX_REFRESH_RETRIES) {
-            console.log('Max refresh retries reached, logging out user')
             // Fully clear auth state and navigate to signin
             if (typeof userStore.finishLogout === 'function') {
               userStore.finishLogout(true)
@@ -91,13 +86,6 @@ api.interceptors.response.use(
     const original = error.config || {}
     const url = original.url || ''
 
-    console.log('Status:', status)
-    console.log('Original:', original)
-    console.log('URL:', url)
-    console.log('Is auth endpoint:', isAuthEndpoint(url))
-    console.log('Token likely expired:', tokenLikelyExpired(error))
-    console.log('Is auto fetch user endpoint:', isAutoFetchUserEndpoint(url))
-
     if(isAutoFetchUserEndpoint(url)) {
       return
     }
@@ -106,25 +94,21 @@ api.interceptors.response.use(
     if (
       status === 401 &&
       !isAuthEndpoint(url) &&
-      tokenLikelyExpired(error)
+      tokenLikelyExpired(error) &&
+      !original._refreshAttempted
     ) {
-      // Check if we've already tried refreshing for this request
-      if (original._refreshAttempted) {
-        console.log('Refresh already attempted for this request')
-      } else {
-        console.log('Attempting to refresh access token')
-        original._refreshAttempted = true
+      original._refreshAttempted = true
 
-        try {
-          const newToken = await refreshAccessToken()
-          original.headers = original.headers || {}
-          original.headers.Authorization = `Bearer ${newToken}`
-          return api.request(original)
-        } catch (refreshError) {
-          console.error('Error refreshing access token:', refreshError)
-          // If refresh failed and we've reached max retries, the user will be logged out
-          // by the refreshAccessToken function, so we can proceed to redirect
-        }
+      try {
+        // Wait for refresh (either our attempt or a concurrent one)
+        const newToken = await refreshAccessToken()
+        original.headers = original.headers || {}
+        original.headers.Authorization = `Bearer ${newToken}`
+        return api.request(original)
+      } catch (refreshError) {
+        console.error('Error refreshing access token:', refreshError)
+        // If refresh failed and we've reached max retries, the user will be logged out
+        // by the refreshAccessToken function, so we can proceed to redirect
       }
     }
 

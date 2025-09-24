@@ -156,7 +156,6 @@ export const useUserStore = defineStore('user', {
       removeUserFromLocalStorage()
 
       // Redirect to home page using Vue Router
-      console.log('Redirecting to home page', router)
       if(expired) {
         router.push('/signin?exp=true')
       } else {
@@ -183,7 +182,6 @@ export const useUserStore = defineStore('user', {
     },
     incrementEmojiClickCount() {
       if (!this.user || this.user.emojiClickedCount === null || this.user.emojiClickedCount === undefined) {
-        console.log('No user found in store or emojiClickedCount is null or undefined')
         return
       }
 
@@ -257,14 +255,12 @@ export const useUserStore = defineStore('user', {
           // Revert the pending clicks on error
           this.user.emojiClickedCount -= clicksToSend
           this.pendingClickCount += clicksToSend
-          console.log(`Reverted ${clicksToSend} clicks due to API error`)
         }
       } catch (error) {
         console.error('Failed to update emoji click count:', error)
         // Revert the pending clicks on error
         this.user.emojiClickedCount -= clicksToSend
         this.pendingClickCount += clicksToSend
-        console.log(`Reverted ${clicksToSend} clicks due to API error`)
       }
     },
 

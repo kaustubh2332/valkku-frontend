@@ -82,7 +82,6 @@ export const useNotificationStore = defineStore('notification', {
 
       // Extract messageCode from error
       const messageCode = err?.response?.data?.code || err?.code || 'something_went_wrong'
-      console.log('messageCode', messageCode)
 
       // Get localized message
       const localizedMessage = this.getLocalizedMessage(messageCode, currentLanguage)

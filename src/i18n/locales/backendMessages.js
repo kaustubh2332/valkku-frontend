@@ -44,8 +44,8 @@ export const backendMessages = {
     "fi": "Käyttäjä on jo joukkueessa"
   },
   "user_already_invited_to_team": {
-    "en": "User is already invited to this team",
-    "fi": "Käyttäjä on jo kutsuttu joukkueeseen"
+    "en": "User is already invited to this team. You can modify users roles by clicking the user.",
+    "fi": "Käyttäjä on jo kutsuttu joukkueeseen. Voit muokata käyttäjän rooleja klikkaamalla käyttäjää."
   },
   "invite_created_successfully": {
     "en": "User invited",
@@ -64,8 +64,8 @@ export const backendMessages = {
     "fi": "Käyttäjä on jo joukkueessa tällä roolilla"
   },
   "guardian_already_invited_to_team_for_this_user": {
-    "en": "Guardian is already invited to team for this user",
-    "fi": "Huoltaja on jo kutsuttu tälle käyttäjälle"
+    "en": "Guardian is already added for this user",
+    "fi": "Tämä huoltaja on jo lisätty tälle käyttäjälle"
   },
   "guardian_cannot_be_the_same_as_the_user": {
     "en": "Guardian cannot be the same as the user",
@@ -103,4 +103,24 @@ export const backendMessages = {
     "en": "Something went wrong",
     "fi": "Jotain meni vikaan"
   },
+  "team_user_role_already_exists": {
+    "en": "User is already in team with this role",
+    "fi": "Käyttäjä on jo joukkueessa tällä roolilla"
+  },
+  "no_roles_left_after_deletion": {
+    "en": "User must have at least one role",
+    "fi": "Käyttäjällä on oltava rooli"
+  },
+  "cannot_delete_athlete_role_if_there_are_guardians": {
+    "en": "Remove athletes guardians first",
+    "fi": "Poista urheilijan huoltajat ensin"
+  },
+  "cannot_delete_user_if_there_are_guardians": {
+    "en": "Remove user's guardians first",
+    "fi": "Poista käyttäjän huoltajat ensin"
+  },
+  "cannot_delete_owner_role": {
+    "en": "Cannot delete owner",
+    "fi": "Omistajaa ei voi poistaa"
+  }
 }

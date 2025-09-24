@@ -67,7 +67,7 @@
 
       <!-- Create & New tooltip on desktop -->
       <v-tooltip
-        v-if="!$vuetify.display.mobile"
+        v-if="!$vuetify.display.mobile && !(isGuardian && existingGuardianSelected)"
         location="bottom"
         :z-index="dropdownZIndex"
       >
@@ -87,7 +87,7 @@
         </div>
       </v-tooltip>
       <v-btn
-        v-else
+        v-else-if="!(isGuardian && existingGuardianSelected)"
         :disabled="!formValid"
         :loading="isSubmitting"
         :size="$vuetify.display.mobile ? 'default' : 'default'"
@@ -111,7 +111,7 @@
             :size="$vuetify.display.mobile ? 'default' : 'default'"
             @click="submitForm(false)"
           >
-            {{ $t('userManagement.inviteUser') }}
+            {{ isGuardian && existingGuardianSelected ? $t('userManagement.addGuardian') : $t('userManagement.inviteUser') }}
           </v-btn>
         </template>
         <div class="d-flex align-center">
@@ -126,7 +126,7 @@
         :size="$vuetify.display.mobile ? 'default' : 'default'"
         @click="submitForm(false)"
       >
-        {{ $t('userManagement.inviteUser') }}
+        {{ isGuardian && existingGuardianSelected ? $t('userManagement.addGuardian') : $t('userManagement.inviteUser') }}
       </v-btn>
     </v-card-actions>
   </div>
@@ -143,6 +143,7 @@
         ref="guardianForm"
         v-model:form-valid="isGuardianFormValid"
         v-model:user="guardianForm"
+        :athlete-user="athleteUser"
         :dropdown-z-index="guardianDropdownZIndex"
         :is-guardian="true"
         :is-modal="true"
@@ -248,6 +249,12 @@
       },
       addGuardianTooltip() {
         return `${this.$t('userManagement.addGuardian')} (${this.modifierKey.toUpperCase()}+G)`
+      },
+      existingGuardianSelected() {
+        // In guardian modal, treat form.email existing in teamUsers as selected-existing
+        const list = this.teamStore.teamUsers || []
+        const email = this.guardianForm?.email || this.form?.email
+        return !!email && list.some(u => u.email === email)
       }
     },
     watch: {
@@ -324,7 +331,10 @@
           teamId: this.userStore.currentTeamId
         })
           .then(() => {
-            this.success(this.$t('userManagement.inviteUserSuccess'))
+            const msg = (this.isGuardian && this.existingGuardianSelected)
+              ? this.$t('userManagement.guardianAddedSuccess')
+              : this.$t('userManagement.inviteUserSuccess')
+            this.success(msg)
             this.resetForm()
             // For create & new, keep previously chosen role
             if (shouldFocus) {

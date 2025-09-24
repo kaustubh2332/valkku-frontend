@@ -159,12 +159,10 @@
       },
       handleGetStarted() {
         // Add your get started logic here
-        console.log('Get Started clicked!')
         this.$router.push('/settings')
       },
       handleExploreFeatures() {
         // Add your explore features logic here
-        console.log('Explore Features clicked!')
         this.$router.push('/users')
       }
     }

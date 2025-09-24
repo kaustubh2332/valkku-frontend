@@ -29,6 +29,10 @@ const routes = [
   {
     path: '/join',
     name: 'Join',
+    meta: {
+      allowWithoutAuth: true,
+      disallowWithAuth: false
+    },
     component: () => import('@/pages/Join.vue')
   },
   {

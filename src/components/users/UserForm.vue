@@ -6,29 +6,67 @@
   >
     <v-row>
       <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="12">
-        <v-autocomplete
-          v-if="isGuardian || localUser.role === 'guardian'"
-          v-model="localUser.email"
-          v-model:search="emailSearch"
-          autofocus
-          :density="$vuetify.display.mobile ? 'compact' : 'default'"
-          :hide-details="$vuetify.display.mobile ? 'auto' : false"
-          :items="emailSuggestions"
-          :item-title="'title'"
-          :item-value="'value'"
-          :label="$t('signUp.email') + ' *'"
-          :menu-props="{ zIndex: dropdownZIndex }"
-          :no-filter="true"
-          clearable
-          required
-          :rules="emailRules"
-          type="email"
-          validate-on="input"
-          variant="outlined"
-          @blur="touchedFields.email = true"
-        />
+        <v-menu
+          v-if="(isGuardian || localUser.role === 'guardian') && !selectedGuardian"
+          v-model="emailMenu"
+          :close-on-content-click="true"
+          location="bottom"
+          :open-on-click="false"
+          :z-index="dropdownZIndex"
+        >
+          <template #activator="{ props }">
+            <v-text-field
+              v-bind="props"
+              v-model="localUser.email"
+              autofocus
+              :density="$vuetify.display.mobile ? 'compact' : 'default'"
+              :hide-details="$vuetify.display.mobile ? 'auto' : false"
+              :label="$t('signUp.email') + ' *'"
+              required
+              :rules="emailRules"
+              type="email"
+              validate-on="input"
+              variant="outlined"
+              @blur="touchedFields.email = true"
+              @focus="onGuardianEmailFocus"
+              @input="onGuardianEmailInput"
+              @keydown="onGuardianKeydown"
+            />
+          </template>
+          <v-list v-if="emailSuggestions.length > 0" density="compact">
+            <v-list-item
+              v-for="s in emailSuggestions"
+              :key="s.value"
+              @click="selectGuardianSuggestion(s)"
+            >
+              <template #prepend>
+                <UserAvatar v-if="s.raw" class="mr-2" size="28" :user="s.raw" />
+              </template>
+              <template #title>
+                <div class="d-flex align-center">
+                  <span>{{ s.title }}</span>
+                </div>
+              </template>
+              <template v-if="s?.raw?.fullName && s?.raw?.email" #subtitle>
+                <span class="text-caption text-medium-emphasis">{{ s.raw.email }}</span>
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <!-- Selected existing guardian info -->
+        <v-card v-if="isGuardian && selectedGuardian" class="mt-3" variant="outlined">
+          <v-card-text class="d-flex align-center">
+            <UserAvatar class="mr-3" size="40" :user="selectedGuardian" />
+            <div class="flex-grow-1 min-width-0">
+              <div class="text-body-1 font-weight-medium text-truncate">{{ selectedGuardian.fullName || selectedGuardian.email }}</div>
+              <div class="text-caption text-medium-emphasis text-truncate">{{ selectedGuardian.email }}</div>
+            </div>
+            <v-btn icon="mdi-close" size="small" variant="text" @click="clearSelectedGuardian" />
+          </v-card-text>
+        </v-card>
         <v-text-field
-          v-else
+          v-if="!(isGuardian || localUser.role === 'guardian')"
           v-model="localUser.email"
           autofocus
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
@@ -42,7 +80,7 @@
           @blur="touchedFields.email = true"
         />
       </v-col>
-      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
+      <v-col v-if="!(isGuardian && selectedGuardian)" :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
         <v-text-field
           v-model="localUser.firstName"
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
@@ -54,7 +92,7 @@
           @blur="touchedFields.firstName = true"
         />
       </v-col>
-      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
+      <v-col v-if="!(isGuardian && selectedGuardian)" :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" cols="6">
         <v-text-field
           v-model="localUser.lastName"
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
@@ -64,7 +102,7 @@
           @blur="touchedFields.lastName = true"
         />
       </v-col>
-      <v-col :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" :cols="isGuardian ? 12 : 6">
+      <v-col v-if="!(isGuardian && selectedGuardian)" :class="{ 'pa-2': $vuetify.display.mobile, 'pa-3': !$vuetify.display.mobile }" :cols="isGuardian ? 12 : 6">
         <v-select
           v-model="localUser.preferredLanguage"
           :density="$vuetify.display.mobile ? 'compact' : 'default'"
@@ -114,10 +152,13 @@
 </template>
 
 <script lang="ts">
+  import UserAvatar from '@/components/users/UserAvatar.vue'
+  import { useTeamStore } from '@/stores/team'
   import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'UserForm',
+    components: { UserAvatar },
     props: {
       user: {
         type: Object,
@@ -145,12 +186,17 @@
       isModal: {
         type: Boolean,
         default: false
+      },
+      athleteUser: {
+        type: Object,
+        default: null
       }
     },
     emits: ['update:user', 'update:formValid', 'keydown'],
     setup() {
       const userStore = useUserStore()
-      return { userStore }
+      const teamStore = useTeamStore()
+      return { userStore, teamStore }
     },
     data() {
       return {
@@ -168,9 +214,11 @@
           lastName: false,
           preferredLanguage: false,
           role: false
-      },
-      emailSearch: '',
-      emailSuggestions: []
+        },
+        emailSearch: '',
+        emailSuggestions: [],
+        selectedGuardian: null,
+        emailMenu: false
       }
     },
     computed: {
@@ -248,17 +296,53 @@
         const query = (newVal || '').trim().toLowerCase()
         if (query.length < 3) {
           this.emailSuggestions = []
+          this.emailMenu = false
           return
         }
-
+        const teamUsers = this.teamStore.teamUsers
         // Get team users from current team in user store if available
-        const currentTeam = this.userStore?.currentTeam
-        const list = Array.isArray(currentTeam?.users) ? currentTeam.users : []
+        const list = teamUsers || []
 
-        this.emailSuggestions = list
-          .filter(u => (u.email || '').toLowerCase().includes(query))
-          .slice(0, 6)
-          .map(u => ({ title: u.fullName ? `${u.fullName} <${u.email}>` : u.email, value: u.email }))
+        const athleteId = (this.user && (this.user.userId || this.user.id)) ? (this.user.userId || this.user.id) : null
+        // Filter by query (email or name) and exclude existing guardians of the athlete
+        const filtered = list.filter(u => {
+          // Exclude if already a guardian of the target athlete
+          if (athleteId && Array.isArray(u.roles)) {
+            const isGuardianOfAthlete = u.roles.some(r => r && r.role === 'guardian' && r.guardianOf === athleteId)
+            if (isGuardianOfAthlete) return false
+          }
+          // Exclude the athlete themself
+          if ((u.userId || u.id) === athleteId) return false
+          // Exclude users who have athlete role only
+          if (Array.isArray(u.roles) && u.roles.length > 0) {
+            const hasNonAthleteRole = u.roles.some(r => r && r.role !== 'athlete')
+            if (!hasNonAthleteRole) return false
+          }
+
+          const emailLc = (u.email || '').toLowerCase()
+          const firstLc = (u.firstName || '').toLowerCase()
+          const lastLc = (u.lastName || '').toLowerCase()
+          const fullLc = `${firstLc} ${lastLc}`.trim()
+          return (
+            emailLc.includes(query) ||
+            firstLc.includes(query) ||
+            lastLc.includes(query) ||
+            fullLc.includes(query)
+          )
+        })
+
+        // Dedupe by email and map to items
+        const seen = new Set()
+        const items = []
+        for (const u of filtered) {
+          const email = u.email || ''
+          if (!email || seen.has(email)) continue
+          seen.add(email)
+          items.push({ title: u.fullName ? `${u.fullName} <${u.email}>` : u.email, value: u.email, raw: u })
+        }
+
+        this.emailSuggestions = items.slice(0, 6)
+        this.emailMenu = this.emailSuggestions.length > 0
       }
     },
     mounted() {
@@ -278,6 +362,45 @@
       document.removeEventListener('keydown', this.handleKeydown)
     },
     methods: {
+      handleGuardianSelection(email) {
+        if (!email) return
+        const found = (this.emailSuggestions || []).find(s => s.value === email)
+        this.selectedGuardian = found?.raw || null
+      },
+      onGuardianEnter(event) {
+        // Prevent submitting arbitrary email; only accept when selection exists
+        if (!this.selectedGuardian) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      },
+      onGuardianKeydown(event) {
+        const key = event.key?.toLowerCase()
+        // Enter: select the first suggestion if none selected yet
+        if (key === 'enter') {
+          if (!this.selectedGuardian && this.emailSuggestions.length > 0) {
+            this.selectGuardianSuggestion(this.emailSuggestions[0])
+          }
+        }
+      },
+      onGuardianEmailInput() {
+        this.emailSearch = this.localUser.email
+      },
+      onGuardianEmailFocus() {
+        if ((this.emailSearch || '').length >= 3 && this.emailSuggestions.length > 0) {
+          this.emailMenu = true
+        }
+      },
+      selectGuardianSuggestion(s) {
+        this.localUser.email = s.value
+        this.selectedGuardian = s.raw || null
+        this.emailMenu = false
+      },
+      clearSelectedGuardian() {
+        this.selectedGuardian = null
+        this.localUser.email = ''
+        this.emailSearch = ''
+      },
       handleKeydown(event) {
         // Handle role shortcuts only for non-guardian forms
         if (!this.isGuardian && (event.metaKey || event.ctrlKey)) {

@@ -31,7 +31,6 @@ export async function fetchAndSetUser() {
     const userData = await fetchUser()
     const userStore = useUserStore()
     userStore.setUser(userData)
-    console.log('User set in store:', userData)
     return userData
   } catch (error) {
     console.error('Failed to fetch and set user:', error)
@@ -65,7 +64,6 @@ export function hasPendingDetails() {
 export function saveUserToLocalStorage(userData) {
   try {
     localStorage.setItem('valkku_user', JSON.stringify(userData))
-    console.log('User saved to localStorage:', userData)
   } catch (error) {
     console.error('Failed to save user to localStorage:', error)
   }
@@ -88,7 +86,6 @@ export function saveTokenToLocalStorage(token) {
 
   try {
     localStorage.setItem('valkku:accessToken', token)
-    console.log('Token saved to localStorage:', token)
   } catch (error) {
     console.error('Failed to save token to localStorage:', error)
   }
@@ -97,7 +94,6 @@ export function saveTokenToLocalStorage(token) {
 export function removeTokenFromLocalStorage() {
   try {
     localStorage.removeItem('valkku:accessToken')
-    console.log('Token removed from localStorage')
   } catch (error) {
     console.error('Failed to remove token from localStorage:', error)
   }
@@ -113,7 +109,6 @@ export function getUserFromLocalStorage() {
     const userData = localStorage.getItem('valkku_user')
     if (userData) {
       const parsedUser = JSON.parse(userData)
-      console.log('User fetched from localStorage:', parsedUser)
       return parsedUser
     }
     return null
@@ -129,7 +124,6 @@ export function getUserFromLocalStorage() {
 export function removeUserFromLocalStorage() {
   try {
     localStorage.removeItem('valkku_user')
-    console.log('User removed from localStorage')
   } catch (error) {
     console.error('Failed to remove user from localStorage:', error)
   }
@@ -138,7 +132,6 @@ export function removeUserFromLocalStorage() {
 export async function saveCurrentTeamToLocalStorage(teamId) {
   try {
     localStorage.setItem('valkku:currentTeamId', teamId)
-    console.log('Current team saved to localStorage:', teamId)
   } catch (error) {
     console.error('Failed to save current team to localStorage:', error)
   }
@@ -147,7 +140,6 @@ export async function saveCurrentTeamToLocalStorage(teamId) {
 export async function removeCurrentTeamFromLocalStorage() {
   try {
     localStorage.removeItem('valkku:currentTeamId')
-    console.log('Current team removed from localStorage')
   } catch (error) {
     console.error('Failed to remove current team from localStorage:', error)
   }
@@ -174,7 +166,6 @@ export async function fetchSetAndSaveUser() {
     const userStore = useUserStore()
     userStore.setUser(userData)
     saveUserToLocalStorage(userData)
-    console.log('User fetched, set in store, and saved to localStorage:', userData)
     return userData
   } catch (error) {
     console.error('Failed to fetch, set, and save user:', error)
@@ -192,7 +183,6 @@ export function loadUserFromLocalStorage() {
     if (userData) {
       const userStore = useUserStore()
       userStore.setUser(userData)
-      console.log('User loaded from localStorage and set in store:', userData)
       return userData
     }
     return null

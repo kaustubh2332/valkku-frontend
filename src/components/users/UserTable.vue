@@ -69,11 +69,52 @@
         </td>
         <td>
           <div class="d-flex align-center flex-wrap" style="gap: 4px;">
-            <RoleChip
-              v-for="userRole in user.roles"
-              :key="userRole.role"
-              :role="userRole.role"
-            />
+            <template v-for="roleObj in rolesPreview(user)" :key="roleObj.role + (roleObj.guardianOf || '')">
+              <v-tooltip
+                v-if="roleObj.role === 'guardian' && roleObj.guardianOf"
+                location="top"
+                :text="getAthleteDisplay(roleObj.guardianOf)"
+              >
+                <template #activator="{ props }">
+                  <RoleChip v-bind="props" :role="roleObj.role" />
+                </template>
+              </v-tooltip>
+              <RoleChip
+                v-else
+                :role="roleObj.role"
+              />
+            </template>
+
+            <v-tooltip v-if="rolesOverflowCount(user) > 0" location="top">
+              <template #activator="{ props }">
+                <v-chip
+                  v-bind="props"
+                  class="ml-1"
+                  color="grey"
+                  size="x-small"
+                  variant="tonal"
+                >
+                  +{{ rolesOverflowCount(user) }}
+                </v-chip>
+              </template>
+              <div class="d-flex align-center flex-wrap" style="gap: 4px; background-color: white; border-radius: 4px; padding: 4px;">
+                <template v-for="extra in rolesOverflow(user)" :key="extra.role + (extra.guardianOf || '')">
+                  <v-tooltip
+                    v-if="extra.role === 'guardian' && extra.guardianOf"
+                    location="top"
+                    :text="getAthleteDisplay(extra.guardianOf)"
+                  >
+                    <template #activator="{ props }">
+                      <RoleChip
+                        v-bind="props"
+                        :role="extra.role"
+                      />
+                    </template>
+                  </v-tooltip>
+                  <RoleChip v-else :role="extra.role" />
+                </template>
+              </div>
+            </v-tooltip>
           </div>
         </td>
       </tr>
@@ -107,6 +148,28 @@
     },
     emits: ['row-click'],
     methods: {
+      sortedRoles(roles) {
+        return (roles || []).sort((a, b) => {
+          const roleOrder = ['owner', 'admin', 'coach', 'athlete', 'guardian']
+          return roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
+        })
+      },
+      rolesPreview(user) {
+        const roles = Array.isArray(this.sortedRoles(user.roles)) ? this.sortedRoles(user.roles) : []
+        return this.sortedRoles(roles).slice(0, 1)
+      },
+      rolesOverflow(user) {
+        const roles = Array.isArray(this.sortedRoles(user.roles)) ? this.sortedRoles(user.roles) : []
+        return this.sortedRoles(roles).slice(1)
+      },
+      rolesOverflowCount(user) {
+        const roles = Array.isArray(this.sortedRoles(user.roles)) ? this.sortedRoles(user.roles) : []
+        return Math.max(0, this.sortedRoles(roles).length - 1)
+      },
+      getAthleteDisplay(athleteId) {
+        const athlete = (this.teamUsers || []).find(u => (u.userId || u.id) === athleteId)
+        return athlete ? (athlete.fullName || athlete.email || athleteId) : athleteId
+      },
       guardiansFor(user) {
         const userId = user.userId || user.id
         return this.teamUsers.filter(u => (u.roles || []).some(r => r.role === 'guardian' && r.guardianOf === userId))
@@ -121,7 +184,7 @@
       isUserInvited(user) {
         return (user.status || 'active') !== 'active'
       }
-    }
+    },
   }
 </script>
 

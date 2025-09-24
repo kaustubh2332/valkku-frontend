@@ -7,6 +7,7 @@
     "settings": "Asetukset",
     "title": "Valkku"
   },
+  "back": "Takaisin",
   "callback": {
     "errorMessage": "Todennus epäonnistui. Yritä uudelleen.",
     "errorTitle": "Todennusvirhe",
@@ -58,6 +59,13 @@
     "welcome": "Tervetuloa"
   },
   "join": {
+    "errors": {
+      "description": "Liittymislinkki on virheellinen tai vanhentunut",
+      "expired": "Kutsu on vanhentunut",
+      "title": "Tapahtui virhe",
+      "token_required": "Linkki virheellinen",
+      "wrong_user": "Kutsu on eri sähköpostille. Kirjaudu ulos ja yritä uudelleen. Voit myös pyytää admin-käyttäjää kutsumaan sinut tämän käyttäjän sähköpostilla {email}."
+    },
     "success": "Liitytty joukkueeseen"
   },
   "language": {
@@ -139,9 +147,13 @@
     "athletes": "Urheilijat",
     "createUserAndNew": "Kutsu & uusi",
     "createUserAndNewTooltip": "Shift + Enter",
-    "guardianEmail": "Huoltajan sähköpostiosoite",
+    "deleteInvite": "Peru kutsu",
+    "guardianAddedSuccess": "Huoltaja lisätty",
     "guardianDetails": "Huoltajan tiedot",
+    "guardianEmail": "Huoltajan sähköpostiosoite",
+    "guardianRemovedSuccess": "Huoltaja poistettu",
     "guardians": "Huoltajat",
+    "inviteDeletedSuccess": "Kutsu peruttu",
     "inviteExpires": "Kutsu vanhentuu",
     "inviteUser": "Kutsu käyttäjä",
     "inviteUserDescription": "Kutsu käyttäjä joukkueeseen",
@@ -161,11 +173,15 @@
     "noUsersDescription": "Tässä joukkueessa ei ole vielä käyttäjiä.",
     "pendingInvite": "Odottaa kutsua",
     "pendingInvites": "Kutsut",
+    "removeGuardian": "Poista huoltaja",
+    "removeGuardianConfirm": "Haluatko varmasti poistaa tämän huoltajan? Huoltajan mahdolliset muut roolit joukkueessa säilyvät.",
     "removeInvite": "Peru kutsu",
+    "removeInviteConfirm": "Oletko varma että haluat peruuttaa kutsun?",
     "removeUser": "Poista käyttäjä",
     "role": "Rooli",
     "roleShortcuts": "",
     "roles": "Roolit",
+    "rolesUpdatedSuccess": "Käyttäjän roolit päivitetty",
     "teamMember": "Joukkueen jäsen",
     "teamMembers": "Jäsenet",
     "title": "Käyttäjänhallinta",

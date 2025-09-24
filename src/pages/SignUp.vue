@@ -229,15 +229,6 @@
         this.isSubmitting = true
 
         try {
-          // TODO: Implement actual sign up logic
-          console.log('Sign up attempt:', {
-            firstName: this.firstName,
-            lastName: this.lastName,
-            email: this.email,
-            password: this.password,
-            preferredLanguage: this.selectedLanguage
-          })
-
           api.post('/auth/signup', {
             firstName: this.firstName,
             lastName: this.lastName,

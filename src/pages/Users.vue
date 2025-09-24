@@ -323,18 +323,15 @@
         }
       },
       handleUserCardClick(user, isInvite) {
-        console.log('invite', user)
         // Just open the modal without navigation to avoid scroll issues
         this.openUserDetail(user.userId || user.id, isInvite)
       },
       handleRemoveUser(user) {
         // TODO: Implement remove user functionality
-        console.log('Remove user:', user)
         this.closeUserDetail()
       },
       handleRemoveInvite(invite) {
         // TODO: Implement remove invite functionality
-        console.log('Remove invite:', invite)
         this.closeUserDetail()
       },
       async handleGuardianInvited() {

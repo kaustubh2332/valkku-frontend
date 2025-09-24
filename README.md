@@ -78,14 +78,6 @@ export default {
   setup() {
     const userStore = useUserStore()
 
-    // Access state
-    console.log(userStore.profile)
-    console.log(userStore.isLoading)
-
-    // Use getters
-    console.log(userStore.isAuthenticated)
-    console.log(userStore.userName)
-
     // Call actions
     userStore.setProfile(userData)
     userStore.setLoading(true)
@@ -106,14 +98,6 @@ import { useAppStore } from '@/stores/app'
 export default {
   setup() {
     const appStore = useAppStore()
-
-    // Access state
-    console.log(appStore.isLoading)
-    console.log(appStore.currentPage)
-
-    // Use getters
-    console.log(appStore.isHomePage)
-    console.log(appStore.isSettingsPage)
 
     // Call actions
     appStore.setLoading(true)

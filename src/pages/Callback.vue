@@ -115,7 +115,6 @@
             this.$router.push(redirectPath)
           })
           .catch((error) => {
-            console.log('Error fetching user:', error)
             this.hasError = true
           })
           .finally(() => {

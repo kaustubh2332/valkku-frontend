@@ -7,6 +7,7 @@
     "settings": "Settings",
     "title": "Valkku"
   },
+  "back": "Back",
   "callback": {
     "errorMessage": "Authentication failed. Please try again.",
     "errorTitle": "Authentication Error",
@@ -58,6 +59,13 @@
     "welcome": "Welcome"
   },
   "join": {
+    "errors": {
+      "description": "Invite link is invalid or expired",
+      "expired": "Invite expired",
+      "title": "Invalid link",
+      "token_required": "Invalid link",
+      "wrong_user": "Invite is for another email. Log out and click the link again. You can also ask the team admin to invite you with the current email {email}."
+    },
     "success": "Joined team"
   },
   "language": {
@@ -139,9 +147,13 @@
     "athletes": "Athletes",
     "createUserAndNew": "Invite & new",
     "createUserAndNewTooltip": "Shift + Enter",
-    "guardianEmail": "Guardian email",
+    "deleteInvite": "Revoke invite",
+    "guardianAddedSuccess": "Guardian added",
     "guardianDetails": "Guardian details",
+    "guardianEmail": "Guardian email",
+    "guardianRemovedSuccess": "Guardian removed",
     "guardians": "Guardians",
+    "inviteDeletedSuccess": "Invite removed",
     "inviteExpires": "Invite valid until",
     "inviteUser": "Invite user",
     "inviteUserDescription": "Invite user to team",
@@ -161,11 +173,15 @@
     "noUsersDescription": "There are no users in this team yet.",
     "pendingInvite": "Pending Invite",
     "pendingInvites": "Invites",
+    "removeGuardian": "Remove guardian",
+    "removeGuardianConfirm": "Are you sure you want to remove this guardian? Guardians possible other roles in this team are preserved.",
     "removeInvite": "Remove invite",
+    "removeInviteConfirm": "Are you sure you want to revoke the invite?",
     "removeUser": "Remove user",
     "role": "Role",
     "roleShortcuts": "",
     "roles": "Roles",
+    "rolesUpdatedSuccess": "User roles updated",
     "teamMember": "Team Member",
     "teamMembers": "Members",
     "title": "Users",

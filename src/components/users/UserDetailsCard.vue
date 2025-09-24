@@ -4,15 +4,15 @@
     <div class="user-header">
       <UserAvatar
         size="100"
-        :user="user"
+        :user="currentUser"
       />
 
       <div class="user-info">
         <h1 class="user-name text-truncate">
-          {{ user.fullName || user.email }}
+          {{ currentUser.fullName || currentUser.email }}
         </h1>
         <div class="user-email text-truncate">
-          {{ user.email }}
+          {{ currentUser.email }}
         </div>
         <v-chip
           class="user-status-chip"
@@ -34,22 +34,48 @@
     <div class="user-details-section">
       <div class="details-grid">
         <div class="detail-item">
-          <div class="detail-label">
+          <div class="detail-label d-flex align-center">
             <v-icon
               class="mr-2"
               icon="mdi-account-badge"
               size="small"
             />
             {{ $t('userManagement.roles') }}
+            <v-spacer />
+            <RoleSelector
+              :saving="isSavingRoles"
+              :user="currentUser"
+              :z-index="30050"
+              @save="saveRolesProxy"
+            />
           </div>
           <div class="roles-container">
-            <RoleChip
+            <template
               v-for="userRole in userRoles"
-              :key="userRole.role"
-              always-show-text
-              class="mr-1"
-              :role="userRole.role"
-            />
+              :key="userRole.role + (userRole.guardianOf || '')"
+            >
+              <v-tooltip
+                v-if="userRole.role === 'guardian' && userRole.guardianOf"
+                location="top"
+                :text="getAthleteDisplay(userRole.guardianOf)"
+              >
+                <template #activator="{ props }">
+                  <span v-bind="props" class="d-inline-flex">
+                    <RoleChip
+                      always-show-text
+                      class="mr-1"
+                      :role="userRole.role"
+                    />
+                  </span>
+                </template>
+              </v-tooltip>
+              <RoleChip
+                v-else
+                always-show-text
+                class="mr-1"
+                :role="userRole.role"
+              />
+            </template>
           </div>
         </div>
 
@@ -115,6 +141,13 @@
                 icon="mdi-chevron-right"
                 size="16"
               />
+              <v-btn
+                class="guardian-remove-btn"
+                icon="mdi-close"
+                size="x-small"
+                variant="text"
+                @click.stop="confirmRemoveGuardian(guardian)"
+              />
             </div>
           </div>
         </div>
@@ -150,10 +183,10 @@
   <BottomSheetModal
     v-model="guardianInviteModal"
     height="95vh"
-    :title="$t('userManagement.addGuardian') + ' - ' + (user.fullName || user.email)"
+    :title="$t('userManagement.addGuardian') + ' - ' + (currentUser.fullName || currentUser.email)"
   >
     <InviteUser
-      :athlete-user="user"
+      :athlete-user="currentUser"
       guardian
       :is-guardian="true"
       :is-open="guardianInviteModal"
@@ -176,22 +209,33 @@
       @remove-user="handleRemoveUser"
     />
   </BottomSheetModal>
+  <Confirm
+    v-model="removeInviteConfirm"
+    :accept-text="$t('userManagement.deleteInvite')"
+    :cancel-text="$t('back')"
+    :loading="deletingInvite"
+    :text="$t('userManagement.removeInviteConfirm')"
+    :title="$t('userManagement.removeInvite')"
+    @accept="confirmRemoveInvite"
+  />
+  <Confirm
+    v-model="removeGuardianConfirm"
+    :accept-text="$t('userManagement.removeGuardian')"
+    :cancel-text="$t('back')"
+    :loading="removingGuardian"
+    :text="$t('userManagement.removeGuardianConfirm')"
+    :title="$t('userManagement.removeGuardian')"
+    @accept="confirmRemoveGuardianAction"
+  />
 </template>
 
 <script lang="ts">
-  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
-  import RoleChip from '@/components/general/RoleChip.vue'
-  import InviteUser from '@/components/users/InviteUser.vue'
-  import UserAvatar from '@/components/users/UserAvatar.vue'
+  import { useNotificationStore } from '@/stores/notification'
+  import { useTeamStore } from '@/stores/team'
+  import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'UserDetailsCard',
-    components: {
-      RoleChip,
-      UserAvatar,
-      InviteUser,
-      BottomSheetModal
-    },
     props: {
       user: {
         type: Object,
@@ -203,30 +247,68 @@
       }
     },
     emits: ['remove-user', 'remove-invite', 'guardian-invited'],
+    setup() {
+      const notificationStore = useNotificationStore()
+      const userStore = useUserStore()
+      const teamStore = useTeamStore()
+      return { notificationStore, userStore, teamStore, info: notificationStore.info }
+    },
     data() {
       return {
         guardianInviteModal: false,
         guardianDetailModal: false,
-        selectedGuardian: null
+        selectedGuardian: null,
+        removeInviteConfirm: false,
+        deletingInvite: false,
+        isSavingRoles: false,
+        removeGuardianConfirm: false,
+        removingGuardian: false,
+        guardianToRemove: null
       }
     },
     computed: {
+      currentUser() {
+        // Get the most up-to-date user data from team store
+        const updatedUser = this.teamStore.teamUsers.find(u =>
+          (u.userId || u.id) === (this.user.userId || this.user.id)
+        )
+        return updatedUser || this.user
+      },
       userRoles() {
-        return this.user.roles || []
+        return this.currentUser.roles || []
       },
       isInvitedUser() {
-        return (this.user.status || 'active') !== 'active'
+        return (this.currentUser.status || 'active') !== 'active'
       },
       userGuardians() {
         // Filter team users who have guardian role with guardianOf === user.id
         return this.teamUsers.filter(teamUser => {
           return teamUser.roles.some(role =>
-            role.role === 'guardian' && role.guardianOf === this.user.userId
+            role.role === 'guardian' && role.guardianOf === this.currentUser.userId
           )
         })
+      },
+      athleteMap() {
+        const map = new Map()
+        for (const u of this.teamUsers) {
+          map.set(u.userId || u.id, u)
+        }
+        return map
       }
     },
     methods: {
+      getAthleteDisplay(athleteId) {
+        const athlete = this.athleteMap.get(athleteId)
+        return athlete ? (athlete.fullName || athlete.email || athleteId) : athleteId
+      },
+      saveRolesProxy(roles) {
+        this.isSavingRoles = true
+        this.teamStore.updateTeamUserRoles({ userId: this.currentUser.userId || this.currentUser.id, roles })
+          .then(() => {
+            this.info(this.$t('userManagement.rolesUpdatedSuccess') + ' ' + this.currentUser.fullName || this.currentUser.email)
+          })
+          .finally(() => { this.isSavingRoles = false })
+      },
       getLanguageName(languageCode) {
         const languageMap = {
           'en': 'English',
@@ -244,10 +326,25 @@
       },
       handleRemoveAction() {
         if (this.isInvitedUser) {
-          this.$emit('remove-invite', this.user)
+          this.removeInviteConfirm = true
         } else {
           this.$emit('remove-user', this.user)
         }
+      },
+      confirmRemoveInvite() {
+        this.deletingInvite = true
+        this.teamStore.deleteInvite({ userId: this.user.userId || this.user.id, teamId: this.userStore.currentTeamId })
+          .then(() => {
+            this.$emit('remove-invite', this.user)
+            this.info(this.$t('userManagement.inviteDeletedSuccess') + ' ' + this.user.fullName || this.user.email)
+          })
+          .catch((error) => {
+            console.error(error)
+          })
+          .finally(() => {
+            this.removeInviteConfirm = false
+            this.deletingInvite = false
+          })
       },
       openGuardianInviteModal() {
         this.guardianInviteModal = true
@@ -261,7 +358,41 @@
         this.selectedGuardian = guardian
         this.guardianDetailModal = true
       },
+      confirmRemoveGuardian(guardian) {
+        this.guardianToRemove = guardian
+        this.removeGuardianConfirm = true
+      },
+      confirmRemoveGuardianAction() {
+        if (!this.guardianToRemove) return
+
+        this.removingGuardian = true
+        this.teamStore.deleteUserTeamRole({
+          teamId: this.userStore.currentTeamId,
+          userId: this.guardianToRemove.userId || this.guardianToRemove.id,
+          role: 'guardian',
+          guardianOf: this.currentUser.userId
+        })
+          .then(() => {
+            this.info(this.$t('userManagement.guardianRemovedSuccess'))
+            this.$emit('guardian-invited') // Refresh the data
+          })
+          .catch((error) => {
+            console.error('Error removing guardian:', error)
+          })
+          .finally(() => {
+            this.removeGuardianConfirm = false
+            this.removingGuardian = false
+            this.guardianToRemove = null
+          })
+      },
       handleRemoveInvite(invite) {
+        // If removal came from nested guardian details, only close that modal and refresh users
+        if (this.guardianDetailModal) {
+          this.guardianDetailModal = false
+          this.teamStore.fetchTeamUsers()
+          return
+        }
+        // Otherwise (main user invited), bubble up so parent handles closing
         this.$emit('remove-invite', invite)
       },
       handleRemoveUser(user) {
@@ -410,6 +541,21 @@
 
 .guardian-item--clickable:hover .guardian-arrow {
   color: rgba(0, 0, 0, 0.6);
+}
+
+.guardian-remove-btn {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.guardian-item--clickable:hover .guardian-remove-btn {
+  opacity: 1;
+}
+
+.guardian-remove-btn:hover {
+  color: rgba(220, 38, 38, 0.8);
+  background-color: rgba(220, 38, 38, 0.1);
 }
 
 /* Actions Section */
