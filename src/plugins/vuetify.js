@@ -17,6 +17,17 @@ export default createVuetify({
   components: {
     VHotkey,
   },
+  display: {
+    // Lower mobile breakpoint so $vuetify.display.mobile is true under 480px
+    mobileBreakpoint: 800,
+    thresholds: {
+      xs: 0,
+      sm: 480,
+      md: 960,
+      lg: 1280,
+      xl: 1920,
+    },
+  },
   theme: {
     defaultTheme: 'light',
     themes: {

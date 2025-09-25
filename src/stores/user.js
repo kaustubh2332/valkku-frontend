@@ -237,6 +237,42 @@ export const useUserStore = defineStore('user', {
       }
     },
 
+    async updateUserDetails(payload) {
+      try {
+        const response = await api.patch('/user/details', payload)
+
+        if (response.data && response.data.success) {
+          // Update the user in the store with the complete response data
+          this.setUser(response.data.data)
+          return { success: true, data: response.data.data }
+        } else {
+          return { success: false, message: response.data?.message || 'Update failed' }
+        }
+      } catch (error) {
+        console.error('Failed to update user details:', error)
+        return {
+          success: false,
+          message: error.response?.data?.message || 'Failed to update user details'
+        }
+      }
+    },
+
+    joinTeam(payload) {
+      return api.post('/team/join', payload)
+        .then(response => {
+          return response.data && response.data.success
+            ? { success: true, data: response.data }
+            : { success: false, message: response.data?.message || 'Join failed' }
+        })
+        .catch(error => {
+          console.error('Failed to join team:', error)
+          return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to join team'
+          }
+        })
+    },
+
     async flushPendingClicks() {
       if (this.pendingClickCount === 0) {
         return
@@ -282,6 +318,11 @@ export const useUserStore = defineStore('user', {
         console.error('Failed to change locale:', error)
         return { success: false, error }
       }
+    },
+
+    clearCurrentTeam() {
+      this.currentTeamId = null
+      this.currentTeamName = null
     }
 
   }

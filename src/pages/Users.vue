@@ -14,25 +14,35 @@
         color="primary"
       >
         <v-tab :value="0">
-          {{ $t('userManagement.managers') }}
-          <v-chip
-            v-if="!$vuetify.display.mobile"
-            class="ml-2"
-            color="primary"
-            size="x-small"
-          >
-            {{ managerUsers.length }}
-          </v-chip>
+          <div v-if="$vuetify.display.mobile">
+            <v-icon>mdi-account-group</v-icon>
+          </div>
+          <div v-else>
+            {{ $t('userManagement.managers') }}
+            <v-chip
+              v-if="!$vuetify.display.mobile"
+              class="ml-2"
+              color="primary"
+              size="x-small"
+            >
+              {{ filteredManagerUsers.length }}
+            </v-chip>
+          </div>
         </v-tab>
         <v-tab :value="1">
-          {{ $t('userManagement.athletes') }}
+          <div v-if="$vuetify.display.mobile">
+            <v-icon>mdi-run</v-icon>
+          </div>
+          <div v-else>
+            {{ $t('userManagement.athletes') }}
+          </div>
           <v-chip
             v-if="!$vuetify.display.mobile"
             class="ml-2"
             color="primary"
             size="x-small"
           >
-            {{ athleteUsers.length }}
+            {{ filteredAthleteUsers.length }}
           </v-chip>
         </v-tab>
       </v-tabs>
@@ -51,8 +61,21 @@
       </template>
     </AppToolbar>
 
+    <!-- Search Bar -->
+    <v-text-field
+      v-model="teamStore.searchQuery"
+      autocomplete="off"
+      class="mt-6 mb-0"
+      clearable
+      density="compact"
+      hide-details
+      :label="$t('userManagement.searchUsers')"
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+    />
+
     <!-- Tabs -->
-    <div class="mt-4">
+    <div class="mt-0">
       <v-window v-model="activeTab" :touch="false">
         <!-- Managers Tab -->
         <v-window-item :value="0">
@@ -91,11 +114,11 @@
           </LoadingWrapper>
 
           <!-- Managers Content -->
-          <div v-else-if="managerUsers.length > 0" class="mt-4">
+          <div v-else-if="filteredManagerUsers.length > 0" class="mt-4">
             <UserTable
               :show-guardians="false"
               :team-users="teamUsers"
-              :users="managerUsers"
+              :users="filteredManagerUsers"
               @row-click="handleUserCardClick"
             />
           </div>
@@ -157,11 +180,11 @@
           </LoadingWrapper>
 
           <!-- Athletes Content -->
-          <div v-else-if="athleteUsers.length > 0" class="mt-4">
+          <div v-else-if="filteredAthleteUsers.length > 0" class="mt-4">
             <UserTable
               :show-guardians="true"
               :team-users="teamUsers"
-              :users="athleteUsers"
+              :users="filteredAthleteUsers"
               @row-click="handleUserCardClick"
             />
           </div>
@@ -193,7 +216,7 @@
   <BottomSheetModal
     v-model="inviteUserDialog"
     height="95vh"
-    :title="$t('userManagement.inviteUser') + ' - ' + userStore.currentTeam.teamName"
+    :title="$t('userManagement.inviteUser') + ' - ' + userStore.currentTeam?.teamName"
   >
     <InviteUser :is-open="inviteUserDialog" @user-invited="handleUserInvited" />
   </BottomSheetModal>
@@ -261,6 +284,38 @@
         return this.teamUsers.filter(user =>
           user.roles.some(role => role.role === 'athlete')
         )
+      },
+      filteredManagerUsers() {
+        if (!this.teamStore.searchQuery) return this.managerUsers
+
+        const query = this.teamStore.searchQuery.toLowerCase()
+        return this.managerUsers.filter(user => {
+          const email = (user.email || '').toLowerCase()
+          const fullName = (user.fullName || '').toLowerCase()
+          const firstName = (user.firstName || '').toLowerCase()
+          const lastName = (user.lastName || '').toLowerCase()
+
+          return email.includes(query) ||
+            fullName.includes(query) ||
+            firstName.includes(query) ||
+            lastName.includes(query)
+        })
+      },
+      filteredAthleteUsers() {
+        if (!this.teamStore.searchQuery) return this.athleteUsers
+
+        const query = this.teamStore.searchQuery.toLowerCase()
+        return this.athleteUsers.filter(user => {
+          const email = (user.email || '').toLowerCase()
+          const fullName = (user.fullName || '').toLowerCase()
+          const firstName = (user.firstName || '').toLowerCase()
+          const lastName = (user.lastName || '').toLowerCase()
+
+          return email.includes(query) ||
+            fullName.includes(query) ||
+            firstName.includes(query) ||
+            lastName.includes(query)
+        })
       },
       isLoadingTeamUsers() {
         return this.teamStore.loadingTeamUsers

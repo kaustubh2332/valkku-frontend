@@ -15,6 +15,9 @@
         >
           <TeamRoleDisplay
             v-if="currentTeamName && currentRole"
+            :guardian-of="currentRole.guardianOf"
+            :guardian-of-email="currentRole.guardianOfEmail"
+            :guardian-of-full-name="currentRole.guardianOfFullName"
             :role-name="currentRole.role"
             rowed
             :team-name="truncatedCurrentTeamName || $t('chooseTeam.selectTeam')"
@@ -39,6 +42,9 @@
             <div class="d-flex align-center justify-space-between w-100">
               <TeamRoleDisplay
                 class="flex-shrink-0 ml-2 mt-0"
+                :guardian-of="role.guardianOf"
+                :guardian-of-email="role.guardianOfEmail"
+                :guardian-of-full-name="role.guardianOfFullName"
                 :role-name="role.role"
                 :team-name="team.teamName"
               />
@@ -79,17 +85,12 @@
 </template>
 
 <script lang="ts">
-  import CreateTeam from '@/pages/CreateTeam.vue'
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import { roleToColor } from '@/utils/mappings'
 
   export default {
     name: 'ChooseTeamBtn',
-    components: {
-      CreateTeam,
-      TeamRoleDisplay: () => import('./TeamRoleDisplay.vue')
-    },
     props: {
       main: {
         type: Boolean,

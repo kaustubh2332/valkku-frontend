@@ -1,4 +1,13 @@
 {
+  "addDetails": {
+    "description": "Please provide the missing information to complete your account setup",
+    "emailLabel": "Email",
+    "haveAccount": "Already have an account? Sign in",
+    "infoMessage": "Please add your details to sign in",
+    "submit": "Save Details",
+    "success": "Details updated successfully! Sign in to continue.",
+    "title": "Add Details"
+  },
   "app": {
     "backToHome": "Back to Home",
     "login": "Login",
@@ -60,13 +69,15 @@
   },
   "join": {
     "errors": {
+      "back": "Go back",
       "description": "Invite link is invalid or expired",
       "expired": "Invite expired",
       "title": "Invalid link",
       "token_required": "Invalid link",
       "wrong_user": "Invite is for another email. Log out and click the link again. You can also ask the team admin to invite you with the current email {email}."
     },
-    "success": "Joined team"
+    "success": "Joined team",
+    "success_description": "Sign in to continue"
   },
   "language": {
     "english": "English",
@@ -88,6 +99,7 @@
     "submit": "Sign In",
     "title": "Sign in"
   },
+  "logout": "Log out",
   "optional": "optional",
   "roles": {
     "admin": "Admin",
@@ -102,8 +114,12 @@
     "emojiClicked": "Emoji clicked {count} times",
     "language": "Language",
     "language_updated": "Language updated",
+    "leaveTeam": "Leave Team",
+    "leaveTeamConfirm": "Are you sure you want to leave {teamName}? This action cannot be undone.",
+    "leaveTeamSuccess": "You have successfully left the team",
     "profile": "Profile",
     "profileDescription": "To update your profile information, password, or security settings, please visit the Auth0 dashboard.",
+    "team": "Team",
     "title": "Settings",
     "version": "Version"
   },
@@ -178,10 +194,12 @@
     "removeInvite": "Remove invite",
     "removeInviteConfirm": "Are you sure you want to revoke the invite?",
     "removeUser": "Remove user",
+    "removeUserConfirm": "Are you sure you want to remove this user from the team?",
     "role": "Role",
     "roleShortcuts": "",
     "roles": "Roles",
     "rolesUpdatedSuccess": "User roles updated",
+    "searchUsers": "Search users...",
     "teamMember": "Team Member",
     "teamMembers": "Members",
     "title": "Users",

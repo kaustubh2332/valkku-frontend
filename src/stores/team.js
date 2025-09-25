@@ -10,7 +10,8 @@ export const useTeamStore = defineStore('team', {
     loadedForTeamId: null,
     teamInvites: [],
     loadingTeamInvites: false,
-    loadedInvitesForTeamId: null
+    loadedInvitesForTeamId: null,
+    searchQuery: ''
   }),
   actions: {
     async inviteUser(payload) {
@@ -130,6 +131,39 @@ export const useTeamStore = defineStore('team', {
         api.delete(url)
           .then(async (res) => {
             await this.fetchTeamUsers(teamId)
+            resolve(res?.data)
+          })
+          .catch((error) => {
+            notificationStore.handleBackendError(error)
+            reject(error)
+          })
+      })
+    },
+    setSearchQuery(query) {
+      this.searchQuery = query
+    },
+    leaveTeam({ teamId, userId }) {
+      const notificationStore = useNotificationStore()
+      const userStore = useUserStore()
+
+      return new Promise((resolve, reject) => {
+        if (!teamId) {
+          teamId = userStore.currentTeamId
+        }
+
+        if (!teamId || !userId) {
+          reject(new Error('Missing teamId or userId for leaveTeam'))
+          return
+        }
+
+        api.delete(`/team/${teamId}/self/${userId}`)
+          .then((res) => {
+            // Clear team data and redirect to home
+            this.teamUsers = []
+            this.teamInvites = []
+            this.loadedForTeamId = null
+            this.loadedInvitesForTeamId = null
+            userStore.clearCurrentTeam()
             resolve(res?.data)
           })
           .catch((error) => {

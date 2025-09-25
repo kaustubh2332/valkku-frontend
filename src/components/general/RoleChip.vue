@@ -7,14 +7,15 @@
     :variant="chipVariant"
   >
     <span v-if="(!$vuetify.display.mobile && !icon) || alwaysShowText" :class="!$vuetify.display.mobile && !icon ? 'mr-2' : ''">
-      {{ roleLabel }}
+      {{ replaceText || roleLabel }}
     </span>
     <v-icon
-      class="mr-0"
+      class="mr-0 ml-1"
       :icon="roleIcon"
       size="12"
     />
   </v-chip>
+  <!-- {{ replaceText }} -->
 </template>
 
 <script lang="ts">
@@ -40,6 +41,10 @@
       noPadding: {
         type: Boolean,
         default: false
+      },
+      replaceText: {
+        type: String,
+        default: null
       }
     },
     computed: {

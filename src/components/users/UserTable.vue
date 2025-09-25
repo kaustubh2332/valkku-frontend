@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <th class="text-left" style="width: 35%">{{ $t('userManagement.teamMember') }}</th>
-        <!-- <th class="text-left" style="width: 25%">Email</th> -->
+        <th class="text-left" style="width: 25%">Email</th>
         <th class="text-left" style="width: 10%">Status</th>
         <th v-if="showGuardians" class="text-left" style="width: 15%">{{ $t('userManagement.guardians') }}</th>
         <th class="text-left" style="width: 15%">{{ $t('userManagement.roles') }}</th>
@@ -20,13 +20,19 @@
           <div class="d-flex align-center">
             <UserAvatar class="mr-3" size="28" :user="user" />
             <div class="text-truncate">
-              <div class="text-body-1 font-weight-medium text-truncate">{{ user.fullName || user.email }}</div>
+              <div
+                class="text-body-1 font-weight-medium text-truncate"
+                v-html="highlightText(user.fullName || user.email, teamStore.searchQuery)"
+              />
             </div>
           </div>
         </td>
-        <!-- <td class="text-truncate">
-          <span class="text-caption text-medium-emphasis">{{ user.email }}</span>
-        </td> -->
+        <td class="text-truncate">
+          <span
+            class="text-caption text-medium-emphasis"
+            v-html="highlightText(user.email, teamStore.searchQuery)"
+          />
+        </td>
         <td>
           <v-chip
             :color="isUserInvited(user) ? 'orange' : 'green'"
@@ -125,12 +131,17 @@
 <script lang="ts">
   import RoleChip from '@/components/general/RoleChip.vue'
   import UserAvatar from '@/components/users/UserAvatar.vue'
+  import { useTeamStore } from '@/stores/team'
 
   export default {
     name: 'UserTable',
     components: {
       RoleChip,
       UserAvatar
+    },
+    setup() {
+      const teamStore = useTeamStore()
+      return { teamStore }
     },
     props: {
       users: {
@@ -183,6 +194,13 @@
       },
       isUserInvited(user) {
         return (user.status || 'active') !== 'active'
+      },
+      highlightText(text, query) {
+        if (!query || !text) return text
+
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const regex = new RegExp(`(${escapedQuery})`, 'gi')
+        return text.replace(regex, '<mark class="search-highlight">$1</mark>')
       }
     },
   }
@@ -198,5 +216,13 @@
   }
   .user-table .table-row:hover {
     background: rgba(0,0,0,0.02);
+  }
+
+  .search-highlight {
+    background-color: #ffeb3b;
+    color: #000;
+    font-weight: 600;
+    padding: 1px 2px;
+    border-radius: 2px;
   }
 </style>

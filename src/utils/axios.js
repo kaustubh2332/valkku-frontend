@@ -25,7 +25,7 @@ function tokenLikelyExpired(error) {
   return code === 'token_expired' || code === 'unauthorized'
 }
 
-async function refreshAccessToken() {
+async function refreshAccessToken(suppressLogoutOnFail = false) {
   if (!refreshPromise) {
     const userStore = useUserStore()
     refreshPromise = (async () => {
@@ -43,14 +43,16 @@ async function refreshAccessToken() {
           lastError = error
           if (attempt === MAX_REFRESH_RETRIES) {
             // Fully clear auth state and navigate to signin
-            if (typeof userStore.finishLogout === 'function') {
-              userStore.finishLogout(true)
-            } else {
-              // Fallback: clear token only
-              if (typeof userStore.setToken === 'function') {
-                userStore.setToken(null)
+            if (!suppressLogoutOnFail) {
+              if (typeof userStore.finishLogout === 'function') {
+                userStore.finishLogout(true)
               } else {
-                userStore.token = null
+                // Fallback: clear token only
+                if (typeof userStore.setToken === 'function') {
+                  userStore.setToken(null)
+                } else {
+                  userStore.token = null
+                }
               }
             }
             throw lastError
@@ -87,6 +89,12 @@ api.interceptors.response.use(
     const url = original.url || ''
 
     if(isAutoFetchUserEndpoint(url)) {
+      // For auto-fetch user endpoints, do a non-fatal background refresh to keep session alive
+      if (status === 401 && tokenLikelyExpired(error)) {
+        // Fire-and-forget; never logs the user out on failure
+        refreshAccessToken(true).catch(() => {})
+      }
+      // Never redirect or propagate for periodic checks
       return
     }
 
@@ -121,7 +129,17 @@ api.interceptors.response.use(
       }
 
       if (!location.pathname.includes('/callback')) {
-        router.push('/signin?exp=true')
+        // Only redirect with exp=true if refresh token has expired
+        // Check if this is a refresh token expiration (not just access token)
+        const isRefreshTokenExpired = url.includes('/auth/refresh') ||
+          (original._refreshAttempted && tokenLikelyExpired(error))
+
+        if (isRefreshTokenExpired) {
+          router.push('/signin?exp=true')
+        } else {
+          // Regular 401 (access token expired but refresh token still valid)
+          router.push('/signin')
+        }
       }
     } else if (status === 403) {
       console.error('Access forbidden')

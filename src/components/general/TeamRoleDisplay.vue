@@ -13,7 +13,10 @@
       </div>
       <div class="d-flex align-center">
         <RoleChip
-          always-show-text
+          :always-show-text="true"
+          class="pl-0"
+          :icon="true"
+          :replace-text="replaceText"
           :role="displayRole"
           style="transform: scale(0.9);"
           text
@@ -38,8 +41,10 @@
       </div>
       <div class="d-flex align-center justify-start" style="margin: 0; padding: 0; height: 12px;">
         <RoleChip
-          always-show-text
-          no-padding
+          :always-show-text="true"
+          class="pl-0"
+          :icon="true"
+          :replace-text="replaceText"
           :role="displayRole"
           style="transform: scale(0.9);"
           text
@@ -50,7 +55,9 @@
 </template>
 
 <script lang="ts">
+  import { useTeamStore } from '@/stores/team'
   import { useUserStore } from '@/stores/user'
+
   export default {
     name: 'TeamRoleDisplay',
     props: {
@@ -59,6 +66,18 @@
         default: null
       },
       roleName: {
+        type: String,
+        default: null
+      },
+      guardianOf: {
+        type: String,
+        default: null
+      },
+      guardianOfEmail: {
+        type: String,
+        default: null
+      },
+      guardianOfFullName: {
         type: String,
         default: null
       },
@@ -73,10 +92,15 @@
     },
     data() {
       return {
-        userStore: useUserStore()
+        userStore: useUserStore(),
+        teamStore: useTeamStore()
       }
     },
     computed: {
+      replaceText() {
+        const name = this.guardianOfFullName ? this.guardianOfFullName.split(' ')[0] : null;
+        return this.roleName === 'guardian' ? (name || this.guardianOfEmail || this.$t('roles.guardian')) : null
+      },
       displayTeamName() {
         return this.teamName || this.userStore.currentTeam?.teamName || ''
       },

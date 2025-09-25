@@ -24,7 +24,7 @@
 
     <v-list>
       <v-tooltip
-        v-for="item in navigationItems"
+        v-for="item in filteredNavigationItems"
         :key="item.name"
         :disabled="isMobile || !rail"
         location="right"
@@ -93,6 +93,9 @@
       isMobile() {
         return this.$vuetify.display.mobile
       },
+      filteredNavigationItems() {
+        return this.navigationItems.filter(item => item.roles?.includes(this.userStore.currentRoleId) || !item.roles)
+      },
       navigationItems() {
         return [
           {
@@ -105,7 +108,8 @@
             name: 'Users',
             path: '/users',
             icon: 'mdi-account-group',
-            title: this.$t('sidebar.userManagement')
+            title: this.$t('sidebar.userManagement'),
+            roles: ['owner', 'admin']
           },
           {
             name: 'Settings',

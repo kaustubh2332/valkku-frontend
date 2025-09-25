@@ -46,6 +46,16 @@ const routes = [
     component: () => import('@/pages/SignUp.vue')
   },
   {
+    path: '/add-details',
+    name: 'AddDetails',
+    meta: {
+      hideSidebar: true,
+      allowWithoutAuth: true,
+      disallowWithAuth: true
+    },
+    component: () => import('@/pages/AddDetails.vue')
+  },
+  {
     path: '/callback',
     name: 'Callback',
     meta: {

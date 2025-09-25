@@ -89,12 +89,12 @@
             {{ isInvitedUser ? $t('userManagement.invitedOn') : $t('userManagement.joinedOn') }}
           </div>
           <div class="detail-value text-truncate">
-            {{ formatDate(user.createdAt) }}
+            {{ formatDate(currentUser.createdAt) }}
           </div>
         </div>
 
         <div
-          v-if="isInvitedUser && user.inviteExpiresAt"
+          v-if="isInvitedUser && currentUser.inviteExpiresAt"
           class="detail-item"
         >
           <div class="detail-label">
@@ -106,7 +106,7 @@
             {{ $t('userManagement.inviteExpires') }}
           </div>
           <div class="detail-value text-truncate">
-            {{ formatDate(user.inviteExpiresAt) }}
+            {{ formatDate(currentUser.inviteExpiresAt) }}
           </div>
         </div>
 
@@ -155,9 +155,9 @@
     </div>
 
     <!-- Actions Section -->
-    <div class="user-actions-section">
+    <div class="user-actions-section d-flex flex-column gap-2">
       <v-btn
-        v-if="user.roles.some(r => r.role === 'athlete')"
+        v-if="userRoles.some(r => r.role === 'athlete')"
         size="small"
         variant="tonal"
         @click="openGuardianInviteModal"
@@ -166,6 +166,7 @@
         {{ $t('userManagement.addGuardian') }}
       </v-btn>
       <v-btn
+        class="mt-2"
         color="error"
         size="small"
         variant="tonal"
@@ -174,7 +175,7 @@
         <v-icon class="mr-2">
           {{ isInvitedUser ? 'mdi-email-remove' : 'mdi-account-remove' }}
         </v-icon>
-        {{ isInvitedUser ? $t('userManagement.removeInvite') : $t('userManagement.removeUser') }}
+        {{ $t('userManagement.removeUser') }}
       </v-btn>
     </div>
   </div>
@@ -211,11 +212,11 @@
   </BottomSheetModal>
   <Confirm
     v-model="removeInviteConfirm"
-    :accept-text="$t('userManagement.deleteInvite')"
+    :accept-text="$t('userManagement.removeUser')"
     :cancel-text="$t('back')"
     :loading="deletingInvite"
-    :text="$t('userManagement.removeInviteConfirm')"
-    :title="$t('userManagement.removeInvite')"
+    :text="$t('userManagement.removeUserConfirm')"
+    :title="$t('userManagement.removeUser')"
     @accept="confirmRemoveInvite"
   />
   <Confirm
@@ -301,6 +302,18 @@
         const athlete = this.athleteMap.get(athleteId)
         return athlete ? (athlete.fullName || athlete.email || athleteId) : athleteId
       },
+      getGuardianDisplay() {
+        const guardian = this.currentUser
+        if (guardian.fullName && guardian.email) {
+          return `${guardian.fullName} (${guardian.email})`
+        } else if (guardian.fullName) {
+          return guardian.fullName
+        } else if (guardian.email) {
+          return guardian.email
+        } else {
+          return guardian.userId || guardian.id || 'Guardian'
+        }
+      },
       saveRolesProxy(roles) {
         this.isSavingRoles = true
         this.teamStore.updateTeamUserRoles({ userId: this.currentUser.userId || this.currentUser.id, roles })
@@ -325,18 +338,14 @@
         return `${day}.${month}.${year}`
       },
       handleRemoveAction() {
-        if (this.isInvitedUser) {
-          this.removeInviteConfirm = true
-        } else {
-          this.$emit('remove-user', this.user)
-        }
+        this.removeInviteConfirm = true
       },
       confirmRemoveInvite() {
         this.deletingInvite = true
-        this.teamStore.deleteInvite({ userId: this.user.userId || this.user.id, teamId: this.userStore.currentTeamId })
+        this.teamStore.deleteInvite({ userId: this.currentUser.userId || this.currentUser.id, teamId: this.userStore.currentTeamId })
           .then(() => {
-            this.$emit('remove-invite', this.user)
-            this.info(this.$t('userManagement.inviteDeletedSuccess') + ' ' + this.user.fullName || this.user.email)
+            this.$emit('remove-invite', this.currentUser)
+            this.info(this.$t('userManagement.inviteDeletedSuccess') + ' ' + this.currentUser.fullName || this.currentUser.email)
           })
           .catch((error) => {
             console.error(error)

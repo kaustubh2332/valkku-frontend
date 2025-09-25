@@ -1,4 +1,13 @@
 {
+  "addDetails": {
+    "description": "Anna puuttuvat tiedot viimeistelläksesi tilisi",
+    "emailLabel": "Sähköposti",
+    "haveAccount": "Onko sinulla jo tili? Kirjaudu sisään",
+    "infoMessage": "Lisää tietosi kirjautuaksesi sisään",
+    "submit": "Tallenna tiedot",
+    "success": "Tiedot päivitetty onnistuneesti! Krjaudu sisään jatkaaksesi.",
+    "title": "Lisää tiedot"
+  },
   "app": {
     "backToHome": "Takaisin etusivulle",
     "login": "Kirjaudu",
@@ -60,13 +69,15 @@
   },
   "join": {
     "errors": {
+      "back": "Takaisin",
       "description": "Liittymislinkki on virheellinen tai vanhentunut",
       "expired": "Kutsu on vanhentunut",
       "title": "Tapahtui virhe",
       "token_required": "Linkki virheellinen",
       "wrong_user": "Kutsu on eri sähköpostille. Kirjaudu ulos ja yritä uudelleen. Voit myös pyytää admin-käyttäjää kutsumaan sinut tämän käyttäjän sähköpostilla {email}."
     },
-    "success": "Liitytty joukkueeseen"
+    "success": "Liitytty joukkueeseen",
+    "success_description": "Kirjaudu sisään jatkaaksesi"
   },
   "language": {
     "english": "English",
@@ -88,6 +99,7 @@
     "submit": "Kirjaudu sisään",
     "title": "Kirjaudu"
   },
+  "logout": "Kirjaudu ulos",
   "optional": "valinnainen",
   "roles": {
     "admin": "Admin",
@@ -102,8 +114,12 @@
     "emojiClicked": "Emojia klikattu {count} kertaa",
     "language": "Kieli",
     "language_updated": "Kieli päivitetty",
+    "leaveTeam": "Poistu joukkueesta",
+    "leaveTeamConfirm": "Oletko varma, että haluat poistua joukkueesta {teamName}? Tätä toimintoa ei voi peruuttaa.",
+    "leaveTeamSuccess": "Olet onnistuneesti poistunut joukkueesta",
     "profile": "Profiili",
     "profileDescription": "Päivittääksesi profiilitietojasi, salasanasi tai tietoturva-asetuksiasi, vieraile Auth0 hallintapaneelissa.",
+    "team": "Joukkue",
     "title": "Asetukset",
     "version": "Versio"
   },
@@ -178,10 +194,12 @@
     "removeInvite": "Peru kutsu",
     "removeInviteConfirm": "Oletko varma että haluat peruuttaa kutsun?",
     "removeUser": "Poista käyttäjä",
+    "removeUserConfirm": "Haluatko varmasti poistaa tämän käyttäjän joukkueesta?",
     "role": "Rooli",
     "roleShortcuts": "",
     "roles": "Roolit",
     "rolesUpdatedSuccess": "Käyttäjän roolit päivitetty",
+    "searchUsers": "Hae käyttäjiä...",
     "teamMember": "Joukkueen jäsen",
     "teamMembers": "Jäsenet",
     "title": "Käyttäjänhallinta",

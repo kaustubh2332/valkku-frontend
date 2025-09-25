@@ -122,5 +122,9 @@ export const backendMessages = {
   "cannot_delete_owner_role": {
     "en": "Cannot delete owner",
     "fi": "Omistajaa ei voi poistaa"
+  },
+  "new_owner_not_signed_up": {
+    "en": "New owner not signed up",
+    "fi": "Uusi omistaja ei ole rekisteröitynyt"
   }
 }
