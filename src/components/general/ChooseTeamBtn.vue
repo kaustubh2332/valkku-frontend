@@ -85,12 +85,14 @@
 </template>
 
 <script lang="ts">
+  import CreateTeam from '@/pages/CreateTeam.vue'
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import { roleToColor } from '@/utils/mappings'
 
   export default {
     name: 'ChooseTeamBtn',
+    components: { CreateTeam },
     props: {
       main: {
         type: Boolean,

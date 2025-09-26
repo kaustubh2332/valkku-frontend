@@ -7,11 +7,11 @@
       <CreatePlanPart
         :colors="colors"
         :part="part"
-        @change="handlePartChange(part, index)"
         @remove="handlePartRemove(index)"
+        @update="handlePartChange($event, index)"
       />
     </div>
-    <v-btn @click="addEmptyPart">
+    <v-btn size="small" @click="addEmptyPart">
       <v-icon class="mr-2">mdi-plus</v-icon>
       {{ $t('events.add_plan_part') }}
     </v-btn>
@@ -43,7 +43,7 @@
       },
       addEmptyPart() {
         this.parts.push({
-          title: 'New part',
+          title: this.$t('events.new_part'),
           color: this.colors[0]
         })
       },

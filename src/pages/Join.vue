@@ -53,10 +53,11 @@
       const token = this.$route.query.token
       this.token = token
       // this.$router.replace('/join')
+      console.log("token", token)
 
       if(!token) {
-        this.notificationStore.error(this.$t('join.errors.token_required'))
         this.error = true
+        this.$router.push('/')
         return
       }
 
@@ -65,17 +66,26 @@
         const teamUser = res.data.data.team_user
         var user = res.data.data.user
 
-        if(teamUser.validUntil && new Date(teamUser.validUntil) < new Date()) this.errorText = this.$t('join.errors.expired')
-        if(this.userStore.token && teamUser.userId !== this.userStore.user.id) {
+        var tokenExpired = teamUser.validUntil && new Date(teamUser.validUntil) < new Date()
+        var wrongUser = this.userStore.token && teamUser.userId !== this.userStore.user.id
+        if(tokenExpired) {
+          this.errorText = this.$t('join.errors.expired')
+          this.error = true
+        } else if(wrongUser) {
           this.errorText = this.$t('join.errors.wrong_user', { email: this.userStore.user.email })
           this.error = true
+          this.notificationStore.error(this.$t('join.errors.wrong_user', { email: this.userStore.user.email }))
         }
       } catch (error) {
-        this.notificationStore.handleBackendError(error)
-        this.error = true
+        if(!this.userStore.token) this.notificationStore.handleBackendError(error)
+        console.log("error", error)
+        this.$router.push('/')
+        return
       } finally {
         this.loading = false
       }
+
+      console.log("wrongUser", wrongUser)
 
       if(this.error) {
         return

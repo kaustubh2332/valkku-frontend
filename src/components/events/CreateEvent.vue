@@ -11,8 +11,11 @@
         variant="outlined"
       />
 
+      <div class="text-overline">
+        {{ $t('events.event_plan') }}
+      </div>
       <CreatePlan />
-      <div class="d-flex justify-end ga-2">
+      <div class="d-flex justify-end ga-2 mt-4">
         <v-btn variant="text" @click="cancel">{{ $t('cancel') }}</v-btn>
         <v-spacer />
         <v-btn color="primary" :disabled="!formValid" @click="save">{{ $t('events.create_event') }}</v-btn>

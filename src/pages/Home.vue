@@ -63,7 +63,9 @@
   <!-- Create Event Modal -->
   <BottomSheetModal
     v-model="createEventOpen"
+    :class="{ 'pa-0': $vuetify.display.mobile }"
     height="80vh"
+    max-width="1000"
     :title="$t('home.addEvent')"
   >
     <CreateEvent @close="createEventOpen = false" @saved="onEventSaved" />

@@ -79,10 +79,9 @@
           v-else
           class="bottom-sheet-desktop"
           max-height="90vh"
-          max-width="100vw"
-          min-width="800"
-          :style="{ width: '90% !important', zIndex: contentZIndex }"
-          width="90%"
+          :max-width="normalizedMaxWidth"
+          :style="{ width: '90vw !important', zIndex: contentZIndex }"
+          width="auto"
         >
           <!-- Desktop title -->
           <v-card-title v-if="title" class="desktop-title">
@@ -150,6 +149,10 @@
       nestingLevel: {
         type: Number,
         default: 0
+      },
+      maxWidth: {
+        type: [String, Number],
+        default: '800'
       }
     },
     emits: ['update:modelValue', 'close'],
@@ -184,6 +187,15 @@
       },
       dropdownZIndex() {
         return this.modalZIndex + 1000
+      },
+      normalizedMaxWidth() {
+        const value = this.maxWidth
+        if (typeof value === 'number') return `${value}px`
+        const trimmed = String(value).trim()
+        // If it already contains units, pass through
+        if (/\d(px|%|rem|em|vw|vh)$/i.test(trimmed)) return trimmed
+        // Otherwise assume pixels
+        return `${Number.parseInt(trimmed, 10)}px`
       },
       isOpen: {
         get() {

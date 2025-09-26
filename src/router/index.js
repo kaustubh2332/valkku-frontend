@@ -75,11 +75,17 @@ const routes = [
   {
     path: '/users',
     name: 'Users',
+    meta: {
+      roles: ['owner', 'admin']
+    },
     component: Users
   },
   {
     path: '/users/:userId',
     name: 'UserDetail',
+    meta: {
+      roles: ['owner', 'admin']
+    },
     component: Users
   },
   {
@@ -131,8 +137,13 @@ function beforeEachGuard(to, from, next) {
   }
 
   // If user exists and has no teams, redirect to create-team (but only if details are complete)
-  if (user && !user.pendingDetails && user.teams.length === 0 && to.path !== '/create-team' && to.path !== '/callback' && !to.meta.allowWithoutTeam) {
+  if (user && !user?.pendingDetails && user?.teams?.length === 0 && to.path !== '/create-team' && to.path !== '/callback' && !to.meta.allowWithoutTeam) {
     next('/create-team')
+    return
+  }
+
+  if(user && to.meta.roles && !to.meta.roles.includes(userStore?.currentRoleId)) {
+    next('/')
     return
   }
 
