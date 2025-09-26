@@ -58,6 +58,15 @@
     "welcome": "Welcome to Valkku",
     "why_we_need_your_name": "We need your name so your team members can recognize you."
   },
+  "events": {
+    "add_plan_part": "Add part",
+    "add_text": "Text",
+    "create_event": "Create event",
+    "plan_part_title": "Title",
+    "save": "Save",
+    "title": "Event title",
+    "titleRequired": "Title is required"
+  },
   "home": {
     "addEvent": "Add event",
     "goodAfternoon": "Afternoon",

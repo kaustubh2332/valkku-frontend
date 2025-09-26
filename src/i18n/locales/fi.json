@@ -58,6 +58,15 @@
     "welcome": "Tervetuloa Valkkuun",
     "why_we_need_your_name": "Tarvitsemme nimesi, jotta ryhmäsi jäsenet tunnistavat sinut."
   },
+  "events": {
+    "add_plan_part": "Lisää osio",
+    "add_text": "Teksti",
+    "create_event": "Luo tapahtuma",
+    "plan_part_title": "Otsikko",
+    "save": "Tallenna",
+    "title": "Tapahtuman nimi",
+    "titleRequired": "Nimi on pakollinen"
+  },
   "home": {
     "addEvent": "Lisää tapahtuma",
     "goodAfternoon": "Päivää",

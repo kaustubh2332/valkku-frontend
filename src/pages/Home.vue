@@ -28,7 +28,7 @@
         size="x-large"
         :text="$t('home.addEvent')"
         variant="tonal"
-        @click="handleGetStarted"
+        @click="openCreateEvent"
       >
         <v-icon class="mr-2">mdi-plus</v-icon>
         {{ $t('home.addEvent') }}
@@ -60,6 +60,15 @@
     </v-col>
   </v-row>
 
+  <!-- Create Event Modal -->
+  <BottomSheetModal
+    v-model="createEventOpen"
+    height="80vh"
+    :title="$t('home.addEvent')"
+  >
+    <CreateEvent @close="createEventOpen = false" @saved="onEventSaved" />
+  </BottomSheetModal>
+
   <!-- Bottom App Buttons -->
   <div class="my-8 d-flex justify-space-around">
     <AppButton
@@ -90,17 +99,21 @@
 </template>
 
 <script lang="ts">
+  import CreateEvent from '@/components/events/CreateEvent.vue'
+  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
   import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'Home',
+    components: { BottomSheetModal, CreateEvent },
     setup() {
       const userStore = useUserStore()
       return { userStore }
     },
     data() {
       return {
-        isLoading: false
+        isLoading: false,
+        createEventOpen: false
       }
     },
     computed: {
@@ -142,6 +155,13 @@
       }
     },
     methods: {
+      openCreateEvent() {
+        this.createEventOpen = true
+      },
+      onEventSaved(payload) {
+        // Placeholder: integrate API later
+        console.log('Event saved:', payload)
+      },
       shootConfetti() {
         const config = {
           angle: 270, // Shoot downward from top
