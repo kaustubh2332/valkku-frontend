@@ -12,7 +12,7 @@
           class="mx-auto mb-4"
           max-height="80"
           max-width="200"
-          :src="logo"
+          src="/src/assets/logo.svg"
         />
       </div>
 
@@ -162,7 +162,6 @@
 <script lang="ts">
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
-  import logo from '@/assets/logo.svg'
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
 
@@ -178,7 +177,6 @@
     },
     data() {
       return {
-        logo,
         formValid: false,
         isSubmitting: false,
         selectedLanguage: this.$i18n.locale,

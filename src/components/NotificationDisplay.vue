@@ -4,17 +4,20 @@
       name="notification"
       tag="div"
     >
-      <v-snackbar
+      <div
         v-for="notification in notifications"
         :key="notification.id"
-        :class="{ 'mobile-notification': $vuetify.display.mobile }"
-        :color="getNotificationColor(notification.type)"
-        :location="$vuetify.display.mobile ? 'top center' : 'bottom left'"
-        :model-value="true"
-        :timeout="notification.duration"
-        :variant="$vuetify.display.mobile ? 'elevated' : 'elevated'"
-        @update:model-value="removeNotification(notification.id)"
+        class="notification-wrapper"
       >
+        <v-snackbar
+          :class="{ 'mobile-notification': $vuetify.display.mobile }"
+          :color="getNotificationColor(notification.type)"
+          :location="$vuetify.display.mobile ? 'top center' : 'bottom left'"
+          :model-value="true"
+          :timeout="notification.duration"
+          :variant="$vuetify.display.mobile ? 'elevated' : 'elevated'"
+          @update:model-value="removeNotification(notification.id)"
+        >
         <div v-if="$vuetify.display.mobile" class="mobile-notification-content">
           <v-icon
             class="mr-2"
@@ -68,7 +71,8 @@
             @click="handleAction(notification)"
           />
         </template>
-      </v-snackbar>
+        </v-snackbar>
+      </div>
     </transition-group>
   </div>
 </template>
@@ -128,6 +132,11 @@
   z-index: 60000;
   pointer-events: none;
   isolation: isolate;
+}
+
+.notification-wrapper {
+  pointer-events: auto;
+  margin-bottom: 10px;
 }
 
 .notification-container :deep(.v-snackbar) {

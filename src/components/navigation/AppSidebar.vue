@@ -42,6 +42,15 @@
         </template>
         <span>{{ item.title }}</span>
       </v-tooltip>
+      <v-list-item
+        v-if="userStore.user?.superAdmin"
+        :active="$route.path.startsWith('/admin')"
+        color="primary"
+        prepend-icon="mdi-shield-crown-outline"
+        title="Admin dashboard"
+        :to="{ path: '/admin' }"
+        @click.stop="handleMobileNavigation"
+      />
     </v-list>
 
     <template #append>
@@ -117,6 +126,12 @@
             icon: 'mdi-cog',
             title: this.$t('sidebar.settings')
           },
+          {
+            name: 'Library',
+            path: '/library',
+            icon: 'mdi-library-outline',
+            title: this.$t('sidebar.library')
+          }
         ]
       }
     },

@@ -5,6 +5,7 @@ import Home from '@/pages/Home.vue'
 import Settings from '@/pages/Settings.vue'
 import SignIn from '@/pages/SignIn.vue'
 import Users from '@/pages/Users.vue'
+import Library from '@/pages/Library.vue'
 
 import { useUserStore } from '@/stores/user'
 
@@ -81,6 +82,11 @@ const routes = [
     component: Users
   },
   {
+    path: '/library',
+    name: 'Library',
+    component: Library
+  },
+  {
     path: '/users/:userId',
     name: 'UserDetail',
     meta: {
@@ -92,6 +98,11 @@ const routes = [
     path: '/create-team',
     name: 'CreateTeam',
     component: () => import('@/pages/CreateTeam.vue')
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/pages/Admin.vue')
   }
 ]
 
@@ -147,12 +158,21 @@ function beforeEachGuard(to, from, next) {
     return
   }
 
+  if(to.path === '/admin' && !user?.superAdmin) {
+    next('/')
+    return
+  }
+
   next()
 }
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes: guardedRoutes
+  routes: guardedRoutes,
+  scrollBehavior(to, from, savedPosition) {
+    // Always scroll to top when navigating to a new route
+    return { top: 0 }
+  }
 })
 
 router.beforeEach(beforeEachGuard)

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { useUserStore } from '@/stores/user'
 import { useNotificationStore } from '@/stores/notification'
+import { useUserStore } from '@/stores/user'
 import api from '@/utils/axios'
 
 export const useTeamStore = defineStore('team', {

@@ -1,4 +1,5 @@
 {
+  "add": "Add",
   "addDetails": {
     "description": "Please provide the missing information to complete your account setup",
     "emailLabel": "Email",
@@ -7,6 +8,29 @@
     "submit": "Save Details",
     "success": "Details updated successfully! Sign in to continue.",
     "title": "Add Details"
+  },
+  "admin": {
+    "addType": "Add Type",
+    "color": "Color",
+    "deleteType": "Delete Type",
+    "deleteTypeConfirm": "Are you sure you want to delete this type?",
+    "editType": "Edit Type",
+    "eventPlanPartTypes": "Event Plan Part Types",
+    "fetchError": "Error fetching types",
+    "hideArchived": "Hide Archived",
+    "planPartCreated": "Plan part created successfully",
+    "planPartError": "Error creating plan part",
+    "positionsUpdated": "Positions updated successfully",
+    "showArchived": "Show Archived",
+    "title": "Admin dashboard",
+    "typeArchived": "Type archived successfully",
+    "typeCreated": "Type created successfully",
+    "typeDeleted": "Type deleted successfully",
+    "typeName": "Type Name",
+    "typeNameMinLength": "Type name must be at least 2 characters",
+    "typeNameRequired": "Type name is required",
+    "typeUnarchived": "Type unarchived successfully",
+    "typeUpdated": "Type updated successfully"
   },
   "app": {
     "backToHome": "Back to Home",
@@ -31,6 +55,13 @@
     "noTeams": "No teams available",
     "selectTeam": "Select team",
     "success": "Team changed"
+  },
+  "common": {
+    "actions": "Actions",
+    "archive": "Archive",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
   },
   "createTeam": {
     "description": "Give your teams name to get started!",
@@ -59,17 +90,37 @@
     "why_we_need_your_name": "We need your name so your team members can recognize you."
   },
   "events": {
+    "add": "Add",
+    "add_new_type": "Add new type",
     "add_plan_part": "Add part",
     "add_text": "Text",
+    "choose_color": "Choose color",
+    "color": "Color",
     "create_event": "Create event",
+    "create_text": "Add text",
     "delete_part": "Delete part",
+    "duration_minutes": "Duration (minutes)",
+    "duration_range": "Duration must be between 1 and 480 minutes",
+    "duration_required": "Duration is required",
+    "edit_event_plan": "Edit plan",
+    "edit_part": "Edit part",
     "edit_part_name": "Edit part name",
+    "edit_plan_part": "Edit plan part",
+    "edit_plan_part_types": "Edit plan part types",
     "event_plan": "Event plan",
+    "event_plan_ok": "Plan ok",
     "new_part": "New part",
+    "new_plan_part": "New plan part",
     "plan_part_title": "Title",
+    "plan_part_type": "Part type",
     "save": "Save",
+    "stop_editing_event_plan": "Stop editing plan",
     "title": "Event title",
-    "titleRequired": "Title is required"
+    "titleRequired": "Title is required",
+    "type_name": "Type name",
+    "type_name_min_length": "Type name must be at least 2 characters",
+    "type_name_required": "Type name is required",
+    "type_required": "Type is required"
   },
   "home": {
     "addEvent": "Add event",
@@ -95,6 +146,17 @@
   "language": {
     "english": "English",
     "finnish": "Suomi"
+  },
+  "library": {
+    "eventPlanPartTypes": "Section types",
+    "files": "Files",
+    "global": "General",
+    "own": "Own",
+    "plan_parts": "Section templates",
+    "plan_types": "Section types",
+    "practise_plans": "Practise templates",
+    "team": "Team",
+    "title": "Library"
   },
   "login": {
     "description": "Sign in to your account to continue",
@@ -140,6 +202,7 @@
   "sidebar": {
     "expand": "Expand",
     "home": "Home",
+    "library": "Library",
     "minify": "Minify",
     "settings": "Settings",
     "userManagement": "Users"

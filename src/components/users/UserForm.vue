@@ -377,10 +377,8 @@
       onGuardianKeydown(event) {
         const key = event.key?.toLowerCase()
         // Enter: select the first suggestion if none selected yet
-        if (key === 'enter') {
-          if (!this.selectedGuardian && this.emailSuggestions.length > 0) {
-            this.selectGuardianSuggestion(this.emailSuggestions[0])
-          }
+        if (key === 'enter' && !this.selectedGuardian && this.emailSuggestions.length > 0) {
+          this.selectGuardianSuggestion(this.emailSuggestions[0])
         }
       },
       onGuardianEmailInput() {

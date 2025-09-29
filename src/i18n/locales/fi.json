@@ -1,4 +1,5 @@
 {
+  "add": "Lisää",
   "addDetails": {
     "description": "Anna puuttuvat tiedot viimeistelläksesi tilisi",
     "emailLabel": "Sähköposti",
@@ -7,6 +8,29 @@
     "submit": "Tallenna tiedot",
     "success": "Tiedot päivitetty onnistuneesti! Krjaudu sisään jatkaaksesi.",
     "title": "Lisää tiedot"
+  },
+  "admin": {
+    "addType": "Lisää tyyppi",
+    "color": "Väri",
+    "deleteType": "Poista tyyppi",
+    "deleteTypeConfirm": "Haluatko varmasti poistaa tämän tyypin?",
+    "editType": "Muokkaa tyyppiä",
+    "eventPlanPartTypes": "Tapahtuman osion tyypit",
+    "fetchError": "Virhe tyyppien hakemisessa",
+    "hideArchived": "Piilota arkistoidut",
+    "planPartCreated": "Suunnitelman osa luotu onnistuneesti",
+    "planPartError": "Virhe suunnitelman osan luomisessa",
+    "positionsUpdated": "Sijainnit päivitetty onnistuneesti",
+    "showArchived": "Näytä arkistoidut",
+    "title": "Admin dashboard",
+    "typeArchived": "Tyyppi arkistoitu onnistuneesti",
+    "typeCreated": "Tyyppi luotu onnistuneesti",
+    "typeDeleted": "Tyyppi poistettu onnistuneesti",
+    "typeName": "Tyypin nimi",
+    "typeNameMinLength": "Tyypin nimi on oltava vähintään 2 merkkiä",
+    "typeNameRequired": "Tyypin nimi on pakollinen",
+    "typeUnarchived": "Tyyppi palautettu arkistosta onnistuneesti",
+    "typeUpdated": "Tyyppi päivitetty onnistuneesti"
   },
   "app": {
     "backToHome": "Takaisin etusivulle",
@@ -31,6 +55,13 @@
     "noTeams": "Ei joukkueita saatavilla",
     "selectTeam": "Valitse joukkue",
     "success": "Joukkue vaihdettu"
+  },
+  "common": {
+    "actions": "Muokkaa",
+    "archive": "Arkistoi",
+    "cancel": "Peru",
+    "delete": "Poista",
+    "edit": "Muokkaa"
   },
   "createTeam": {
     "description": "Anna joukkueen nimi.",
@@ -59,17 +90,37 @@
     "why_we_need_your_name": "Tarvitsemme nimesi, jotta ryhmäsi jäsenet tunnistavat sinut."
   },
   "events": {
+    "add": "Lisää",
+    "add_new_type": "Lisää uusi tyyppi",
     "add_plan_part": "Lisää osio",
     "add_text": "Teksti",
+    "choose_color": "Valitse väri",
+    "color": "Väri",
     "create_event": "Luo tapahtuma",
+    "create_text": "Lisää tekstiä",
     "delete_part": "Poista osio",
+    "duration_minutes": "Kesto (minuutteina)",
+    "duration_range": "Kesto täytyy olla 1-480 minuuttia",
+    "duration_required": "Kesto on pakollinen",
+    "edit_event_plan": "Muokkaa suunnitelmaa",
+    "edit_part": "Muokkaa osiota",
     "edit_part_name": "Muokkaa osion nimeä",
+    "edit_plan_part": "Muokkaa suunnitelma-osiota",
+    "edit_plan_part_types": "Muokkaa osiotyyppejä",
     "event_plan": "Tapahtuman suunnitelma",
+    "event_plan_ok": "Suunnitelma ok",
     "new_part": "Uusi osio",
+    "new_plan_part": "Uusi suunnitelma-osio",
     "plan_part_title": "Otsikko",
+    "plan_part_type": "Osion tyyppi",
     "save": "Tallenna",
+    "stop_editing_event_plan": "Lopeta suunnitelman muokkaus",
     "title": "Tapahtuman nimi",
-    "titleRequired": "Nimi on pakollinen"
+    "titleRequired": "Nimi on pakollinen",
+    "type_name": "Tyypin nimi",
+    "type_name_min_length": "Tyypin nimi on oltava vähintään 2 merkkiä",
+    "type_name_required": "Tyypin nimi on pakollinen",
+    "type_required": "Tyyppi on pakollinen"
   },
   "home": {
     "addEvent": "Lisää tapahtuma",
@@ -95,6 +146,17 @@
   "language": {
     "english": "English",
     "finnish": "Suomi"
+  },
+  "library": {
+    "eventPlanPartTypes": "Harjoitusosioden tyypit",
+    "files": "Tiedostot",
+    "global": "Yleiset",
+    "own": "Omat",
+    "plan_parts": "Harjoitusosiot",
+    "plan_types": "Osioiden tyypit",
+    "practise_plans": "Harjoitussuunnitelmat",
+    "team": "Joukkue",
+    "title": "Kirjasto"
   },
   "login": {
     "description": "Kirjaudu sisään jatkaaksesi",
@@ -140,6 +202,7 @@
   "sidebar": {
     "expand": "Laajenna",
     "home": "Koti",
+    "library": "Kirjasto",
     "minify": "Pienennä",
     "settings": "Asetukset",
     "userManagement": "Käyttäjät"

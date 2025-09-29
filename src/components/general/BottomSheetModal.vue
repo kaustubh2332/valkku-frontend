@@ -3,6 +3,7 @@
     <div
       v-if="isOpen"
       class="modal-overlay"
+      v-bind="$attrs"
       :class="{
         'modal-overlay--mobile': $vuetify.display.mobile,
         'modal-overlay--closing': isClosing,
@@ -125,6 +126,7 @@
 <script lang="ts">
   export default {
     name: 'BottomSheetModal',
+    inheritAttrs: false,
     props: {
       modelValue: {
         type: Boolean,
@@ -192,9 +194,7 @@
         const value = this.maxWidth
         if (typeof value === 'number') return `${value}px`
         const trimmed = String(value).trim()
-        // If it already contains units, pass through
         if (/\d(px|%|rem|em|vw|vh)$/i.test(trimmed)) return trimmed
-        // Otherwise assume pixels
         return `${Number.parseInt(trimmed, 10)}px`
       },
       isOpen: {
@@ -227,39 +227,22 @@
     methods: {
       setupMobileModal() {
         if (!this.$vuetify.display.mobile) return
-
-        // Calculate modal height from prop
         const screenHeight = window.innerHeight
         let modalHeight
-
         if (this.height.includes('vh')) {
-          // Handle viewport height (e.g., '80vh')
           const vhValue = Number.parseFloat(this.height.replace('vh', ''))
           modalHeight = screenHeight * (vhValue / 100)
         } else if (this.height.includes('px')) {
-          // Handle pixel values (e.g., '100px')
           modalHeight = Number.parseFloat(this.height.replace('px', ''))
         } else {
-          // Default to 80vh if format not recognized
           modalHeight = screenHeight * 0.8
         }
-
-        // Set bounds for dragging
         this.maxTranslateY = screenHeight - modalHeight
-        this.minTranslateY = screenHeight * 0.2 // Can be dragged up to 20% from top
-
-        // Reset translateY to 0 for CSS-based animation
+        this.minTranslateY = screenHeight * 0.2
         this.translateY = 0
-
-        // Start animation after a small delay to ensure initial state is rendered
         this.$nextTick(() => {
-          // Force a reflow to ensure the modal is in hidden state
           this.$el.offsetHeight
-
-          // Now trigger the animation
-          setTimeout(() => {
-            this.isAnimating = true
-          }, 10)
+          setTimeout(() => { this.isAnimating = true }, 10)
         })
       },
 
@@ -388,12 +371,12 @@
 
       preventBodyScroll() {
         // Prevent body scroll when modal is open; support nested modals
-        const lockCount = Number.parseInt(document.body.getAttribute('data-scroll-lock') || '0') + 1
-        document.body.setAttribute('data-scroll-lock', String(lockCount))
+        const lockCount = Number.parseInt(document.body.dataset.scrollLock || '0') + 1
+        document.body.dataset.scrollLock = String(lockCount)
         if (lockCount > 1) return
 
         const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0
-        document.body.setAttribute('data-scroll-y', String(scrollY))
+        document.body.dataset.scrollY = String(scrollY)
         document.body.style.overflow = 'hidden'
         document.body.style.position = 'fixed'
         document.body.style.width = '100%'
@@ -402,11 +385,11 @@
 
       restoreBodyScroll() {
         // Restore body scroll when modal is closed; support nested modals
-        const lockCount = Math.max(0, Number.parseInt(document.body.getAttribute('data-scroll-lock') || '0') - 1)
-        document.body.setAttribute('data-scroll-lock', String(lockCount))
+        const lockCount = Math.max(0, Number.parseInt(document.body.dataset.scrollLock || '0') - 1)
+        document.body.dataset.scrollLock = String(lockCount)
         if (lockCount > 0) return
 
-        const scrollYAttr = document.body.getAttribute('data-scroll-y')
+        const scrollYAttr = document.body.dataset.scrollY
         const scrollY = Number.parseInt(scrollYAttr || '0')
         document.body.style.overflow = ''
         document.body.style.position = ''
@@ -414,7 +397,7 @@
         document.body.style.top = ''
         // Restore after styles are cleared
         window.scrollTo(0, scrollY)
-        document.body.removeAttribute('data-scroll-y')
+        delete document.body.dataset.scrollY
       },
 
       handleContentTouchStart(event) {

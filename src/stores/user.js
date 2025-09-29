@@ -83,7 +83,7 @@ export const useUserStore = defineStore('user', {
               }
             }
 
-            if(this.user && this.user?.preferredLanguage && this.user?.preferredLanguage !== i18n.locale) {
+            if(this.user && this.user?.preferredLanguage && this.user?.preferredLanguage !== i18n.global.locale.value) {
               this.changeLocale(this.user?.preferredLanguage)
               window.localStorage.setItem('valkku:locale', this.user?.preferredLanguage)
             }
@@ -172,7 +172,6 @@ export const useUserStore = defineStore('user', {
           console.error('Periodic user fetch failed:', error)
         })
       }, 60_000) // 60 seconds = 1 minute
-      // }, 1000) // 10 seconds = 10 seconds
     },
     stopPeriodicFetch() {
       if (this.fetchInterval) {
