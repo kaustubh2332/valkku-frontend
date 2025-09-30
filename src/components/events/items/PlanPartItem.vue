@@ -9,15 +9,24 @@
       <div>
         <div v-html="item.text" />
       </div>
-      <v-btn
-        v-if="editing"
-        class="plan-part-item-edit"
-        size="x-small"
-        variant="text"
-        @click="edit()"
-      >
-        <v-icon>mdi-pencil</v-icon>
-      </v-btn>
+      <div v-if="editing" class="plan-part-item-actions">
+        <v-btn
+          class="plan-part-item-edit"
+          size="x-small"
+          variant="text"
+          @click="edit()"
+        >
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn
+          class="plan-part-item-remove"
+          size="x-small"
+          variant="text"
+          @click="remove()"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </div>
     </div>
 
     <BottomSheetModal
@@ -51,7 +60,7 @@
         default: true
       }
     },
-    emits: ['edit'],
+    emits: ['edit', 'remove'],
     data() {
       return {
         creatingText: false,
@@ -69,6 +78,9 @@
         this.$emit('edit', { ...this.item, text })
         this.creatingTextText = text
         this.creatingText = false
+      },
+      remove() {
+        this.$emit('remove', this.item)
       }
     }
   }
@@ -97,12 +109,23 @@
   box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
 }
 
-.item-content .plan-part-item-edit {
-  opacity: 0;
-  transition-duration: 0.2s;
+.plan-part-item-actions {
+  display: flex;
+  gap: 4px;
 }
-.item-content:hover .plan-part-item-edit {
-  opacity: 1;
+
+.plan-part-item-edit,
+.plan-part-item-remove {
+  min-width: 24px;
+  height: 24px;
+}
+
+.plan-part-item-remove {
+  color: #f44336;
+}
+
+.plan-part-item-remove:hover {
+  background-color: rgba(244, 67, 54, 0.1);
 }
 
 /* Fix bullet point positioning for HTML content */

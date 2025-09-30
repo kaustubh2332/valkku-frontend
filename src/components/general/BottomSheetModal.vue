@@ -63,7 +63,7 @@
             />
           </div>
 
-          <!-- Content -->
+          <!-- Scrollable Content -->
           <div
             ref="contentArea"
             class="bottom-sheet-content"
@@ -73,6 +73,11 @@
           >
             <slot />
           </div>
+
+          <!-- Actions (always visible) -->
+          <div v-if="$slots.actions" class="bottom-sheet-actions">
+            <slot name="actions" />
+          </div>
         </div>
 
         <!-- Desktop: Centered dialog -->
@@ -81,7 +86,7 @@
           class="bottom-sheet-desktop"
           max-height="90vh"
           :max-width="normalizedMaxWidth"
-          :style="{ width: '90vw !important', zIndex: contentZIndex }"
+          :style="{ width: '90vw !important', zIndex: contentZIndex, display: 'flex', flexDirection: 'column' }"
           width="auto"
         >
           <!-- Desktop title -->
@@ -114,9 +119,14 @@
             @click="close"
           />
 
-          <v-card-text class="desktop-modal-content">
+          <v-card-text class="desktop-modal-content" style="flex: 1; overflow-y: auto;">
             <slot />
           </v-card-text>
+
+          <!-- Desktop Actions (always visible) -->
+          <v-card-actions v-if="$slots.actions" class="desktop-modal-actions">
+            <slot name="actions" />
+          </v-card-actions>
         </v-card>
       </div>
     </div>
@@ -606,6 +616,8 @@
   transform: translateY(100%);
   transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   overflow: visible;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-overlay--nested .bottom-sheet-mobile {
@@ -686,12 +698,20 @@
 }
 
 .bottom-sheet-content {
-  height: calc(100% - 60px);
+  flex: 1;
   overflow-y: auto;
   overflow-x: visible;
   padding: 0 16px 16px;
   touch-action: auto;
   user-select: auto;
+  min-height: 0; /* Allow flex item to shrink */
+}
+
+.bottom-sheet-actions {
+  flex-shrink: 0;
+  padding: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: white;
 }
 
 .bottom-sheet-desktop {
@@ -719,10 +739,16 @@
 }
 
 .desktop-modal-content {
-  max-height: 90vh;
+  max-height: calc(90vh - 80px); /* Account for actions height */
   overflow-y: auto;
   overflow-x: visible;
   padding-top: 16px;
+}
+
+.desktop-modal-actions {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: white;
 }
 
 /* Custom scrollbar for desktop modal content */

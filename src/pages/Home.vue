@@ -31,7 +31,12 @@
         @click="openCreateEvent"
       >
         <v-icon class="mr-2">mdi-plus</v-icon>
-        {{ $t('home.addEvent') }}
+        <span v-if="userStore.isStaff">
+          {{ $t('home.addEvent') }}
+        </span>
+        <span v-else>
+          {{ $t('home.addEventOwn') }}
+        </span>
       </v-btn>
     </v-col>
     <v-col>

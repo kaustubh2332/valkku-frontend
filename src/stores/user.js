@@ -20,6 +20,7 @@ export const useUserStore = defineStore('user', {
     getToken: (state) => state.token,
     firstName: (state) => state.user?.firstName,
     lastName: (state) => state.user?.lastName,
+    isStaff: (state) => ['owner', 'admin', 'coach'].includes(state.currentRoleId),
     currentTeam: (state) => state.user?.teams?.find(team => team.teamId === state.currentTeamId),
     currentRole: (state) => {
       if (!state.currentTeamId || !state.currentRoleId) {

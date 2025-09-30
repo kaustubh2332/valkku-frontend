@@ -6,6 +6,7 @@
 
 // Composables
 import { createVuetify } from 'vuetify'
+import { VDateInput } from 'vuetify/labs/VDateInput'
 import { VHotkey } from 'vuetify/labs/VHotkey'
 
 // Styles
@@ -16,6 +17,7 @@ import 'vuetify/styles'
 export default createVuetify({
   components: {
     VHotkey,
+    VDateInput
   },
   display: {
     // Lower mobile breakpoint so $vuetify.display.mobile is true under 480px
