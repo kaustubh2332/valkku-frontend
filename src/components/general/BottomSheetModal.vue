@@ -18,9 +18,9 @@
         class="bottom-sheet-modal"
         :class="{ 'bottom-sheet-modal--mobile': $vuetify.display.mobile }"
       >
-        <!-- Mobile: Bottom sheet -->
+        <!-- Mobile: Bottom sheet (freeze mode at open to avoid remount on resize) -->
         <div
-          v-if="$vuetify.display.mobile"
+          v-if="frozenIsMobile"
           class="bottom-sheet-mobile"
           :class="{
             'bottom-sheet-mobile--dragging': isDragging,
@@ -182,6 +182,7 @@
         contentStartY: null,
         contentDragStarted: false,
         isClosing: false,
+        frozenIsMobile: false,
         modalId: Math.random().toString(36).slice(2, 11)
       }
     },
@@ -219,6 +220,8 @@
     watch: {
       isOpen(newValue) {
         if (newValue) {
+          // Freeze the mobile/desktop mode at the time of opening to avoid remount on resize
+          this.frozenIsMobile = !!this.$vuetify.display.mobile
           this.$nextTick(() => {
             this.setupMobileModal()
           })
@@ -228,6 +231,8 @@
           this.resetPosition()
           this.restoreBodyScroll()
           this.unregisterEscapeHandler()
+          // Reset frozen mode after close
+          this.frozenIsMobile = !!this.$vuetify.display.mobile
         }
       }
     },

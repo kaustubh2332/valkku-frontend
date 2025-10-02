@@ -2,6 +2,7 @@
   <div :class="$attrs.class">
     <v-menu
       :style="{ maxWidth: 'min(800px, 95vw)' }"
+      :z-index="2100"
     >
       <template #activator="{ props }">
         <v-btn

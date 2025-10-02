@@ -4,6 +4,7 @@
     :close-on-content-click="false"
     location="top start"
     offset="8"
+    :z-index="2100"
   >
     <template #activator="{ props }">
       <div
@@ -11,17 +12,26 @@
         class="profile-activator"
         :class="sidebar ? 'profile-activator-rail' : 'profile-activator-full'"
       >
-        <v-avatar
-          :class="sidebar ? '' : 'me-3'"
-          :size="32"
-        >
-          <v-img
-            v-if="user?.picture"
-            :alt="user.name || 'User'"
-            :src="user.picture"
-          />
-          <v-icon v-else>mdi-account</v-icon>
-        </v-avatar>
+        <div class="avatar-container">
+          <v-avatar
+            :class="sidebar ? '' : 'me-3'"
+            :size="32"
+          >
+            <v-img
+              v-if="user?.picture"
+              :alt="user.name || 'User'"
+              :src="user.picture"
+            />
+            <v-icon v-else>mdi-account</v-icon>
+          </v-avatar>
+          <v-icon
+            v-if="sidebar"
+            class="chevron-badge"
+            size="12"
+          >
+            mdi-chevron-up
+          </v-icon>
+        </div>
 
         <div v-if="!sidebar" class="profile-content">
           <span class="profile-name">{{ fullName || user?.email || 'User' }}</span>
@@ -120,6 +130,21 @@
 .profile-activator-rail {
   padding: 8px;
   justify-content: center;
+}
+
+.avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.chevron-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background-color: rgb(var(--v-theme-surface));
+  border-radius: 50%;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .profile-content {

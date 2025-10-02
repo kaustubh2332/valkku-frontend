@@ -96,9 +96,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 20050;
-  padding-bottom: 0px; /* Fallback for devices without safe-area-inset support */
+  z-index: 1500;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .mobile-bottom-nav {

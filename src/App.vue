@@ -91,10 +91,10 @@
 }
 
 #mobile-fab {
-    position: absolute;
+    position: fixed;
     right: 16px;
-    top: calc(16px + env(safe-area-inset-top, 0px));
-    z-index: 20000;
+    top: calc(20px + env(safe-area-inset-top, 0px));
+    z-index: 1000;
 }
 
 .mobile-bottom-spacing {

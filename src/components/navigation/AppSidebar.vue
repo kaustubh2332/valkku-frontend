@@ -1,12 +1,16 @@
 <template>
   <v-navigation-drawer
     v-model="drawer"
+    class="sidebar-drawer"
     :location="$vuetify.display.mobile ? 'right' : 'left'"
     :permanent="!$vuetify.display.mobile"
     :rail="rail && !$vuetify.display.mobile"
     :temporary="$vuetify.display.mobile"
     @click="rail = false"
   >
+    <!-- Safe area spacer for mobile -->
+    <div v-if="$vuetify.display.mobile" class="mobile-safe-area-top" />
+
     <!-- Team Selection -->
     <div v-if="isAuthenticated" class="pa-4">
       <div class="d-flex align-center">
@@ -62,6 +66,9 @@
           @close-mobile-drawer="handleMobileNavigation"
         />
       </div>
+
+      <!-- Safe area spacer for mobile bottom -->
+      <div v-if="$vuetify.display.mobile" class="mobile-safe-area-bottom" />
     </template>
   </v-navigation-drawer>
 
@@ -77,17 +84,10 @@
 </template>
 
 <script lang="ts">
-  import ChooseTeamBtn from '@/components/general/ChooseTeamBtn.vue'
-  import ProfileMenu from '@/components/general/ProfileMenu.vue'
-
   import { useUserStore } from '@/stores/user'
 
   export default {
     name: 'AppSidebar',
-    components: {
-      ChooseTeamBtn,
-      ProfileMenu
-    },
     data() {
       return {
         userStore: useUserStore(),
@@ -159,3 +159,24 @@
     }
   }
 </script>
+
+<style>
+.mobile-safe-area-top {
+  height: env(safe-area-inset-top, 0px);
+  background: inherit;
+}
+
+.mobile-safe-area-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+  background: inherit;
+}
+
+/* Ensure sidebar goes over bottom nav on mobile */
+.sidebar-drawer.v-navigation-drawer {
+  z-index: 2001 !important;
+}
+
+.sidebar-drawer.v-navigation-drawer .v-overlay__scrim {
+  z-index: 2000 !important;
+}
+</style>

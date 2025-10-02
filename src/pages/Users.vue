@@ -215,7 +215,7 @@
 
   <BottomSheetModal
     v-model="inviteUserDialog"
-    height="95vh"
+    height="80vh"
     :title="$t('userManagement.inviteUser') + ' - ' + userStore.currentTeam?.teamName"
   >
     <InviteUser :is-open="inviteUserDialog" @user-invited="handleUserInvited" />

@@ -305,6 +305,10 @@ export const useUserStore = defineStore('user', {
         // Update i18n locale immediately for responsive UI
         i18n.global.locale.value = locale
 
+        // Update Vuetify locale
+        const { currentLocale } = await import('@/plugins/vuetify')
+        currentLocale.value = locale
+
         // Save to localStorage
         localStorage.setItem('valkku:locale', locale)
 

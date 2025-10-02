@@ -25,6 +25,18 @@ export const useEventStore = defineStore('event', {
             this.loadingPlanPartTypes = false
           })
       })
+    },
+    saveEvent(eventData) {
+      return new Promise((resolve, reject) => {
+        const userStore = useUserStore()
+        api.post(`/event/team/${userStore.currentTeamId}`, eventData)
+          .then((response) => {
+            resolve(response.data)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
     }
   }
 })
