@@ -39,10 +39,7 @@
         <v-icon class="me-2">mdi-account-cog-outline</v-icon>
         {{ $t('settings.account') }}
       </div>
-      <v-btn
-        :loading="loadingPwChangeUri"
-        @click="changePassword"
-      >
+      <v-btn @click="openChangePasswordDialog">
         <v-icon class="me-2">mdi-key</v-icon>
         {{ $t('settings.changePassword') }}
       </v-btn>
@@ -96,26 +93,29 @@
     :title="$t('settings.leaveTeam')"
     @accept="confirmLeaveTeam"
   />
+
+  <!-- Change Password Dialog -->
+  <ChangePasswordDialog v-model="changePasswordDialog" />
 </template>
 
 <script lang="ts">
+  import ChangePasswordDialog from '@/components/general/ChangePasswordDialog.vue'
   import Confirm from '@/components/general/Confirm.vue'
   import { useNotificationStore } from '@/stores/notification'
   import { useTeamStore } from '@/stores/team'
   import { useUserStore } from '@/stores/user'
-  import api from '@/utils/axios'
   export default {
     name: 'Settings',
-    components: { Confirm },
+    components: { ChangePasswordDialog, Confirm },
     data() {
       return {
         userStore: useUserStore(),
         teamStore: useTeamStore(),
         notificationStore: useNotificationStore(),
         selectedLanguage: this.$i18n.locale,
-        loadingPwChangeUri: false,
         leaveTeamConfirm: false,
-        leavingTeam: false
+        leavingTeam: false,
+        changePasswordDialog: false
       }
     },
     computed: {
@@ -147,22 +147,8 @@
       startLogout() {
         this.userStore.logout()
       },
-      async changePassword() {
-        try {
-          // Call your backend to generate a password change ticket
-          this.loadingPwChangeUri = true
-          const response = await api.post('/auth/password/change-ticket', {
-            userId: this.user.sub
-          })
-
-          // Redirect to the generated password change URL
-          window.location.href = response.data.data.url
-        } catch (error) {
-          console.error('Failed to generate password change ticket:', error)
-          // You could show a user-friendly error message here
-        } finally {
-          this.loadingPwChangeUri = false
-        }
+      openChangePasswordDialog() {
+        this.changePasswordDialog = true
       },
       startLeaveTeam() {
         this.leaveTeamConfirm = true

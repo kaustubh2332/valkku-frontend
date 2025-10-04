@@ -65,7 +65,7 @@
       >
         <v-text-field
           v-model="email"
-          autocomplete="email"
+          autocomplete="current-email"
           class="mb-4"
           disabled
           :label="$t('addDetails.emailLabel')"

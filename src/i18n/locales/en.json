@@ -64,7 +64,7 @@
     "edit": "Edit"
   },
   "createTeam": {
-    "description": "Give your teams name to get started!",
+    "description": "Give your teams name to get started",
     "errors": {
       "team_name_max_length": "Team name must be under 50 characters",
       "team_name_min_length": "Team name must be at least 2 characters",
@@ -108,7 +108,7 @@
     "date": "Date",
     "days": "days",
     "delete_part": "Delete part",
-    "duration_minutes": "Duration (minutes)",
+    "duration_minutes": "Estimated duration (minutes)",
     "duration_range": "Duration must be between 1 and 480 minutes",
     "duration_required": "Duration is required",
     "edit_event_plan": "Edit plan",
@@ -239,6 +239,16 @@
   "settings": {
     "account": "Account",
     "changePassword": "Change Password",
+    "changePasswordDialog": {
+      "confirmNewPassword": "Confirm New Password",
+      "currentEmail": "Email",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordsDontMatch": "Passwords do not match",
+      "submit": "Change Password",
+      "title": "Change Password"
+    },
     "emojiClicked": "Emoji clicked {count} times",
     "language": "Language",
     "language_updated": "Language updated",

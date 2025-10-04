@@ -64,7 +64,7 @@
     "edit": "Muokkaa"
   },
   "createTeam": {
-    "description": "Anna joukkueen nimi.",
+    "description": "Anna joukkueen nimi",
     "errors": {
       "team_name_max_length": "Joukkueen nimen tulee olla alle 50 merkkiä",
       "team_name_min_length": "Joukkueen nimen tulee olla vähintään 2 merkkiä",
@@ -108,7 +108,7 @@
     "date": "Päivämäärä",
     "days": "päivän",
     "delete_part": "Poista osio",
-    "duration_minutes": "Kesto (minuutteina)",
+    "duration_minutes": "Arvioitu kesto (minuutteina)",
     "duration_range": "Kesto täytyy olla 1-480 minuuttia",
     "duration_required": "Kesto on pakollinen",
     "edit_event_plan": "Muokkaa suunnitelmaa",
@@ -123,7 +123,7 @@
     "event_type": "Tapahtuman tyyppi",
     "friday": "Perjantai",
     "friday_short": "Pe",
-    "location": "Paikka",
+    "location": "Sijainti",
     "location_name": "Paikan nimi",
     "match": "Ottelu",
     "meeting": "Kokous",
@@ -151,7 +151,7 @@
     "saturday": "Lauantai",
     "saturday_short": "La",
     "save": "Tallenna",
-    "search_location": "Hae paikkaa",
+    "search_location": "Hae sijaintia",
     "self_directed_training": "Omatoimiharjoitus",
     "start_time": "Aloitusaika",
     "stop_editing_event_plan": "Lopeta suunnitelman muokkaus",
@@ -239,6 +239,16 @@
   "settings": {
     "account": "Tili",
     "changePassword": "Vaihda salasana",
+    "changePasswordDialog": {
+      "confirmNewPassword": "Vahvista uusi salasana",
+      "currentEmail": "Sähköposti",
+      "currentPassword": "Nykyinen salasana",
+      "newPassword": "Uusi salasana",
+      "passwordTooShort": "Salasanan tulee olla vähintään 8 merkkiä",
+      "passwordsDontMatch": "Salasanat eivät täsmää",
+      "submit": "Vaihda salasana",
+      "title": "Vaihda salasana"
+    },
     "emojiClicked": "Emojia klikattu {count} kertaa",
     "language": "Kieli",
     "language_updated": "Kieli päivitetty",

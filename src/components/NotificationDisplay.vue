@@ -125,14 +125,6 @@
 </script>
 
 <style scoped>
-.notification-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 60000;
-  pointer-events: none;
-  isolation: isolate;
-}
 
 .notification-wrapper {
   pointer-events: auto;
@@ -246,12 +238,22 @@
   transition: transform 0.3s ease;
 }
 
+/* Desktop notification positioning */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 60000;
+  pointer-events: none;
+  isolation: isolate;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 600px) {
   .notification-container {
-    top: 58px; /* Inside v-app padding (50px + 8px margin) */
-    right: 8px;
-    left: 8px;
+    top: calc(20px + env(safe-area-inset-top, 0px));
+    right: calc(8px + env(safe-area-inset-right, 0px));
+    left: calc(8px + env(safe-area-inset-left, 0px));
   }
 
   .notification-container :deep(.v-snackbar) {

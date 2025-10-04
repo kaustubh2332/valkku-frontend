@@ -68,6 +68,7 @@
 <script lang="ts">
   import { useI18n } from 'vue-i18n'
   import { useZIndex } from '@/composables/useZIndex'
+  import { useNotificationStore } from '@/stores/notification'
   import api from '@/utils/axios'
 
   export default {
@@ -81,8 +82,10 @@
     },
     emits: ['created', 'close'],
     setup() {
+      const notificationStore = useNotificationStore()
+      const handleBackendError = notificationStore.handleBackendError
       const { locale } = useI18n()
-      return { locale }
+      return { locale, handleBackendError }
     },
     data() {
       return {
@@ -203,6 +206,7 @@
             lon: this.form.lon
           })
         } catch (error) {
+          this.handleBackendError(error)
           console.error('Create location failed', error)
         } finally {
           this.saving = false

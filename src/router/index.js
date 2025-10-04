@@ -1,11 +1,12 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { usePostHog } from '@/composables/usePostHog'
 
 // Import your page components
 import Home from '@/pages/Home.vue'
+import Library from '@/pages/Library.vue'
 import Settings from '@/pages/Settings.vue'
 import SignIn from '@/pages/SignIn.vue'
 import Users from '@/pages/Users.vue'
-import Library from '@/pages/Library.vue'
 
 import { useUserStore } from '@/stores/user'
 
@@ -165,6 +166,8 @@ function beforeEachGuard(to, from, next) {
 
   next()
 }
+
+const { posthog } = usePostHog()
 
 const router = createRouter({
   history: createWebHashHistory(),

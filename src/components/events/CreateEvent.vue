@@ -111,6 +111,7 @@
       <v-row v-if="showMe('locationId') && userStore.isStaff" class="mb-4">
         <v-col cols="12" md="6">
           <v-autocomplete
+            ref="locationAutocomplete"
             v-model="event.locationId"
             v-model:menu="locationMenuOpen"
             autocomplete="off"
@@ -735,6 +736,14 @@
       openCreateLocation() {
         this.locationMenuOpen = false
         this.showCreateLocation = true
+        // Blur the autocomplete input to unfocus it
+        this.$nextTick(() => {
+          const autocomplete = this.$refs.locationAutocomplete as any
+          const input = autocomplete?.$el?.querySelector('input')
+          if (input && typeof input.blur === 'function') {
+            input.blur()
+          }
+        })
       },
       async handleLocationCreated(payload) {
         this.showCreateLocation = false
@@ -806,6 +815,15 @@
         const atLocalMidnight = new Date(yyyy, Number(mm) - 1, Number(dd))
         this.event.eventDate = Math.floor(atLocalMidnight.getTime() / 1000).toString()
         this.pickerDate = `${yyyy}-${mm}-${dd}`
+
+        // Set default start and end times if not already set
+        if (!this.event.startTime) {
+          this.event.startTime = '18:00'
+        }
+        if (!this.event.endTime) {
+          this.event.endTime = '20:00'
+        }
+
         this.dateMenu = false
       },
       onPickEndDate(val) {

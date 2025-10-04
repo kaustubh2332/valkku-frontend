@@ -126,5 +126,13 @@ export const backendMessages = {
   "new_owner_not_signed_up": {
     "en": "New owner not signed up",
     "fi": "Uusi omistaja ei ole rekisteröitynyt"
+  },
+  "location_already_exists": {
+    "en": "Location already exists",
+    "fi": "Sijainti on jo olemassa"
+  },
+  "user_already_invited": {
+    "en": "User is already invited - check your email",
+    "fi": "Käyttäjä on jo kutsuttu - tarkista sähköpostisi"
   }
 }
