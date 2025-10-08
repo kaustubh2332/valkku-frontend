@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model="dialogOpen">
+  <GeneralDialog v-model="dialogOpen">
     <v-card-title class="text-h5 pa-6 pb-2">
       {{ $t('settings.changePasswordDialog.title') }}
     </v-card-title>
@@ -11,7 +11,7 @@
       >
         <v-text-field
           v-model="currentEmail"
-          autocomplete="current-email"
+          autocomplete="username"
           :label="$t('settings.changePasswordDialog.currentEmail')"
           readonly
         />
@@ -66,16 +66,18 @@
         {{ $t('settings.changePasswordDialog.submit') }}
       </v-btn>
     </v-card-actions>
-  </Dialog>
+  </GeneralDialog>
 </template>
 
 <script lang="ts">
+  import GeneralDialog from '@/components/general/Dialog.vue'
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
     name: 'ChangePasswordDialog',
+    components: { GeneralDialog },
     props: {
       modelValue: {
         type: Boolean,

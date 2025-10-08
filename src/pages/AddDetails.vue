@@ -65,10 +65,10 @@
       >
         <v-text-field
           v-model="email"
-          autocomplete="current-email"
+          autocomplete="username"
           class="mb-4"
-          disabled
           :label="$t('addDetails.emailLabel')"
+          readonly
           variant="outlined"
         />
         <!-- Name Fields (if name param is present) -->

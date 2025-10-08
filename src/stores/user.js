@@ -67,13 +67,28 @@ export const useUserStore = defineStore('user', {
             const currentRole = window.localStorage.getItem('valkku:currentRole')
 
             if (currentTeamId) {
-              this.setCurrentTeam(currentTeamId)
+              let team = this.user.teams.find(team => team.teamId === currentTeamId)
+              if(team) {
+                this.setCurrentTeam(currentTeamId)
 
-              if (currentRole) {
-                this.setCurrentRole(currentRole)
+                // Check if the stored currentRole exists in this team's roles
+                if (currentRole) {
+                  const hasRole = team.roles?.some(role => role.role === currentRole)
+                  if (hasRole) {
+                    this.setCurrentRole(currentRole)
+                  } else {
+                    // Role doesn't exist in this team, use first available role
+                    this.setCurrentRole(team.roles?.[0]?.role || null)
+                  }
+                } else {
+                  // No stored role, use first available role
+                  this.setCurrentRole(team.roles?.[0]?.role || null)
+                }
               } else {
-                const team = this.user.teams.find(team => team.teamId === currentTeamId)
-                this.setCurrentRole(team?.roles[0]?.role)
+                // Stored team doesn't exist, use first team
+                team = this.user.teams[0]
+                this.setCurrentTeam(team.teamId)
+                this.setCurrentRole(team.roles?.[0]?.role || null)
               }
             } else if(this.user.teams && this.user.teams.length > 0) {
               const firstTeam = this.user.teams[0]

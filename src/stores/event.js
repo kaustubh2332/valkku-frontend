@@ -6,7 +6,9 @@ import api from '@/utils/axios'
 export const useEventStore = defineStore('event', {
   state: () => ({
     planPartTypes: [],
-    loadingPlanPartTypes: false
+    loadingPlanPartTypes: false,
+    events: [],
+    loadingEvents: false
   }),
   actions: {
     initCreateEventData() {
@@ -35,6 +37,24 @@ export const useEventStore = defineStore('event', {
           })
           .catch((error) => {
             reject(error)
+          })
+      })
+    },
+    initEvents() {
+      return new Promise((resolve, reject) => {
+        const userStore = useUserStore()
+        this.loadingEvents = true
+
+        api.get(`/event/team/${userStore.currentTeamId}`)
+          .then((response) => {
+            this.events = response.data.data
+            resolve(response.data.data)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+          .finally(() => {
+            this.loadingEvents = false
           })
       })
     }

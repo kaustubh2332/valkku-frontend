@@ -41,6 +41,9 @@
     "title": "Valkku"
   },
   "back": "Back",
+  "calendar": {
+    "title": "Calendar"
+  },
   "callback": {
     "errorMessage": "Authentication failed. Please try again.",
     "errorTitle": "Authentication Error",
@@ -95,6 +98,8 @@
     "add_new_type": "Add new type",
     "add_plan_part": "Add part",
     "add_text": "Text",
+    "add_to_own": "Only me",
+    "add_to_team": "Team",
     "address": "Address",
     "can_modify_later": "Event plan can be created and edited later",
     "choose_color": "Choose color",
@@ -120,9 +125,11 @@
     "end_time": "End time",
     "event_plan": "Event plan",
     "event_plan_ok": "Plan ok",
+    "event_saved": "Event created",
     "event_type": "Event type",
     "friday": "Friday",
     "friday_short": "Fri",
+    "global_scope": "Global type",
     "location": "Location",
     "location_name": "Location name",
     "match": "Match",
@@ -157,6 +164,7 @@
     "stop_editing_event_plan": "Stop editing plan",
     "sunday": "Sunday",
     "sunday_short": "Sun",
+    "team_scope": "Team type",
     "thursday": "Thursday",
     "thursday_short": "Thu",
     "title": "Event title",
@@ -168,10 +176,12 @@
     "type_name_min_length": "Type name must be at least 2 characters",
     "type_name_required": "Type name is required",
     "type_required": "Type is required",
+    "user_scope": "Own type",
     "wednesday": "Wednesday",
     "wednesday_short": "Wed",
     "weekly": "Weekly",
-    "weeks": "weeks"
+    "weeks": "weeks",
+    "who_sees": "Who sees this type?"
   },
   "home": {
     "addEvent": "Add event",
@@ -263,6 +273,7 @@
   },
   "shortcuts": "Shortcuts",
   "sidebar": {
+    "calendar": "Calendar",
     "expand": "Expand",
     "home": "Home",
     "library": "Library",
@@ -295,6 +306,7 @@
     "submit": "Create Account",
     "title": "Create Account"
   },
+  "something_went_wrong": "Something went wrong",
   "userManagement": {
     "active": "Active",
     "addGuardian": "Add guardian",

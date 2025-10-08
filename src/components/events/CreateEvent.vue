@@ -13,6 +13,7 @@
             :items="eventTypes"
             :label="$t('events.event_type')"
             :menu-props="{ zIndex: dropdownZIndex }"
+            :rules="eventTypeRules"
             variant="outlined"
           >
             <template #item="{ props, item }">
@@ -50,6 +51,7 @@
                 v-bind="props"
                 :model-value="formattedEventDate"
                 readonly
+                :rules="eventDateRules"
                 variant="outlined"
               />
             </template>
@@ -82,6 +84,7 @@
             density="compact"
             hide-details="auto"
             :label="$t('events.start_time')"
+            :rules="startTimeRules"
             type="time"
             variant="outlined"
           />
@@ -92,13 +95,14 @@
             density="compact"
             hide-details="auto"
             :label="$t('events.end_time')"
+            :rules="endTimeRules"
             type="time"
             variant="outlined"
           />
         </v-col>
-        <v-col v-if="showMe('durationMins')" cols="12" md="6">
+        <v-col v-if="showMe('durationInMinutes')" cols="12" md="6">
           <v-text-field
-            v-model="event.durationMins"
+            v-model="event.durationInMinutes"
             density="compact"
             hide-details="auto"
             :label="$t('events.duration_minutes')"
@@ -185,6 +189,7 @@
             :label="$t('events.repeat_on_weekdays')"
             :menu-props="{ zIndex: dropdownZIndex }"
             multiple
+            :rules="weekdaysRules"
             variant="outlined"
           >
             <template #item="{ props, item }">
@@ -226,6 +231,7 @@
                 :persistent-hint="!!repeatUntilHint"
                 v-bind="props"
                 readonly
+                :rules="repeatsUntilRules"
                 variant="outlined"
               />
             </template>
@@ -342,7 +348,7 @@
     <div class="d-flex justify-end ga-2 mt-4">
       <v-btn variant="text" @click="cancel">{{ $t('cancel') }}</v-btn>
       <v-spacer />
-      <v-btn color="primary" :disabled="!formValid" @click="save">{{ $t('events.create_event') }}</v-btn>
+      <v-btn color="primary" :disabled="!formValid || saving" :loading="saving" @click="save">{{ $t('events.create_event') }}</v-btn>
     </div>
   </div>
 
@@ -363,6 +369,7 @@
   import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
   import { useZIndex } from '@/composables/useZIndex'
   import { useEventStore } from '@/stores/event'
+  import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
@@ -374,18 +381,20 @@
       const eventStore = useEventStore()
       const userStore = useUserStore()
       const currentRoleId = userStore.currentRoleId
-      return { eventStore, userStore, currentRoleId }
+      const notificationStore = useNotificationStore()
+      return { eventStore, userStore, currentRoleId, notificationStore }
     },
     data() {
       return {
         formValid: false,
+        saving: false,
         event: {
           title: '',
           eventType: '',
           eventDate: '',
           startTime: '',
           endTime: '',
-          durationMins: null,
+          durationInMinutes: null,
           notes: '',
           coachesNotes: '',
           ownNotes: '',
@@ -406,6 +415,45 @@
       }
     },
     computed: {
+      // --- Field validation rules ---
+      eventTypeRules() {
+        return [
+          (v) => !!v || this.$t('events.type_required')
+        ]
+      },
+      eventDateRules() {
+        return [
+          () => !!this.event.eventDate || this.$t('events.date_required')
+        ]
+      },
+      startTimeRules() {
+        return [
+          (v) => !!v || this.$t('events.start_time_required')
+        ]
+      },
+      endTimeRules() {
+        return [
+          (v) => !!v || this.$t('events.end_time_required'),
+          () => {
+            // Backend: startTimeUnixSec < endTimeUnixSec and both > 0
+            const s = Number(this.startTimeUnixSec)
+            const e = Number(this.endTimeUnixSec)
+            if (!Number.isFinite(s) || !Number.isFinite(e)) return true // other rules will flag empties
+            if (s <= 0 || e <= 0) return this.$t('events.time_positive_required')
+            return s < e || this.$t('events.start_before_end')
+          }
+        ]
+      },
+      weekdaysRules() {
+        return [
+          () => (this.event.repeats !== 'daily' || (Array.isArray(this.event.weekdays) && this.event.weekdays.length > 0)) || this.$t('events.repeatsOn_required_weekly')
+        ]
+      },
+      repeatsUntilRules() {
+        return [
+          () => (!this.event.repeats || this.event.repeats === 'never' || !!this.event.repeatsUntilDate) || this.$t('events.repeats_until_required')
+        ]
+      },
       startTimeUnixSec() {
         return this.combineDateAndTimeToUnix(this.event.eventDate, this.event.startTime)
       },
@@ -670,23 +718,36 @@
           const dd = String(d.getDate()).padStart(2, '0')
           return `${yyyy}-${mm}-${dd}`
         })()
-        return {
+        // Map to backend schema
+        const payload = {
           title: (this.event.title || '').trim(),
           // Send as YYYY-MM-DD to backend
           eventDate: eventDateStr,
-          eventType: this.event.eventType,
+          type: this.event.eventType,
           startTime: this.event.startTime,
           endTime: this.event.endTime,
-          startTimeUnixSec: this.startTimeUnixSec,
-          endTimeUnixSec: this.endTimeUnixSec,
-          notes: (this.event.notes || '').trim(),
-          coachesNotes: (this.event.coachesNotes || '').trim(),
-          ownNotes: (this.event.ownNotes || '').trim(),
-          repeats: this.event.repeats,
-          weekdays: this.weekdaysBinary,
-          repeatsUntilUnixSec: this.repeatsUntilUnixSec,
+          // start/end unix conditionally added below
+          notes: (this.event.notes || '').trim() || null,
+          coachesNotes: (this.event.coachesNotes || '').trim() || null,
+          ownNotes: (this.event.ownNotes || '').trim() || null,
+          repeats: this.event.repeats === 'never' ? undefined : this.event.repeats,
+          repeatsOn: this.event.repeats === 'daily' ? this.weekdaysBinary : null,
+          repeatsUntilUnixSec: (this.event.repeats && this.event.repeats !== 'never') ? this.repeatsUntilUnixSec : undefined,
           locationId: this.event.locationId
         }
+        // Optional duration for own-time events
+        const durationInMinsNum = Number(this.event.durationInMinutes)
+        if (Number.isFinite(durationInMinsNum) && durationInMinsNum > 0) {
+          // Send durationInMins and omit start/end unix to indicate flexible timing
+          payload.durationInMinutes = durationInMinsNum
+        } else {
+          // Include unix times only when valid and no duration override
+          const s = Number(this.startTimeUnixSec)
+          const e = Number(this.endTimeUnixSec)
+          if (Number.isFinite(s)) payload.startTimeUnixSec = s
+          if (Number.isFinite(e)) payload.endTimeUnixSec = e
+        }
+        return payload
       }
     },
     async mounted() {
@@ -699,7 +760,7 @@
           // practise, match, meeting, self_training, other_event
           startTime: ['practise', 'match', 'meeting', 'other_event'],
           endTime: ['practise', 'match', 'meeting', 'other_event'],
-          durationMins: ['self_training'],
+          durationInMinutes: ['self_training'],
           date: ['all'],
           repeats: ['all'],
           weekdays: ['all'],
@@ -716,8 +777,45 @@
       },
       save() {
         if (!this.formValid) return
-        this.$emit('saved', this.finalEvent)
-        this.$emit('close')
+
+        // Extra guard validations mirroring backend schema
+        const s = Number(this.startTimeUnixSec)
+        const e = Number(this.endTimeUnixSec)
+        if (Number.isFinite(s) && Number.isFinite(e)) {
+          if (s <= 0 || e <= 0) {
+            // Let field rules surface the error; stop submit
+            return
+          }
+          if (s >= e) {
+            return
+          }
+        }
+
+        if (this.finalEvent.repeats === 'weekly' && (!Array.isArray(this.event.weekdays) || this.event.weekdays.length === 0)) {
+          return
+        }
+        if (this.finalEvent.repeats && this.finalEvent.repeats !== 'never' && !this.event.repeatsUntilDate) {
+          return
+        }
+
+        this.saving = true
+        this.eventStore.saveEvent(this.finalEvent)
+          .then((res) => {
+            if (res?.success) {
+              this.notificationStore.success(this.$t('events.event_saved') || 'Event created')
+              this.$emit('saved', res?.data || this.finalEvent)
+              this.$emit('close')
+            } else {
+              const message = res?.message || this.$t('something_went_wrong')
+              this.notificationStore.error(message)
+            }
+          })
+          .catch((error) => {
+            this.notificationStore.handleBackendError(error)
+          })
+          .finally(() => {
+            this.saving = false
+          })
       },
       async fetchTeamLocations() {
         try {

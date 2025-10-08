@@ -27,6 +27,11 @@
                         :style="{ backgroundColor: (item.raw as any).color, width: '16px', height: '16px', borderRadius: '50%' }"
                       />
                     </template>
+                    <template #append>
+                      <v-icon v-if="(item.raw as any).scope === 'global'" v-tooltip:top="$t('events.global_scope')" small>mdi-earth</v-icon>
+                      <v-icon v-if="(item.raw as any).scope === 'team'" v-tooltip:top="$t('events.team_scope')" small>mdi-account-group</v-icon>
+                      <v-icon v-if="(item.raw as any).scope === 'user'" v-tooltip:top="$t('events.user_scope')" small>mdi-account</v-icon>
+                    </template>
                   </v-list-item>
                 </template>
                 <template #selection="{ item }">
@@ -93,7 +98,7 @@
     >
       <CreatePlanPartType
         @close="createTypeModal = false"
-        @save="onTypeCreated"
+        @success="onTypeCreated"
       />
     </BottomSheetModal>
   </div>
@@ -197,12 +202,9 @@
         this.createTypeModal = true
       },
       onTypeCreated(newType) {
-        // Emit the new type to parent component
-        this.$emit('add', newType)
-        // Select the new type
-        this.formData.type = newType.title
-        // Close the modal
-        this.createTypeModal = false
+        // Select the newly created type
+        this.formData.type = newType.id
+        // Modal is already closed by the CreatePlanPartType component
       },
       getModalDepth() {
         // Count the number of modal containers in the DOM hierarchy

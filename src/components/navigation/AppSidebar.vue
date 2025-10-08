@@ -114,6 +114,12 @@
             title: this.$t('sidebar.home')
           },
           {
+            name: 'Calendar',
+            path: '/calendar',
+            icon: 'mdi-calendar-blank-outline',
+            title: this.$t('sidebar.calendar')
+          },
+          {
             name: 'Users',
             path: '/users',
             icon: 'mdi-account-group',

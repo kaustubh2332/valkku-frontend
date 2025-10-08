@@ -24,8 +24,8 @@
       >
         <CreatePlanPartType
           :admin="true"
-          @add="onPlanPartTypeAdded"
           @close="createPlanPartModal = false"
+          @success="onPlanPartTypeAdded"
         />
       </BottomSheetModal>
     </v-container>
@@ -68,29 +68,9 @@
           this.planPartTypes[itemIndex] = { ...this.planPartTypes[itemIndex], ...updatedItem }
         }
       },
-      async onPlanPartTypeAdded(planPartType) {
-        this.saving = true
-        try {
-          // Create the plan part via backend API
-          const response = await api.post('/event/plan-part-type', {
-            type: planPartType.type,
-            color: planPartType.color,
-            scope: 'global'
-          })
-
-          if (response.data.success) {
-            this.$notificationStore.success(this.$t('admin.planPartCreated'))
-            this.createPlanPartModal = false
-            await this.fetchPlanPartTypes() // Refresh the list
-          } else {
-            this.$notificationStore.error(response.data.message || this.$t('admin.planPartError'))
-          }
-        } catch (error) {
-          console.error('Error creating plan part:', error)
-          this.$notificationStore.handleBackendError(error)
-        } finally {
-          this.saving = false
-        }
+      async onPlanPartTypeAdded() {
+        // Refresh the list after successful creation
+        await this.fetchPlanPartTypes()
       }
     }
   }

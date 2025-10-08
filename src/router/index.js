@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import { usePostHog } from '@/composables/usePostHog'
 
 // Import your page components
+import Calendar from '@/pages/Calendar.vue'
 import Home from '@/pages/Home.vue'
 import Library from '@/pages/Library.vue'
 import Settings from '@/pages/Settings.vue'
@@ -10,13 +11,18 @@ import Users from '@/pages/Users.vue'
 
 import { useUserStore } from '@/stores/user'
 
-import { getTokenFromLocalStorage } from '@/utils/auth'
+import { decodeToken, getTokenFromLocalStorage, isTokenExpired } from '@/utils/auth'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    component: Calendar
   },
   {
     path: '/signin',
@@ -109,19 +115,43 @@ const routes = [
 
 const guardedRoutes = routes
 
-// BEFORE EACH GUARD
-function beforeEachGuard(to, from, next) {
-  const userStore = useUserStore()
-  const user = userStore.user
+// Helper function to validate and get token
+function validateAndGetToken(userStore) {
   let token = userStore.token
 
   if(!token) {
     token = getTokenFromLocalStorage()
-
     if(token) {
       userStore.setToken(token)
     }
   }
+
+  // Decode and validate token if it exists
+  if (token) {
+    // Check if token is expired
+    if (isTokenExpired(token)) {
+      userStore.finishLogout(true)
+      return null
+    }
+
+    // Decode token for additional validation or logging
+    const decodedToken = decodeToken(token)
+    // You can access token payload here
+    // Example: decodedToken.sub (user ID), decodedToken.email, etc.
+    if (!decodedToken) {
+      console.warn('Invalid token format')
+      return null
+    }
+  }
+
+  return token
+}
+
+// BEFORE EACH GUARD
+function beforeEachGuard(to, from, next) {
+  const userStore = useUserStore()
+  const user = userStore.user
+  const token = validateAndGetToken(userStore)
 
   // If no user and not going to callback, redirect to callback
   if (!token && !to.meta.allowWithoutAuth) {
@@ -167,12 +197,13 @@ function beforeEachGuard(to, from, next) {
   next()
 }
 
-const { posthog } = usePostHog()
+// Initialize PostHog
+usePostHog()
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes: guardedRoutes,
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior() {
     // Always scroll to top when navigating to a new route
     return { top: 0 }
   }

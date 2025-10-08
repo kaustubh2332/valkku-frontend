@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-form ref="form" @submit.prevent="save">
-      <div class="mb-4">
+      <div class="mb-4 d-flex align-start">
         <!-- Admin mode: Dual language input -->
         <template v-if="admin">
           <v-row>
@@ -29,10 +29,10 @@
           </v-row>
         </template>
 
-        <!-- Regular mode: Single language input -->
+        <!-- Regular mode: Single language input (but saves to both) -->
         <template v-else>
           <v-text-field
-            v-model="formData.title"
+            v-model="currentLocaleTitle"
             autofocus
             density="compact"
             :label="$t('events.type_name')"
@@ -42,14 +42,22 @@
           />
         </template>
 
-        <!-- Color picker -->
-        <div class="d-flex align-center mt-4">
-          <span class="mr-4">{{ $t('events.color') }}:</span>
-          <ChooseColor
-            v-model="formData.color"
-            :colors="availableColors"
-          />
+        <div class="d-flex align-center">
+          <!-- Color picker -->
+          <div class="d-flex align-center mt-2 ml-4 mr-4">
+            <ChooseColor
+              v-model="formData.color"
+              :colors="availableColors"
+            />
+          </div>
         </div>
+      </div>
+      <div v-if="userStore.isStaff">
+        {{ $t('events.who_sees') }}
+        <v-radio-group v-model="formData.scope">
+          <v-radio :label="$t('events.add_to_own')" value="user" />
+          <v-radio :label="$t('events.add_to_team')" value="team" />
+        </v-radio-group>
       </div>
 
       <!-- Actions -->
@@ -75,6 +83,12 @@
 </template>
 
 <script lang="ts">
+  import { useI18n } from 'vue-i18n'
+  import { useEventStore } from '@/stores/event'
+  import { useNotificationStore } from '@/stores/notification'
+  import { useUserStore } from '@/stores/user'
+  import api from '@/utils/axios'
+
   export default {
     name: 'CreatePlanPartType',
     props: {
@@ -87,15 +101,22 @@
         default: null
       }
     },
-    emits: ['close', 'save'],
+    emits: ['close', 'success'],
+    setup() {
+      const userStore = useUserStore()
+      const notificationStore = useNotificationStore()
+      const eventStore = useEventStore()
+      const { locale } = useI18n()
+      return { userStore, notificationStore, eventStore, locale }
+    },
     data() {
       return {
         saving: false,
         formData: {
-          title: '',
           titleEn: '',
           titleFi: '',
-          color: '#2196F3'
+          color: '#2196F3',
+          scope: 'user'
         },
         availableColors: [
           '#FFEB3B', // Light Yellow
@@ -120,6 +141,16 @@
       }
     },
     computed: {
+      currentLocaleTitle: {
+        get() {
+          return this.locale === 'en' ? this.formData.titleEn : this.formData.titleFi
+        },
+        set(value) {
+          // When user types, update both languages with the same value
+          this.formData.titleEn = value
+          this.formData.titleFi = value
+        }
+      },
       titleRules() {
         return [
           (v: string) => !!v || this.$t('events.type_name_required'),
@@ -139,12 +170,9 @@
         ]
       },
       isFormValid() {
-        if (this.admin) {
-          return this.formData.titleEn && this.formData.titleEn.length >= 2 &&
-            this.formData.titleFi && this.formData.titleFi.length >= 2 &&
-            this.formData.color
-        }
-        return this.formData.title && this.formData.title.length >= 2 && this.formData.color
+        return this.formData.titleEn && this.formData.titleEn.length >= 2 &&
+          this.formData.titleFi && this.formData.titleFi.length >= 2 &&
+          this.formData.color
       }
     },
     watch: {
@@ -159,39 +187,69 @@
     },
     methods: {
       populateForm(data) {
-        if (this.admin && data.titleObject) {
-          // Admin mode: populate both languages
+        if (data.titleObject) {
+          // Populate from titleObject (both admin and regular mode)
           this.formData.titleEn = data.titleObject.en || ''
           this.formData.titleFi = data.titleObject.fi || ''
-        } else {
-          // Regular mode: populate single title
-          this.formData.title = data.title || ''
+        } else if (data.title) {
+          // Fallback for old data format (if any)
+          this.formData.titleEn = data.title
+          this.formData.titleFi = data.title
         }
         this.formData.color = data.color || '#2196F3'
+        this.formData.scope = data.scope || 'user'
       },
       async save() {
         if (!this.$refs.form.validate()) return
 
         this.saving = true
         try {
-          let planPartType
+          // Always send titleObject with both languages
+          const payload: any = {
+            titleObject: {
+              en: this.formData.titleEn.trim(),
+              fi: this.formData.titleFi.trim()
+            },
+            color: this.formData.color,
+            scope: this.admin ? 'global' : this.formData.scope
+          }
 
-          planPartType = this.admin
-            ? {
-              // Admin mode: Create titleObject with both languages
-              titleObject: {
-                en: this.formData.titleEn.trim(),
-                fi: this.formData.titleFi.trim()
-              },
-              color: this.formData.color
+          // Add teamId or userId based on scope
+          if (!this.admin) {
+            if (this.formData.scope === 'team') {
+              payload.teamId = this.userStore.currentTeamId
+            } else {
+              payload.userId = this.userStore.user.id
             }
-            : {
-              // Regular mode: Single title
-              title: this.formData.title.trim(),
-              color: this.formData.color
+          }
+
+          // Call the API to create the plan part type
+          const response = await api.post(`/event/plan-part-type/${this.userStore.currentTeamId}`, payload)
+
+          if (response.data.success) {
+            // Show success notification
+            this.notificationStore.success(
+              this.$t('admin.typeCreated')
+            )
+
+            // Add the new type to the store if not admin
+            if (!this.admin) {
+              this.eventStore.planPartTypes.push(response.data.data)
             }
 
-          this.$emit('save', planPartType)
+            // Emit success event with the created type
+            this.$emit('success', response.data.data)
+
+            // Close the modal
+            this.$emit('close')
+          } else {
+            this.notificationStore.error(
+              response.data.message || this.$t('admin.planPartError')
+            )
+          }
+        } catch (error) {
+          console.error('Failed to create plan part type:', error)
+          this.notificationStore.handleBackendError(error)
         } finally {
           this.saving = false
         }

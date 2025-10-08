@@ -1,5 +1,41 @@
 import { useUserStore } from '@/stores/user'
 import api from '@/utils/axios'
+import { jwtDecode } from 'jwt-decode'
+
+/**
+ * Decodes a JWT token and returns the payload
+ * @param {string} token - JWT token to decode
+ * @returns {Object|null} Decoded token payload or null if invalid
+ */
+export function decodeToken(token) {
+  if (!token) {
+    return null
+  }
+
+  try {
+    const decoded = jwtDecode(token)
+    return decoded
+  } catch (error) {
+    console.error('Failed to decode token:', error)
+    return null
+  }
+}
+
+/**
+ * Checks if a JWT token is expired
+ * @param {string} token - JWT token to check
+ * @returns {boolean} True if token is expired
+ */
+export function isTokenExpired(token) {
+  const decoded = decodeToken(token)
+  if (!decoded || !decoded.exp) {
+    return true
+  }
+
+  // JWT exp is in seconds, Date.now() is in milliseconds
+  const currentTime = Date.now() / 1000
+  return decoded.exp < currentTime
+}
 
 /**
  * Fetches user data from the backend bootstrap endpoint

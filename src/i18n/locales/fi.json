@@ -41,6 +41,9 @@
     "title": "Valkku"
   },
   "back": "Takaisin",
+  "calendar": {
+    "title": "Kalenteri"
+  },
   "callback": {
     "errorMessage": "Todennus epäonnistui. Yritä uudelleen.",
     "errorTitle": "Todennusvirhe",
@@ -95,6 +98,8 @@
     "add_new_type": "Lisää uusi tyyppi",
     "add_plan_part": "Lisää osio",
     "add_text": "Teksti",
+    "add_to_own": "Vain minä",
+    "add_to_team": "Joukkue",
     "address": "Osoite",
     "can_modify_later": "Suunnitelman voi luoda myöhemminkin",
     "choose_color": "Valitse väri",
@@ -120,9 +125,11 @@
     "end_time": "Lopetusaika",
     "event_plan": "Tapahtuman suunnitelma",
     "event_plan_ok": "Suunnitelma ok",
+    "event_saved": "Tapahtuma luotu",
     "event_type": "Tapahtuman tyyppi",
     "friday": "Perjantai",
     "friday_short": "Pe",
+    "global_scope": "Sovelluksen tyyppi",
     "location": "Sijainti",
     "location_name": "Paikan nimi",
     "match": "Ottelu",
@@ -157,6 +164,7 @@
     "stop_editing_event_plan": "Lopeta suunnitelman muokkaus",
     "sunday": "Sunnuntai",
     "sunday_short": "Su",
+    "team_scope": "Joukkueen tyyppi",
     "thursday": "Torstai",
     "thursday_short": "To",
     "title": "Tapahtuman nimi",
@@ -168,10 +176,12 @@
     "type_name_min_length": "Tyypin nimi on oltava vähintään 2 merkkiä",
     "type_name_required": "Tyypin nimi on pakollinen",
     "type_required": "Tyyppi on pakollinen",
+    "user_scope": "Oma tyyppi",
     "wednesday": "Keskiviikko",
     "wednesday_short": "Ke",
     "weekly": "Viikoittain",
-    "weeks": "viikon"
+    "weeks": "viikon",
+    "who_sees": "Kuka tämän tyypin näkee?"
   },
   "home": {
     "addEvent": "Lisää tapahtuma",
@@ -263,6 +273,7 @@
   },
   "shortcuts": "Pikanäppäimet",
   "sidebar": {
+    "calendar": "Kalenteri",
     "expand": "Laajenna",
     "home": "Koti",
     "library": "Kirjasto",
@@ -295,6 +306,7 @@
     "submit": "Luo tili",
     "title": "Luo tili"
   },
+  "something_went_wrong": "Jotain meni vikaan",
   "userManagement": {
     "active": "Aktiivinen",
     "addGuardian": "Lisää huoltaja",
