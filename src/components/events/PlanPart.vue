@@ -14,7 +14,7 @@
             size="small"
           >
             <div>
-              {{ part.duration }} min
+              {{ part.durationInMinutes }} min
             </div>
           </v-chip>
           <div class="text-truncate text-overline ml-2">
@@ -65,7 +65,7 @@
           item-key="id"
           :move="allowChildMove"
           tag="div"
-          @end="isDragging = false"
+          @end="onDragEnd"
           @start="isDragging = true"
         >
           <template #item="{ element }">
@@ -142,15 +142,16 @@
 <script lang="ts">
   import { useI18n } from 'vue-i18n'
   import draggable from 'vuedraggable'
+  import { generateId } from '@/utils/id'
   import PlanPartItem from './items/PlanPartItem.vue'
 
   export default {
     name: 'PlanPart',
-    inheritAttrs: false,
     components: {
       PlanPartItem,
       draggable
     },
+    inheritAttrs: false,
     props: {
       modelValue: { // plan part items
         type: Array,
@@ -252,8 +253,16 @@
         }
       },
       onTextAdded(text) {
-        const id = Date.now().toString()
-        this.itemsProxy.push({ id, text, type: 'text', nodeType: 'item', __flash: true })
+        const id = generateId()
+        const position = this.itemsProxy.length
+        this.itemsProxy.push({
+          id,
+          type: 'text',
+          nodeType: 'item',
+          position,
+          item: { text },
+          __flash: true
+        })
         this.creatingText = false
         setTimeout(() => {
           const next = this.itemsProxy.slice()
@@ -304,6 +313,14 @@
           }
         }
         return depth
+      },
+      onDragEnd() {
+        this.isDragging = false
+        // Update positions for all items after drag
+        this.itemsProxy = this.itemsProxy.map((item: any, index: number) => ({
+          ...item,
+          position: index
+        }))
       }
     }
   }

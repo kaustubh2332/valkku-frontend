@@ -13,6 +13,7 @@
           <CalendarEventCard
             :data="data"
             :event="data.event"
+            :view="data.view.type"
           />
         </template>
       </FullCalendar>
@@ -21,7 +22,7 @@
       <v-overlay
         class="align-center justify-center"
         contained
-        :model-value="loading"
+        :model-value="showLoading"
         persistent
       >
         <v-progress-circular
@@ -31,6 +32,95 @@
           width="3"
         />
       </v-overlay>
+
+      <!-- Context Menu -->
+      <v-menu
+        v-model="contextMenu.show"
+        :activator="contextMenu.activator"
+        :close-on-content-click="false"
+        location="bottom start"
+        :z-index="9999"
+      >
+        <v-list
+          density="compact"
+          min-width="200"
+        >
+          <v-list-item
+            prepend-icon="mdi-eye"
+            @click="viewEvent"
+          >
+            <v-list-item-title>{{ $t('calendar.view_event') }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item
+            prepend-icon="mdi-pencil"
+            @click="editEvent"
+          >
+            <v-list-item-title>{{ $t('calendar.edit_event') }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item
+            prepend-icon="mdi-content-duplicate"
+            @click="duplicateEvent"
+          >
+            <v-list-item-title>{{ $t('calendar.duplicate_event') }}</v-list-item-title>
+          </v-list-item>
+          <v-divider />
+          <v-list-item
+            class="text-error"
+            prepend-icon="mdi-delete"
+            @click="deleteEvent"
+          >
+            <v-list-item-title>{{ $t('calendar.delete_event') }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <!-- Empty Space Context Menu -->
+      <v-menu
+        v-model="emptySpaceMenu.show"
+        :activator="emptySpaceMenu.activator"
+        :close-on-content-click="false"
+        location="bottom start"
+        :z-index="9999"
+      >
+        <v-list
+          density="compact"
+          min-width="200"
+        >
+          <v-list-item
+            prepend-icon="mdi-plus"
+            @click="addEvent"
+          >
+            <v-list-item-title>{{ $t('calendar.add_event') }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item
+            prepend-icon="mdi-calendar-plus"
+            @click="addQuickEvent"
+          >
+            <v-list-item-title>{{ $t('calendar.add_quick_event') }}</v-list-item-title>
+          </v-list-item>
+          <v-divider />
+          <v-list-item
+            prepend-icon="mdi-calendar-today"
+            @click="goToToday"
+          >
+            <v-list-item-title>{{ $t('calendar.go_to_today') }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <!-- Edit Event Modal -->
+      <BottomSheetModal
+        v-model="editEventModal"
+        :title="$t('events.edit_event')"
+        @close="editEventModal = false"
+      >
+        <CreateEvent
+          v-if="editEventModal"
+          :edit="selectedEvent"
+          @close="editEventModal = false"
+          @saved="handleEventSaved"
+        />
+      </BottomSheetModal>
     </div>
   </div>
 </template>
@@ -43,13 +133,14 @@
   import timeGridPlugin from '@fullcalendar/timegrid'
   import FullCalendar from '@fullcalendar/vue3'
   import { useI18n } from 'vue-i18n'
-  import CalendarEventCard from '@/components/calendar/CalendarEventCard.vue'
+  import CreateEvent from '@/components/events/CreateEvent.vue'
+  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
     name: 'Calendar',
-    components: { FullCalendar, CalendarEventCard },
+    components: { FullCalendar, BottomSheetModal, CreateEvent },
     setup() {
       const { locale } = useI18n()
       const userStore = useUserStore()
@@ -59,21 +150,22 @@
       return {
         events: [],
         loading: false,
-        calendarOptions: {
-          plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, multimonthPlugin],
-          initialView: 'dayGridMonth',
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay'
-          },
-          locale: (this.locale && typeof this.locale === 'string' && this.locale === 'fi') ? fiLocale : null,
-          firstDay: (this.locale && typeof this.locale === 'string' && this.locale === 'fi') ? 1 : 0,
-          events: [],
-          height: 'auto',
-          slotMinTime: '06:00:00',
-          slotMaxTime: '23:00:00',
-        }
+        showLoading: false,
+        loadingTimeout: null,
+        isUpdatingUrl: false,
+        urlUpdateTimeout: null,
+        contextMenu: {
+          show: false,
+          activator: null,
+          event: null
+        },
+        emptySpaceMenu: {
+          show: false,
+          activator: null,
+          date: null
+        },
+        editEventModal: false,
+        selectedEvent: null
       }
     },
     computed: {
@@ -87,6 +179,73 @@
       },
       dateFirstDayOfWeek() {
         return this.$i18n?.locale === 'fi' ? 1 : 0
+      },
+      // URL query parameters for calendar state
+      urlView() {
+        return this.$route.query.view || 'dayGridMonth'
+      },
+      urlDate() {
+        return this.$route.query.date || new Date().toISOString().split('T')[0]
+      },
+      calendarOptions() {
+        return {
+          plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, multimonthPlugin],
+          initialView: this.urlView,
+          initialDate: this.urlDate,
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay'
+          },
+          locale: (this.locale && typeof this.locale === 'string' && this.locale === 'fi') ? fiLocale : null,
+          firstDay: (this.locale && typeof this.locale === 'string' && this.locale === 'fi') ? 1 : 0,
+          events: [],
+          height: 'auto',
+          slotMinTime: '06:00:00',
+          slotMaxTime: '23:00:00',
+          // MultiMonthYear specific options
+          multiMonthMaxColumns: 3,
+          multiMonthMinWidth: 300,
+          // Ensure events are shown in year view
+          displayEventTime: true,
+          displayEventEnd: true,
+          // Event handlers
+          datesSet: (info) => {
+            this.onDatesSet(info)
+            this.updateUrlFromCalendar()
+          },
+          eventClick: (clickInfo) => this.onEventClick(clickInfo),
+          viewDidMount: (view) => {
+            console.log('viewDidMount event fired', view.view.type) // Debug log
+            this.updateUrlFromCalendar()
+          },
+          // Right-click context menu
+          eventMouseEnter: (info) => this.onEventMouseEnter(info),
+          eventMouseLeave: (info) => this.onEventMouseLeave(info),
+          // Empty space right-click
+          dateClick: (info) => this.onDateClick(info),
+          // Drag and drop handlers
+          eventDrop: (info) => this.onEventDrop(info),
+          eventResize: (info) => this.onEventResize(info),
+          eventDragStart: (info) => this.onEventDragStart(info),
+          eventDragStop: (info) => this.onEventDragStop(info),
+          // Enable drag and drop
+          editable: true,
+          eventResizableFromStart: true,
+          eventStartEditable: true,
+          eventDurationEditable: true
+        }
+      }
+    },
+    watch: {
+      // Watch for URL changes and update calendar
+      '$route.query': {
+        handler(newQuery) {
+          if (!this.isUpdatingUrl) {
+            this.updateCalendarFromUrl()
+          }
+        },
+        deep: true
       }
     },
     mounted() {
@@ -99,12 +258,123 @@
           if (start && end) {
             this.fetchEventsForRange(start, end)
           }
-          // Hook into range changes
-          this.calendarOptions.datesSet = (info) => this.onDatesSet(info)
+          // Event handlers are now defined in calendarOptions computed property
+
+          // Ensure calendar is initialized with URL parameters
+          setTimeout(() => {
+            this.updateCalendarFromUrl()
+          }, 100)
         } catch {}
       })
+
+      // Add right-click listener for empty space
+      this.$nextTick(() => {
+        const calendarEl = this.$refs.calendarRef?.$el
+        if (calendarEl) {
+          calendarEl.addEventListener('contextmenu', (e) => {
+            // Check if clicking on empty space (not on an event)
+            if (!e.target.closest('.fc-event')) {
+              this.onEmptySpaceRightClick(e, null)
+            }
+          })
+        }
+      })
+    },
+    beforeUnmount() {
+      if (this.urlUpdateTimeout) {
+        clearTimeout(this.urlUpdateTimeout)
+      }
     },
     methods: {
+      updateCalendarFromUrl() {
+        this.$nextTick(() => {
+          try {
+            const apiCal = (this.$refs.calendarRef as any)?.getApi?.()
+            if (!apiCal) return
+
+            const newView = this.urlView
+            const newDate = this.urlDate
+
+            console.log('Updating calendar from URL:', { newView, newDate }) // Debug log
+
+            // Change view if different
+            if (apiCal.view.type !== newView) {
+              console.log('Changing view from', apiCal.view.type, 'to', newView) // Debug log
+              apiCal.changeView(newView)
+            }
+
+            // Change date if different
+            const currentDate = apiCal.getDate()
+            // Parse date string as local date to avoid timezone issues
+            const [year, month, day] = newDate.split('-').map(Number)
+            const targetDate = new Date(year, month - 1, day) // month is 0-indexed
+
+            // Compare dates using local formatting
+            const currentYear = currentDate.getFullYear()
+            const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0')
+            const currentDay = String(currentDate.getDate()).padStart(2, '0')
+            const currentDateStr = `${currentYear}-${currentMonth}-${currentDay}`
+
+            const targetYear = targetDate.getFullYear()
+            const targetMonth = String(targetDate.getMonth() + 1).padStart(2, '0')
+            const targetDay = String(targetDate.getDate()).padStart(2, '0')
+            const targetDateStr = `${targetYear}-${targetMonth}-${targetDay}`
+
+            if (currentDateStr !== targetDateStr) {
+              console.log('Changing date from', currentDateStr, 'to', targetDateStr) // Debug log
+              apiCal.gotoDate(targetDate)
+            }
+          } catch (error) {
+            console.warn('Failed to update calendar from URL:', error)
+          }
+        })
+      },
+      updateUrlFromCalendar() {
+        console.log('updateUrlFromCalendar called') // Debug log
+        // Add a small delay to ensure calendar has fully updated
+        this.$nextTick(() => {
+          try {
+            const apiCal = (this.$refs.calendarRef as any)?.getApi?.()
+            if (!apiCal) {
+              console.log('No calendar API available') // Debug log
+              return
+            }
+
+            const currentView = apiCal.view.type
+            const currentDate = apiCal.getDate()
+            // Format date as YYYY-MM-DD in local timezone to avoid timezone shifts
+            const year = currentDate.getFullYear()
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0')
+            const day = String(currentDate.getDate()).padStart(2, '0')
+            const dateStr = `${year}-${month}-${day}`
+
+            const newQuery = {
+              view: currentView,
+              date: dateStr
+            }
+
+            console.log('Current calendar state:', { currentView, dateStr }) // Debug log
+
+            // Only update URL if values have changed
+            const currentQuery = this.$route.query
+            if (currentQuery.view !== newQuery.view || currentQuery.date !== newQuery.date) {
+              console.log('Updating URL:', newQuery) // Debug log
+              this.isUpdatingUrl = true
+              this.$router.replace({
+                name: 'Calendar',
+                query: newQuery
+              }).finally(() => {
+                this.isUpdatingUrl = false
+              })
+            } else {
+              console.log('URL already up to date') // Debug log
+            }
+          } catch (error) {
+            console.warn('Failed to update URL from calendar:', error)
+            this.isUpdatingUrl = false
+          }
+        })
+      },
       escapeHtml(str) {
         return String(str)
           .replace(/&/g, '&amp;')
@@ -122,8 +392,22 @@
         this.fetchEventsForRange(info.start, info.end)
       },
       fetchEventsForRange(startDate, endDate) {
+        console.log('fetchEventsForRange called', startDate, endDate)
         if (!this.userStore.currentTeamId) return
+
+        // Clear any existing timeout
+        if (this.loadingTimeout) {
+          clearTimeout(this.loadingTimeout)
+          this.loadingTimeout = null
+        }
+
         this.loading = true
+        // Only show loading spinner if request takes longer than 500ms
+        this.loadingTimeout = setTimeout(() => {
+          if (this.loading) {
+            this.showLoading = true
+          }
+        }, 500)
 
         const startDateStr = this.formatYMD(startDate)
         const endDateStr = this.formatYMD(endDate)
@@ -132,7 +416,6 @@
           params: { startDate: startDateStr, endDate: endDateStr }
         })
           .then((res) => {
-            console.log(res.data.data)
             const list = res?.data?.data || []
             this.events = Array.isArray(list) ? list.map((e) => this.mapBackendEventToCalendar(e)) : []
 
@@ -149,8 +432,288 @@
             console.error('Failed to fetch events:', error)
           })
           .finally(() => {
+            // Clear timeout and hide loading
+            if (this.loadingTimeout) {
+              clearTimeout(this.loadingTimeout)
+              this.loadingTimeout = null
+            }
             this.loading = false
+            this.showLoading = false
           })
+      },
+      onEventClick(clickInfo) {
+        try {
+          const id = clickInfo?.event?.id
+          const idNum = Number(id)
+          if (!id || Number.isNaN(idNum)) return
+          this.$router.push({ name: 'EventInfo', params: { eventId: id } })
+        } catch {}
+      },
+      onEventMouseEnter(info) {
+        // Add right-click listener to the event element
+        const element = info.el
+        if (element) {
+          const rightClickHandler = (e) => this.onEventRightClick(e, info)
+          element._rightClickHandler = rightClickHandler
+          element.addEventListener('contextmenu', rightClickHandler)
+        }
+      },
+      onEventMouseLeave(info) {
+        // Remove right-click listener when mouse leaves
+        const element = info.el
+        if (element && element._rightClickHandler) {
+          element.removeEventListener('contextmenu', element._rightClickHandler)
+          delete element._rightClickHandler
+        }
+      },
+      onEventRightClick(event, info) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        // Store the event data and show context menu
+        this.contextMenu.event = info.event
+        this.contextMenu.activator = event.target
+        this.contextMenu.show = true
+      },
+      onEventDrop(info) {
+        console.log('Event dropped:', info)
+        this.updateEventDates(info.event)
+      },
+      onEventResize(info) {
+        console.log('Event resized:', info)
+        this.updateEventDates(info.event)
+      },
+      onEventDragStart(info) {
+        console.log('Event drag started:', info)
+        // Add visual feedback if needed
+        info.el.style.opacity = '0.5'
+      },
+      onEventDragStop(info) {
+        console.log('Event drag stopped:', info)
+        // Remove visual feedback
+        info.el.style.opacity = '1'
+      },
+      async updateEventDates(event) {
+        try {
+          const eventId = event.id
+          const start = event.start
+          const end = event.end
+
+          if (!eventId || !start) {
+            console.warn('Missing event ID or start time')
+            return
+          }
+
+          // Convert to Unix timestamps
+          const startTimeUnixSec = Math.floor(start.getTime() / 1000)
+          const endTimeUnixSec = end ? Math.floor(end.getTime() / 1000) : null
+
+          // Update the event on the backend
+          const updateData = {
+            startTimeUnixSec,
+            ...(endTimeUnixSec && { endTimeUnixSec })
+          }
+
+          console.log('Updating event:', eventId, updateData)
+
+          await api.put(`/events/${eventId}`, updateData)
+
+          // Show success notification
+          console.log('Event updated successfully')
+
+        } catch (error) {
+          console.error('Failed to update event:', error)
+
+          // Revert the event position on error
+          event.revert()
+        }
+      },
+      // Context menu actions
+      viewEvent() {
+        if (this.contextMenu.event) {
+          const eventId = this.contextMenu.event.id
+          this.$router.push({ name: 'EventInfo', params: { eventId } })
+        }
+        this.contextMenu.show = false
+      },
+      editEvent() {
+        if (this.contextMenu.event) {
+          const eventId = this.contextMenu.event.id
+          // Get the full event data and open edit modal
+          this.fetchEventForEdit(eventId)
+        }
+        this.contextMenu.show = false
+      },
+      duplicateEvent() {
+        if (this.contextMenu.event) {
+          const eventId = this.contextMenu.event.id
+          console.log('Duplicate event:', eventId)
+          // TODO: Implement duplicate functionality
+        }
+        this.contextMenu.show = false
+      },
+      async deleteEvent() {
+        if (this.contextMenu.event) {
+          const eventId = this.contextMenu.event.id
+          const eventTitle = this.contextMenu.event.title
+
+          // Show confirmation dialog
+          const confirmed = confirm(`Are you sure you want to delete "${eventTitle}"?`)
+          if (confirmed) {
+            try {
+              await api.delete(`/events/${eventId}`)
+              console.log('Event deleted successfully')
+
+              // Remove from calendar
+              this.contextMenu.event.remove()
+
+              // Refresh events
+              this.fetchEventsForRange(
+                this.$refs.calendarRef?.getApi?.()?.view?.currentStart,
+                this.$refs.calendarRef?.getApi?.()?.view?.currentEnd
+              )
+            } catch (error) {
+              console.error('Failed to delete event:', error)
+            }
+          }
+        }
+        this.contextMenu.show = false
+      },
+      async fetchEventForEdit(eventId) {
+        try {
+          this.showLoading = true
+          const response = await api.get(`/event/${eventId}/team/${this.userStore.currentTeamId}`)
+          if (response?.data?.success) {
+            this.selectedEvent = response.data.data
+            this.editEventModal = true
+          } else {
+            console.error('Failed to fetch event for editing')
+          }
+        } catch (error) {
+          console.error('Error fetching event for edit:', error)
+        } finally {
+          this.showLoading = false
+        }
+      },
+      handleEventSaved(updatedEvent) {
+        // Close the modal
+        this.editEventModal = false
+        this.selectedEvent = null
+
+        // Try to update the event in the current calendar view immediately
+        this.updateCalendarEvent(updatedEvent)
+
+        // Sync local events array so later renders don't revert the change
+        this.updateLocalEventsArray(updatedEvent)
+
+        // As a fallback, refresh events from server
+        // (kept to ensure consistency if the event isn't currently rendered)
+        this.refreshCalendar()
+
+        console.log('Event updated:', updatedEvent)
+      },
+      updateCalendarEvent(updatedEvent) {
+        try {
+          if (!updatedEvent || !updatedEvent.id) return
+          const api = this.$refs.calendarRef?.getApi?.()
+          if (!api) return
+          const fcEvent = api.getEventById(String(updatedEvent.id))
+          if (!fcEvent) return
+
+          // Update basic fields
+          if (updatedEvent.title) fcEvent.setProp('title', updatedEvent.title)
+          // Update extended props
+          const extended = Object.assign({}, fcEvent.extendedProps, updatedEvent)
+          fcEvent.setExtendedProp('type', updatedEvent.type)
+          fcEvent.setExtendedProp('status', updatedEvent.status)
+          fcEvent.setExtendedProp('teamId', updatedEvent.teamId)
+          fcEvent.setExtendedProp('durationInMinutes', updatedEvent.durationInMinutes)
+          fcEvent.setExtendedProp('repeats', updatedEvent.repeats)
+          fcEvent.setExtendedProp('repeatsOn', updatedEvent.repeatsOn)
+          fcEvent.setExtendedProp('repeatsUntilUnixSec', updatedEvent.repeatsUntilUnixSec)
+          fcEvent.setExtendedProp('locationId', updatedEvent.locationId)
+          fcEvent.setExtendedProp('eventDate', updatedEvent.eventDate)
+          fcEvent.setExtendedProp('notes', updatedEvent.notes)
+          fcEvent.setExtendedProp('ownNotes', updatedEvent.ownNotes)
+          fcEvent.setExtendedProp('coachesNotes', updatedEvent.coachesNotes)
+          fcEvent.setExtendedProp('raw', extended)
+
+          // Update start/end when available
+          if (Number(updatedEvent.startTimeUnixSec) > 0) {
+            const start = new Date(Number(updatedEvent.startTimeUnixSec) * 1000)
+            fcEvent.setStart(start)
+          }
+          if (Number(updatedEvent.endTimeUnixSec) > 0) {
+            const end = new Date(Number(updatedEvent.endTimeUnixSec) * 1000)
+            fcEvent.setEnd(end)
+          }
+        } catch (error) {
+          console.warn('Failed to update calendar event in-place; will refetch', error)
+        }
+      },
+      updateLocalEventsArray(updatedEvent) {
+        try {
+          if (!updatedEvent || !updatedEvent.id) return
+          const idStr = String(updatedEvent.id)
+          const idx = this.events.findIndex(e => String(e.id) === idStr)
+          const mapped = this.mapBackendEventToCalendar(updatedEvent)
+          const exists = idx !== -1
+          if (exists) {
+            this.events.splice(idx, 1, mapped)
+          } else {
+            // If not found in current window but still visible, add it
+            this.events.push(mapped)
+          }
+        } catch {}
+      },
+      refreshCalendar() {
+        // Re-fetch events for current visible range and re-inject into calendar
+        try {
+          const api = this.$refs.calendarRef?.getApi?.()
+          const start = api?.view?.currentStart
+          const end = api?.view?.currentEnd
+          if (start && end) {
+            this.fetchEventsForRange(start, end)
+          }
+        } catch {}
+      },
+      // Empty space context menu
+      onDateClick(info) {
+        // Only show menu on right-click (contextmenu event)
+        // This will be handled by the calendar's built-in dateClick for left clicks
+        // We'll add a separate right-click handler for empty space
+      },
+      onEmptySpaceRightClick(event, date) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        // Store the date and show empty space menu
+        this.emptySpaceMenu.date = date
+        this.emptySpaceMenu.activator = event.target
+        this.emptySpaceMenu.show = true
+      },
+      // Empty space menu actions
+      addEvent() {
+        if (this.emptySpaceMenu.date) {
+          console.log('Add event on date:', this.emptySpaceMenu.date)
+          // TODO: Open create event dialog with pre-filled date
+        }
+        this.emptySpaceMenu.show = false
+      },
+      addQuickEvent() {
+        if (this.emptySpaceMenu.date) {
+          console.log('Add quick event on date:', this.emptySpaceMenu.date)
+          // TODO: Open quick event creation
+        }
+        this.emptySpaceMenu.show = false
+      },
+      goToToday() {
+        const apiCal = this.$refs.calendarRef?.getApi?.()
+        if (apiCal) {
+          apiCal.today()
+          this.updateUrlFromCalendar()
+        }
+        this.emptySpaceMenu.show = false
       },
       mapBackendEventToCalendar(ev) {
         const startSec = Number(ev.startTimeUnixSec)
@@ -167,9 +730,27 @@
           endIso = new Date(endSec * 1000).toISOString()
           allDay = false
         } else if (ev.eventDate) {
-          // All-day event: use date-only strings (YYYY-MM-DD)
+          // All-day event: use date-only strings (YYYY-MM-DD) without timezone shifts
           const raw = String(ev.eventDate)
-          const ymd = raw.includes('T') ? raw.slice(0, 10) : this.formatYMD(raw)
+          let ymd = ''
+          if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+            // Already plain YYYY-MM-DD, use as-is
+            ymd = raw
+          } else if (raw.includes('T')) {
+            // ISO date string -> convert to local date to avoid timezone shifts
+            const d = new Date(raw)
+            if (!Number.isNaN(d.getTime())) {
+              const yy = d.getFullYear()
+              const mm = String(d.getMonth() + 1).padStart(2, '0')
+              const dd2 = String(d.getDate()).padStart(2, '0')
+              ymd = `${yy}-${mm}-${dd2}`
+            } else {
+              ymd = raw.slice(0, 10)
+            }
+          } else {
+            // Fallback to formatting via Date only if necessary
+            ymd = this.formatYMD(raw)
+          }
           if (ymd && ymd.length === 10) {
             startIso = ymd
             // end is next day (exclusive) also as Y-M-D
@@ -222,3 +803,182 @@
     }
   }
 </script>
+
+<style scoped>
+/* Ensure events are visible in multiMonthYear view */
+:deep(.fc-multimonth .fc-event) {
+  display: block !important;
+  visibility: visible !important;
+}
+
+:deep(.fc-multimonth .fc-event-title) {
+  display: block !important;
+}
+
+:deep(.fc-multimonth .fc-event-time) {
+  display: block !important;
+}
+
+/* Mobile calendar button improvements */
+:deep(.fc-toolbar) {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+:deep(.fc-toolbar-chunk) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.fc-button) {
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  min-height: 36px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+:deep(.fc-button:hover) {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+:deep(.fc-button:active) {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+:deep(.fc-button-primary) {
+  background: #1976d2 !important;
+  border-color: #1976d2 !important;
+}
+
+:deep(.fc-button-primary:hover) {
+  background: #1565c0 !important;
+  border-color: #1565c0 !important;
+}
+
+:deep(.fc-button-group) {
+  display: flex;
+  gap: 4px;
+}
+
+:deep(.fc-button-group .fc-button) {
+  margin: 0 !important;
+}
+
+/* Specific styling for navigation buttons */
+:deep(.fc-prev-button),
+:deep(.fc-next-button) {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+:deep(.fc-prev-button::before),
+:deep(.fc-next-button::before) {
+  content: '' !important;
+}
+
+:deep(.fc-prev-button .fc-icon),
+:deep(.fc-next-button .fc-icon) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Drag and drop improvements */
+:deep(.fc-event) {
+  cursor: move;
+  user-select: none;
+}
+
+:deep(.fc-event:hover) {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+:deep(.fc-event-dragging) {
+  opacity: 0.8;
+  transform: rotate(2deg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+:deep(.fc-event-resizing) {
+  opacity: 0.8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  :deep(.fc-toolbar) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  :deep(.fc-toolbar-chunk) {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  :deep(.fc-button) {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    min-height: 32px !important;
+  }
+
+  :deep(.fc-prev-button),
+  :deep(.fc-next-button) {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+  }
+
+  :deep(.fc-toolbar-title) {
+    font-size: 18px !important;
+    text-align: center;
+    margin: 8px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.fc-button) {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    min-height: 28px !important;
+  }
+
+  :deep(.fc-prev-button),
+  :deep(.fc-next-button) {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  :deep(.fc-toolbar-title) {
+    font-size: 16px !important;
+  }
+
+  :deep(.fc-button-group) {
+    gap: 2px;
+  }
+}
+</style>

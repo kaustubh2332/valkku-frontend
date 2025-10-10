@@ -52,7 +52,7 @@
           </div>
         </div>
       </div>
-      <div v-if="userStore.isStaff">
+      <div v-if="userStore.isStaff && !initial">
         {{ $t('events.who_sees') }}
         <v-radio-group v-model="formData.scope">
           <v-radio :label="$t('events.add_to_own')" value="user" />
@@ -202,17 +202,28 @@
       async save() {
         if (!this.$refs.form.validate()) return
 
+        // Always prepare titleObject with both languages
+        const formData = {
+          titleObject: {
+            en: this.formData.titleEn.trim(),
+            fi: this.formData.titleFi.trim()
+          },
+          color: this.formData.color,
+          scope: this.admin ? 'global' : this.formData.scope
+        }
+
+        // If initial prop exists, we're in edit mode within a parent component (like PlanPartsTable)
+        // Just emit the data and let the parent handle the API call
+        if (this.initial) {
+          this.$emit('success', formData)
+          return
+        }
+
+        // Otherwise, we're creating a new type (from CreatePlanPart.vue)
+        // Handle the API call ourselves
         this.saving = true
         try {
-          // Always send titleObject with both languages
-          const payload: any = {
-            titleObject: {
-              en: this.formData.titleEn.trim(),
-              fi: this.formData.titleFi.trim()
-            },
-            color: this.formData.color,
-            scope: this.admin ? 'global' : this.formData.scope
-          }
+          const payload: any = { ...formData }
 
           // Add teamId or userId based on scope
           if (!this.admin) {
@@ -224,7 +235,7 @@
           }
 
           // Call the API to create the plan part type
-          const response = await api.post(`/event/plan-part-type/${this.userStore.currentTeamId}`, payload)
+          const response = await api.post(`/plan/plan-part-type/${this.userStore.currentTeamId}`, payload)
 
           if (response.data.success) {
             // Show success notification

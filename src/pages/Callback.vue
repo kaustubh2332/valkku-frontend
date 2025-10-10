@@ -112,7 +112,7 @@
           .then(() => {
             // Redirect to original destination or home
             const redirectPath = this.$route.query.redirect as string || '/'
-            this.$router.push(redirectPath)
+            this.$router.replace(redirectPath)
           })
           .catch((error) => {
             this.hasError = true

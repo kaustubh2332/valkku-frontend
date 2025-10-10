@@ -7,9 +7,11 @@
       <v-row>
         <v-col cols="12">
           <PlanPartsTable
+            :admin="true"
             :items="planPartTypes"
             :loading="loading"
-            @refresh="fetchPlanPartTypes"
+            scope="global"
+            @refresh="fetchPlanPartTypes(true)"
             @update-item="updatePlanPartType"
             @update:items="planPartTypes = $event"
           />
@@ -49,16 +51,20 @@
       await this.fetchPlanPartTypes()
     },
     methods: {
-      async fetchPlanPartTypes() {
-        this.loading = true
+      async fetchPlanPartTypes(silent = false) {
+        if (!silent) {
+          this.loading = true
+        }
         try {
-          const response = await api.get('/event/plan-part-type/global')
+          const response = await api.get('/plan/plan-part-type/global')
           this.planPartTypes = response.data.data
         } catch (error) {
           console.error('Error fetching plan part types:', error)
           this.$notificationStore.error(this.$t('admin.fetchError'))
         } finally {
-          this.loading = false
+          if (!silent) {
+            this.loading = false
+          }
         }
       },
       updatePlanPartType(updatedItem) {

@@ -1,5 +1,14 @@
 <template>
   <div>
+    <div v-if="!hasContent" class="mb-4">
+      <v-card class="pa-6 d-flex align-center justify-center" variant="tonal">
+        <div class="text-center">
+          <v-icon class="mb-2" color="primary" size="36">mdi-clipboard-text-outline</v-icon>
+          <div class="text-body-1 mb-2">{{ $t('plan.no_plan_content') }}</div>
+        </div>
+      </v-card>
+    </div>
+
     <draggable
       v-model="parts"
       :animation="150"
@@ -12,6 +21,7 @@
       item-key="id"
       style="width: 100%;"
       tag="div"
+      @end="updatePositions"
     >
       <template #item="{ element, index }">
         <PlanPart
@@ -31,20 +41,33 @@
           v-else
           :key="'item-' + element.id + '-' + (element.__flash ? 'flash' : 'noflash')"
           data-node="item"
+          :editing="editing"
           :flash="!!element.__flash"
           :item="element"
           @edit="onItemEdit"
+          @remove="handleTopLevelItemRemove(index)"
         />
       </template>
     </draggable>
     <div v-if="editing" class="d-flex ga-2">
-      <v-btn :loading="loadingPlanPartTypes" size="small" @click="createTextOpen = true">
+      <v-btn size="small" @click="createTextOpen = true">
         <v-icon class="mr-2">mdi-plus</v-icon>
         {{ $t('events.add_text') }}
       </v-btn>
-      <v-btn :loading="loadingPlanPartTypes" size="small" @click="createPlanPartOpen = true">
+      <v-btn size="small" @click="createPlanPartOpen = true">
         <v-icon class="mr-2">mdi-plus</v-icon>
         {{ $t('events.add_plan_part') }}
+      </v-btn>
+    </div>
+    <div v-if="editing" class="mt-4 d-flex justify-end">
+      <v-btn
+        color="primary"
+        :disabled="!hasContent || saving"
+        :loading="saving"
+        size="small"
+        @click="savePlan(eventId)"
+      >
+        {{ $t('events.save_plan') }}
       </v-btn>
     </div>
   </div>
@@ -75,6 +98,10 @@
 <script lang="ts">
   import draggable from 'vuedraggable'
   import { useEventStore } from '@/stores/event'
+  import { useNotificationStore } from '@/stores/notification'
+  import { useUserStore } from '@/stores/user'
+  import api from '@/utils/axios'
+  import { generateId } from '@/utils/id'
 
   export default {
     name: 'CreatePlan',
@@ -85,18 +112,26 @@
       editing: {
         type: Boolean,
         default: true
+      },
+      plan: {
+        type: Object,
+        default: null
       }
     },
+    emits: ['save'],
     setup() {
       const eventStore = useEventStore()
       const { loadingPlanPartTypes } = eventStore
-      return { eventStore, loadingPlanPartTypes }
+      const userStore = useUserStore()
+      const notificationStore = useNotificationStore()
+      return { eventStore, loadingPlanPartTypes, userStore, notificationStore }
     },
     data() {
       return {
         parts: [],
         createPlanPartOpen: false,
         createTextOpen: false,
+        saving: false,
         colors: [
           '#6366F1',
           '#EC4899',
@@ -121,7 +156,84 @@
         }
       }
     },
+    computed: {
+      eventId() {
+        return this.$route.params.eventId ? Number(this.$route.params.eventId) : null
+      },
+      hasContent() {
+        return this.parts && this.parts.length > 0
+      },
+      partsWithPositions() {
+        return this.parts.map((part: any, index: number) => {
+          const updatedPart = { ...part, position: index }
+
+          // If it's a part with items, update positions of items too
+          if (part.nodeType === 'part' && Array.isArray(part.items)) {
+            updatedPart.items = part.items.map((item: any, itemIndex: number) => ({
+              ...item,
+              position: itemIndex
+            }))
+          }
+
+          return updatedPart
+        })
+      }
+    },
+    watch: {
+      parts: {
+        handler() {
+          // Update all positions whenever parts array changes (items moved between levels)
+          this.updateAllPositions()
+        },
+        deep: true
+      }
+    },
+    async mounted() {
+      await this.eventStore.initCreatePlanData()
+      // Initialize parts from plan if provided
+      if (this.plan && this.plan.parts) {
+        this.parts = [...this.plan.parts]
+      }
+    },
     methods: {
+      savePlan(eventId: number) {
+        this.saving = true
+
+        let parts = this.partsWithPositions.filter(part => part.nodeType === 'part').map(part => ({ ...part, typeId: part.type?.id }));
+        delete parts.items;
+
+        const topLevelItems = this.parts.filter((part: any) => part.nodeType === 'item');
+        const nestedItems = this.parts.filter((part: any) => part.nodeType === 'part').flatMap((part: any) => part.items.map((i: any) => ({ ...i, partId: part.id })) || []);
+
+        const payload = {
+          title: null,
+          description: null,
+          teamId: this.userStore.currentTeamId,
+          eventId: eventId,
+          parts,
+          scope: 'team',
+          items: [...topLevelItems, ...nestedItems]
+        }
+
+        if ((!payload.parts && payload.parts.length === 0) || (!payload.items && payload.items.length === 0)) {
+          this.notificationStore.info(this.$t('plan.no_plan_content'))
+          this.saving = false
+          return Promise.resolve({ success: true, message: this.$t('plan.no_plan_content') })
+        }
+
+        // Save plan to POST /plan
+        return api.post('/plan', payload)
+          .then(() => {
+            this.notificationStore.success(this.$t('plan.plan_saved'))
+          })
+          .catch((error) => {
+            this.notificationStore.handleBackendError(error)
+            throw error
+          })
+          .finally(() => {
+            this.saving = false
+          })
+      },
       nextItem(index: number) {
         return this.parts[index + 1] || null
       },
@@ -169,8 +281,9 @@
         this.parts = nextParts
       },
       addPart(part: any) {
-        const id = Date.now().toString()
-        this.parts.push({ ...part, id, nodeType: 'part', __flash: true })
+        const id = generateId()
+        const position = this.parts.length
+        this.parts.push({ ...part, id, nodeType: 'part', position, __flash: true })
         this.createPlanPartOpen = false
         setTimeout(() => {
           const next = this.parts.slice()
@@ -180,8 +293,9 @@
         }, 600)
       },
       addEmptyPart() {
-        const id = Date.now().toString()
-        this.parts.push({ id, title: this.$t('events.new_part'), color: this.colors[0], nodeType: 'part', __flash: true })
+        const id = generateId()
+        const position = this.parts.length
+        this.parts.push({ id, title: this.$t('events.new_part'), color: this.colors[0], nodeType: 'part', position, __flash: true })
         setTimeout(() => {
           const next = this.parts.slice()
           const i = next.findIndex((x: any) => x.id === id)
@@ -192,9 +306,20 @@
       handlePartRemove(index: number) {
         this.parts.splice(index, 1)
       },
+      handleTopLevelItemRemove(index: number) {
+        this.parts.splice(index, 1)
+      },
       addText(text: string) {
-        const id = Date.now().toString()
-        this.parts.push({ id, text, type: 'text', nodeType: 'item', __flash: true })
+        const id = generateId()
+        const position = this.parts.length
+        this.parts.push({
+          id,
+          type: 'text',
+          nodeType: 'item',
+          position,
+          item: { text },
+          __flash: true
+        })
         this.createTextOpen = false
         setTimeout(() => {
           const next = this.parts.slice()
@@ -202,6 +327,33 @@
           if (i !== -1) next[i].__flash = false
           this.parts = next
         }, 600)
+      },
+      updatePositions() {
+        // Update positions for all top-level items after drag
+        this.updateAllPositions()
+      },
+      updateAllPositions() {
+        // Debounce to avoid multiple rapid updates
+        if (this._updateTimeout) {
+          clearTimeout(this._updateTimeout)
+        }
+
+        this._updateTimeout = setTimeout(() => {
+          // Update positions for all top-level items and their children
+          this.parts = this.parts.map((part: any, index: number) => {
+            const updatedPart = { ...part, position: index }
+
+            // If it's a part with items, update positions of items too
+            if (part.nodeType === 'part' && Array.isArray(part.items)) {
+              updatedPart.items = part.items.map((item: any, itemIndex: number) => ({
+                ...item,
+                position: itemIndex
+              }))
+            }
+
+            return updatedPart
+          })
+        }, 50) // Small delay to batch updates
       }
     }
   }

@@ -24,6 +24,7 @@
     "axios": "^1.11.0",
     "fi": "link:@fullcalendar/core/locales/fi",
     "jwt-decode": "^4.0.0",
+    "nanoid": "^5.1.6",
     "pinia": "^3.0.3",
     "posthog-js": "^1.270.1",
     "vue": "^3.5.17",

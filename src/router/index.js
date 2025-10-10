@@ -72,13 +72,55 @@ const routes = [
     component: () => import('@/pages/Callback.vue')
   },
   {
+    path: '/events/:eventId',
+    name: 'Event',
+    meta: {
+      hideSidebar: false,
+    },
+    component: () => import('@/components/events/Event.vue'),
+    redirect: { name: 'EventInfo' },
+    children: [
+      {
+        path: 'info',
+        name: 'EventInfo',
+        component: () => import('@/components/events/Event.vue')
+      },
+      {
+        path: 'plan',
+        name: 'EventPlan',
+        component: () => import('@/components/events/Event.vue')
+      }
+    ]
+  },
+  {
     path: '/settings',
     name: 'Settings',
     meta: {
       allowWithoutDetails: true,
       allowWithoutTeam: true
     },
-    component: Settings
+    component: Settings,
+    redirect: '/settings/general',
+    children: [
+      {
+        path: 'general',
+        name: 'SettingsGeneral',
+        meta: {
+          allowWithoutDetails: true,
+          allowWithoutTeam: true
+        },
+        component: Settings
+      },
+      {
+        path: 'plan-part-types',
+        name: 'SettingsPlanPartTypes',
+        meta: {
+          allowWithoutDetails: true,
+          allowWithoutTeam: true
+        },
+        component: Settings
+      }
+    ]
   },
   {
     path: '/users',
@@ -86,12 +128,44 @@ const routes = [
     meta: {
       roles: ['owner', 'admin']
     },
-    component: Users
+    component: Users,
+    redirect: '/users/managers',
+    children: [
+      {
+        path: 'managers',
+        name: 'UsersManagers',
+        meta: {
+          roles: ['owner', 'admin']
+        },
+        component: Users
+      },
+      {
+        path: 'athletes',
+        name: 'UsersAthletes',
+        meta: {
+          roles: ['owner', 'admin']
+        },
+        component: Users
+      }
+    ]
   },
   {
     path: '/library',
     name: 'Library',
-    component: Library
+    component: Library,
+    redirect: '/library/practice-plans',
+    children: [
+      {
+        path: 'practice-plans',
+        name: 'LibraryPracticePlans',
+        component: Library
+      },
+      {
+        path: 'plan-parts',
+        name: 'LibraryPlanParts',
+        component: Library
+      }
+    ]
   },
   {
     path: '/users/:userId',

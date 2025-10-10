@@ -9,11 +9,14 @@
         @change="onTeamChange"
       /> -->
       <v-tabs
-        v-model="activeTab"
+        :model-value="currentTab"
         align-tabs="start"
         color="primary"
       >
-        <v-tab :value="0">
+        <v-tab
+          :to="{ name: 'UsersManagers' }"
+          value="managers"
+        >
           <div v-if="$vuetify.display.mobile">
             <v-icon>mdi-account-group</v-icon>
           </div>
@@ -29,7 +32,10 @@
             </v-chip>
           </div>
         </v-tab>
-        <v-tab :value="1">
+        <v-tab
+          :to="{ name: 'UsersAthletes' }"
+          value="athletes"
+        >
           <div v-if="$vuetify.display.mobile">
             <v-icon>mdi-run</v-icon>
           </div>
@@ -76,9 +82,8 @@
 
     <!-- Tabs -->
     <div class="mt-0">
-      <v-window v-model="activeTab" :touch="false">
-        <!-- Managers Tab -->
-        <v-window-item :value="0">
+      <!-- Managers Tab -->
+      <div v-if="$route.name === 'UsersManagers'">
           <!-- Loading Skeleton for Managers -->
           <LoadingWrapper
             v-if="isLoadingTeamUsers"
@@ -141,10 +146,10 @@
               </v-card-text>
             </v-card>
           </div>
-        </v-window-item>
+      </div>
 
-        <!-- Athletes Tab -->
-        <v-window-item :value="1">
+      <!-- Athletes Tab -->
+      <div v-if="$route.name === 'UsersAthletes'">
           <!-- Loading Skeleton for Athletes -->
           <LoadingWrapper
             v-if="isLoadingTeamUsers"
@@ -207,9 +212,7 @@
               </v-card-text>
             </v-card>
           </div>
-        </v-window-item>
-
-      </v-window>
+      </div>
     </div>
   </div>
 
@@ -254,11 +257,13 @@
         inviteUserDialog: false,
         userDetailDialog: false,
         userDetailDialogIsInvite: false,
-        selectedUser: null,
-        activeTab: 0
+        selectedUser: null
       }
     },
     computed: {
+      currentTab() {
+        return this.$route.name === 'UsersManagers' ? 'managers' : 'athletes'
+      },
       teamUsers() {
         // Map roles to include status and compute invite/active state per user
         const users = (this.teamStore.teamUsers || []).map(u => {

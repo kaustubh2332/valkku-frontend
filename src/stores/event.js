@@ -11,11 +11,11 @@ export const useEventStore = defineStore('event', {
     loadingEvents: false
   }),
   actions: {
-    initCreateEventData() {
+    initCreatePlanData() {
       return new Promise((resolve, reject) => {
         this.loadingPlanPartTypes = true
         const userStore = useUserStore()
-        api.get(`/event/plan-part-type/team/${userStore.currentTeamId}`)
+        api.get(`/plan/plan-part-type/all/${userStore.currentTeamId}`)
           .then((response) => {
             this.planPartTypes = response.data.data
             resolve(response.data.data)
@@ -28,10 +28,33 @@ export const useEventStore = defineStore('event', {
           })
       })
     },
+    getEvent(eventId, teamId) {
+      return new Promise((resolve, reject) => {
+        api.get(`/event/${eventId}/team/${teamId}`)
+          .then((response) => {
+            resolve(response.data.data)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
     saveEvent(eventData) {
       return new Promise((resolve, reject) => {
         const userStore = useUserStore()
         api.post(`/event/team/${userStore.currentTeamId}`, eventData)
+          .then((response) => {
+            resolve(response.data)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+    updateEvent(eventId, eventData) {
+      return new Promise((resolve, reject) => {
+        const userStore = useUserStore()
+        api.put(`/event/${eventId}/team/${userStore.currentTeamId}`, eventData)
           .then((response) => {
             resolve(response.data)
           })

@@ -6,8 +6,10 @@
       :class="[{ [`item-content-${item.id}`]: true }, { 'flash-border': flash }]"
       @dblclick="editing ? edit() : null"
     >
-      <div>
-        <div v-html="item.text" />
+      <div class="d-flex align-center" style="width: 100%;">
+        <div style="flex: 1;">
+          <div v-html="item.item?.text || item.text" />
+        </div>
       </div>
       <div v-if="editing" class="plan-part-item-actions">
         <v-btn
@@ -70,12 +72,12 @@
     methods: {
       edit() {
         if (this.item.type === 'text') {
-          this.creatingTextText = this.item.text
+          this.creatingTextText = this.item.item?.text || this.item.text
           this.creatingText = true
         }
       },
       onTextEdited(text: string) {
-        this.$emit('edit', { ...this.item, text })
+        this.$emit('edit', { ...this.item, item: { text } })
         this.creatingTextText = text
         this.creatingText = false
       },

@@ -1,15 +1,16 @@
 <template>
   <v-card flat>
     <v-card-title class="d-flex align-center">
-      <div class="text-h6">{{ $t('library.eventPlanPartTypes') }}</div>
       <v-spacer />
       <v-btn
         color="primary"
         variant="tonal"
         @click="openCreateDialog"
       >
-        <v-icon class="mr-2">mdi-plus</v-icon>
-        {{ $t('admin.addType') }}
+        <v-icon>mdi-plus</v-icon>
+        <span v-if="!dense" class="mr-2">
+          {{ $t('admin.addType') }}
+        </span>
       </v-btn>
       <v-btn
         class="ml-2"
@@ -17,13 +18,35 @@
         variant="text"
         @click="toggleArchived"
       >
-        <v-icon class="mr-2">{{ showArchived ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
-        {{ showArchived ? $t('admin.hideArchived') : $t('admin.showArchived') }}
+        <v-icon>{{ showArchived ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
+        <span v-if="!dense" class="ml-2">
+          {{ showArchived ? $t('admin.hideArchived') : $t('admin.showArchived') }}
+        </span>
       </v-btn>
     </v-card-title>
 
     <div v-if="loading" class="pa-4 text-center">
       <v-progress-circular indeterminate />
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="items.length === 0" class="empty-state">
+      <v-icon color="grey-lighten-1" size="64">mdi-shape-outline</v-icon>
+      <div class="text-h6 mt-4 text-grey-darken-1">
+        {{ $t('admin.noTypesYet') }}
+      </div>
+      <div class="text-body-2 text-grey mt-2">
+        {{ $t('admin.noTypesDescription') }}
+      </div>
+      <v-btn
+        class="mt-4"
+        color="primary"
+        variant="tonal"
+        @click="openCreateDialog"
+      >
+        <v-icon class="mr-2">mdi-plus</v-icon>
+        {{ $t('admin.createFirstType') }}
+      </v-btn>
     </div>
 
     <div v-else class="custom-table">
@@ -42,6 +65,7 @@
         class="table-body"
         drag-class="drag-dragging"
         ghost-class="drag-ghost"
+        handle=".drag-handle"
         item-key="id"
         :model-value="items"
         @end="onDragEnd"
@@ -57,7 +81,7 @@
               <v-icon class="drag-handle">mdi-drag</v-icon>
             </div>
             <div class="table-cell title-column">
-              <div class="d-flex flex-column">
+              <div v-if="admin" class="d-flex flex-column">
                 <div class="d-flex align-center">
                   <span class="mr-2 text-caption">EN:</span>
                   <span>{{ element.titleObject?.en || 'N/A' }}</span>
@@ -66,6 +90,9 @@
                   <span class="mr-2 text-caption">FI:</span>
                   <span>{{ element.titleObject?.fi || 'N/A' }}</span>
                 </div>
+              </div>
+              <div v-else>
+                {{ getLocalizedTitle(element.titleObject || {}) }}
               </div>
             </div>
             <div class="table-cell color-column justify-center">
@@ -102,10 +129,10 @@
       :title="isEditing ? $t('admin.editType') : $t('admin.addType')"
     >
       <CreatePlanPartType
-        :admin="true"
+        :admin="admin"
         :initial="editingItem"
         @close="closeDialog"
-        @save="onTypeSaved"
+        @success="onTypeSaved"
       />
     </BottomSheetModal>
   </v-card>
@@ -116,6 +143,7 @@
   import draggable from 'vuedraggable'
   import { useZIndex } from '@/composables/useZIndex'
   import { useNotificationStore } from '@/stores/notification'
+  import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
@@ -131,13 +159,27 @@
       items: {
         type: Array,
         default: () => []
+      },
+      scope: {
+        type: String,
+        default: 'global',
+        validator: (value: string) => ['global', 'team', 'user'].includes(value)
+      },
+      admin: {
+        type: Boolean,
+        default: false
+      },
+      dense: {
+        type: Boolean,
+        default: false
       }
     },
     emits: ['refresh', 'update:items', 'update-item'],
     setup() {
       const { locale } = useI18n()
       const notificationStore = useNotificationStore()
-      return { locale, notificationStore }
+      const userStore = useUserStore()
+      return { locale, notificationStore, userStore }
     },
     data() {
       return {
@@ -177,22 +219,36 @@
       async onTypeSaved(typeData) {
         this.saving = true
         try {
-          const payload = {
+          const payload: any = {
             titleObject: typeData.titleObject,
             color: typeData.color,
-            scope: 'global',
             position: this.items.length // Add position for new items
           }
 
           if (this.isEditing) {
+            // For editing, keep the original scope (cannot be changed)
+            payload.scope = this.editingItem.scope
+
+            // Add teamId or userId based on scope for authentication
+            if (this.editingItem.scope === 'team') {
+              payload.teamId = this.userStore.currentTeamId
+            } else if (this.editingItem.scope === 'user') {
+              payload.userId = this.userStore.user.id
+            }
+
             // Optimistically update the item by emitting an event
             this.$emit('update-item', { id: this.editingId, ...payload })
             this.closeDialog()
 
-            // Make API call in background
+            // Make API call in background and quietly refresh
             try {
-              await api.put(`/event/plan-part-type/${this.editingId}`, payload)
+              await api.put(`/plan/plan-part-type/${this.editingId}`, {
+                ...payload,
+                teamId: this.userStore.currentTeamId
+              })
               this.notificationStore.success(this.$t('admin.typeUpdated'))
+              // Quietly refresh to get the updated data from the server
+              this.$emit('refresh')
             } catch (error) {
               console.error('Error updating type:', error)
               this.notificationStore.handleBackendError(error)
@@ -200,11 +256,28 @@
               this.$emit('refresh')
             }
           } else {
-            // For new items, show loading since we need the ID from server
+            // For creating, use the selected scope
+            const scope = typeData.scope || this.scope
+            payload.scope = scope
+
+            // Add teamId or userId based on scope
+            if (scope === 'team') {
+              payload.teamId = this.userStore.currentTeamId
+            } else if (scope === 'user') {
+              payload.userId = this.userStore.user.id
+            }
+
             try {
-              const response = await api.post('/event/plan-part-type', payload)
+              const response = await api.post(`/plan/plan-part-type/${this.userStore.currentTeamId}`, payload)
+              const newItem = response.data.data
+
+              // Add the newly created item to the list optimistically
+              this.$emit('update:items', [...this.items, newItem])
+
               this.notificationStore.success(this.$t('admin.typeCreated'))
               this.closeDialog()
+
+              // Quietly refresh to ensure sync with server
               this.$emit('refresh')
             } catch (error) {
               console.error('Error creating type:', error)
@@ -227,11 +300,23 @@
 
         // Make API call in background
         try {
-          await api.put(`/event/plan-part-type/${item.id}`, {
+          const payload: any = {
             titleObject: item.titleObject,
             color: item.color,
-            scope: 'global',
+            scope: item.scope,
             archived: !item.archived
+          }
+
+          // Add teamId or userId based on scope
+          if (item.scope === 'team') {
+            payload.teamId = this.userStore.currentTeamId
+          } else if (item.scope === 'user') {
+            payload.userId = this.userStore.user.id
+          }
+
+          await api.put(`/plan/plan-part-type/${item.id}`, {
+            ...payload,
+            teamId: this.userStore.currentTeamId
           })
         } catch (error) {
           console.error('Error toggling archive:', error)
@@ -285,9 +370,9 @@
             pos: index
           }))
 
-          await api.patch('/event/plan-part-type/positions', {
+          await api.patch(`/plan/plan-part-type/positions/${this.userStore.currentTeamId}`, {
             positions,
-            scope: 'global'
+            scope: this.scope
           })
 
           // No success notification for position updates - they happen silently
@@ -365,7 +450,6 @@
   display: flex;
   border-bottom: 1px solid rgba(0,0,0,0.12);
   transition: background-color 0.2s;
-  cursor: move;
 }
 
 .table-row:hover {
@@ -416,5 +500,15 @@
 
 .drag-ghost {
   opacity: 0.3;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  text-align: center;
+  min-height: 300px;
 }
 </style>

@@ -1,28 +1,57 @@
 <template>
-  <div class="event-card" :style="styleVars">
-    <div class="top-row">
-      <span v-if="durationText" class="pill duration">{{ durationText }}</span>
-      <span v-if="typeLabel" class="pill type">{{ typeLabel }}</span>
-    </div>
+  <v-menu
+    :close-on-content-click="false"
+    location="top"
+    :offset="4"
+    :open-delay="200"
+    open-on-hover
+  >
+    <template #activator="{ props }">
+      <div
+        class="event-card"
+        :class="{ 'year-view': isYearView }"
+        :style="styleVars"
+        v-bind="props"
+      >
+        <!-- Year view: just a colored box -->
+        <div v-if="isYearView" class="year-event">
+          <!-- Just a colored box, no text -->
+        </div>
 
-    <div class="title" :title="title">{{ title }}</div>
+        <!-- Mobile month view: start time and title -->
+        <div v-else-if="shouldShowStartTimeOnly" class="mobile-month-event">
+          <div class="mobile-start-time">{{ startTime }}</div>
+          <div class="mobile-title">{{ title }}</div>
+        </div>
 
-    <div v-if="locationName" class="meta" :title="locationName">
-      <span class="dot" />
-      <span class="meta-text text-truncate">{{ locationName }}</span>
-    </div>
-
-    <div class="reactions">
-      <span class="like">
-        <span class="icon like">👍</span>
-        <span class="count">{{ likes }}</span>
-      </span>
-      <span class="dislike">
-        <span class="icon dislike">👎</span>
-        <span class="count">{{ dislikes }}</span>
-      </span>
-    </div>
-  </div>
+        <!-- Regular view: full display -->
+        <div v-else>
+          <div class="top-row">
+            <span v-if="durationText" class="pill duration">{{ durationText }}</span>
+          </div>
+          <div class="title" :title="title">{{ title }}</div>
+        </div>
+      </div>
+    </template>
+    <v-card elevation="6" min-width="220">
+      <v-card-text class="py-3">
+        <strong class="evt-tt-title text-truncate">{{ title }}</strong>
+        <div v-if="durationText" class="evt-tt-line">{{ durationText }}</div>
+        <div v-if="typeLabel" class="evt-tt-line mt-2">
+          <v-chip
+            class="evt-tt-chip"
+            :color="typeColor"
+            label
+            size="small"
+            variant="tonal"
+          >
+            {{ typeLabel }}
+          </v-chip>
+        </div>
+        <div v-if="locationName" class="evt-tt-line">{{ locationName }}</div>
+      </v-card-text>
+    </v-card>
+  </v-menu>
 </template>
 
 <script lang="ts">
@@ -32,22 +61,32 @@
       event: {
         type: Object,
         required: true
+      },
+      view: {
+        type: String,
+        default: 'dayGridMonth'
       }
     },
     data() {
-      return {}
+      return {
+        windowWidth: window.innerWidth
+      }
     },
     computed: {
+      isYearView() {
+        return this.view === 'multiMonthYear'
+      },
+      isMobile() {
+        return this.windowWidth <= 768
+      },
+      isMonthView() {
+        return this.view === 'dayGridMonth'
+      },
+      shouldShowStartTimeOnly() {
+        return this.isMobile && this.isMonthView && !this.isYearView
+      },
       title() {
         return this.event?.title || ''
-      },
-      likes() {
-        const v = (this.event?.extendedProps && this.event.extendedProps.likes) || 0
-        return Number.isFinite(Number(v)) ? Number(v) : 0
-      },
-      dislikes() {
-        const v = (this.event?.extendedProps && this.event.extendedProps.dislikes) || 0
-        return Number.isFinite(Number(v)) ? Number(v) : 0
       },
       locationName() {
         const ext = this.event?.extendedProps || {}
@@ -55,7 +94,27 @@
       },
       typeLabel() {
         const ext = this.event?.extendedProps || {}
-        return ext.typeLabel || ext.type || ''
+        const raw = (ext.type || ext.typeLabel || '').toString().toLowerCase()
+        const map = {
+          practise: this.$t('events.practise'),
+          match: this.$t('events.match'),
+          meeting: this.$t('events.meeting'),
+          self_training: this.$t('events.self_directed_training'),
+          other_event: this.$t('events.other_event')
+        }
+        return map[raw] || (raw || '')
+      },
+      typeColor() {
+        const ext = this.event?.extendedProps || {}
+        const raw = (ext.type || ext.typeLabel || '').toString().toLowerCase()
+        const colorMap = {
+          practise: '#1e88e5',
+          match: '#e53935',
+          meeting: '#8e24aa',
+          self_training: '#43a047',
+          other_event: 'grey'
+        }
+        return colorMap[raw] || this.baseColor
       },
       durationText() {
         const ext = this.event?.extendedProps || {}
@@ -73,6 +132,17 @@
             return `${hh}:${mm}`
           }
           return `${fmt(start)}-${fmt(end)}`
+        }
+        return ''
+      },
+      startTime() {
+        const ext = this.event?.extendedProps || {}
+        const start = this.event?.start
+        if (start) {
+          const date = new Date(start)
+          const hh = String(date.getHours()).padStart(2, '0')
+          const mm = String(date.getMinutes()).padStart(2, '0')
+          return `${hh}:${mm}`
         }
         return ''
       },
@@ -104,7 +174,16 @@
         }
       }
     },
+    mounted() {
+      window.addEventListener('resize', this.handleResize)
+    },
+    beforeUnmount() {
+      window.removeEventListener('resize', this.handleResize)
+    },
     methods: {
+      handleResize() {
+        this.windowWidth = window.innerWidth
+      },
       shadeColor(hex, percent) {
         try {
           const h = hex.replace('#', '')
@@ -137,6 +216,47 @@
   box-shadow: 0 6px 16px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.02) inset;
   width: 100%;
   height: 100%;
+}
+
+/* Desktop improvements */
+@media (min-width: 769px) {
+  .event-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .title {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+  }
+
+  .pill {
+    font-size: 13px !important;
+    padding: 4px 10px !important;
+  }
+}
+
+/* Mobile padding reduction */
+@media (max-width: 768px) {
+  .event-card {
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+  }
+
+  .event-card.year-view {
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-card {
+    padding: 1px 2px !important;
+    border-radius: 2px !important;
+  }
+
+  .mobile-month-event {
+    padding: 0px 1px !important;
+  }
 }
 .event-card::after {
   content: '';
@@ -204,4 +324,61 @@
 .icon.like { color: #86efac; }
 .icon.dislike { color: #f87171; }
 .count { color: #ffffff; }
+
+/* Year view styles - just a colored box */
+.event-card.year-view {
+  padding: 0;
+  min-height: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.year-event {
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* Mobile month view styles */
+.mobile-month-event {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1px 2px;
+  gap: 0px;
+  overflow: hidden;
+}
+
+.mobile-start-time {
+  font-size: 9px;
+  font-weight: 600;
+  color: white;
+  text-align: left;
+  line-height: 1;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.mobile-title {
+  font-size: 8px;
+  font-weight: 500;
+  color: white;
+  text-align: left;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.8;
+  width: 100%;
+  word-wrap: break-word;
+}
 </style>

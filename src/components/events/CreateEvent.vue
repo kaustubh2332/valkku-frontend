@@ -103,9 +103,12 @@
         <v-col v-if="showMe('durationInMinutes')" cols="12" md="6">
           <v-text-field
             v-model="event.durationInMinutes"
+            autocomplete="off"
             density="compact"
             hide-details="auto"
             :label="$t('events.duration_minutes')"
+            :rules="durationInMinutesRules"
+            type="number"
             variant="outlined"
           />
         </v-col>
@@ -309,6 +312,7 @@
 
     </v-form>
 
+    <!-- Plan Section -->
     <div v-if="showMe('plan')" class="d-flex align-center mb-4">
       <div>
         <div class="text-h6">
@@ -323,6 +327,7 @@
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
+            color="primary"
             icon="mdi-pencil"
             size="small"
             variant="text"
@@ -335,7 +340,8 @@
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
-            icon="mdi-check"
+            color="error"
+            icon="mdi-close"
             size="small"
             variant="text"
             @click="toggleEdit"
@@ -344,11 +350,18 @@
         {{ $t('events.stop_editing_event_plan') }}
       </v-tooltip>
     </div>
-    <CreatePlan v-if="showMe('plan')" :editing="editing" />
+    <CreatePlan v-if="showMe('plan')" ref="createPlanRef" :editing="editing" />
+
     <div class="d-flex justify-end ga-2 mt-4">
       <v-btn variant="text" @click="cancel">{{ $t('cancel') }}</v-btn>
       <v-spacer />
-      <v-btn color="primary" :disabled="!formValid || saving" :loading="saving" @click="save">{{ $t('events.create_event') }}</v-btn>
+      <v-btn
+        color="primary"
+        :disabled="!formValid || saving"
+        :loading="saving"
+        style="cursor: pointer;"
+        @click="save"
+      >{{ isEditing ? $t('events.update_event') : $t('events.create_event') }}</v-btn>
     </div>
   </div>
 
@@ -372,10 +385,17 @@
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
+  import CreatePlan from './CreatePlan.vue'
 
   export default {
     name: 'CreateEvent',
-    components: { BottomSheetModal },
+    components: { BottomSheetModal, CreatePlan },
+    props: {
+      edit: {
+        type: Object,
+        default: null
+      }
+    },
     emits: ['close', 'saved'],
     setup() {
       const eventStore = useEventStore()
@@ -407,14 +427,17 @@
         endPickerDate: '',
         dateMenu: false,
         endDateMenu: false,
-        editing: true,
         teamLocations: [],
         loadingLocations: false,
         showCreateLocation: false,
-        locationMenuOpen: false
+        locationMenuOpen: false,
+        editing: true
       }
     },
     computed: {
+      isEditing() {
+        return !!(this.edit && this.edit.id)
+      },
       // --- Field validation rules ---
       eventTypeRules() {
         return [
@@ -423,36 +446,49 @@
       },
       eventDateRules() {
         return [
-          () => !!this.event.eventDate || this.$t('events.date_required')
+          () => !!this.event.eventDate || this.$t('required')
         ]
       },
       startTimeRules() {
         return [
-          (v) => !!v || this.$t('events.start_time_required')
+          (v) => !!v || this.$t('required')
         ]
       },
       endTimeRules() {
         return [
-          (v) => !!v || this.$t('events.end_time_required'),
+          (v) => !!v || this.$t('required'),
           () => {
             // Backend: startTimeUnixSec < endTimeUnixSec and both > 0
             const s = Number(this.startTimeUnixSec)
             const e = Number(this.endTimeUnixSec)
             if (!Number.isFinite(s) || !Number.isFinite(e)) return true // other rules will flag empties
-            if (s <= 0 || e <= 0) return this.$t('events.time_positive_required')
-            return s < e || this.$t('events.start_before_end')
+            if (s >= e) return this.$t('events.end_time_must_be_after_start')
+            return true
           }
         ]
       },
       weekdaysRules() {
         return [
-          () => (this.event.repeats !== 'daily' || (Array.isArray(this.event.weekdays) && this.event.weekdays.length > 0)) || this.$t('events.repeatsOn_required_weekly')
+          () => (this.event.repeats !== 'daily' || (Array.isArray(this.event.weekdays) && this.event.weekdays.length > 0)) || this.$t('required')
         ]
       },
       repeatsUntilRules() {
         return [
-          () => (!this.event.repeats || this.event.repeats === 'never' || !!this.event.repeatsUntilDate) || this.$t('events.repeats_until_required')
+          () => (!this.event.repeats || this.event.repeats === 'never' || !!this.event.repeatsUntilDate) || this.$t('required')
         ]
+      },
+      durationInMinutesRules() {
+        return [
+          (v) => {
+            if (!this.currentEventTypeHasNoStartAndEnd) return true
+            const num = Number(v)
+            return (Number.isFinite(num) && num > 0) || this.$t('events.duration_required')
+          }
+        ]
+      },
+      currentEventTypeHasNoStartAndEnd() {
+        const selectedType = this.eventTypes.find(t => t.value === this.event.eventType)
+        return selectedType?.noStartAndEnd === true
       },
       startTimeUnixSec() {
         return this.combineDateAndTimeToUnix(this.event.eventDate, this.event.startTime)
@@ -687,11 +723,26 @@
           { title: this.$t('events.practise'), value: 'practise', color: '#1e88e5' },
           { title: this.$t('events.match'), value: 'match', color: '#e53935' },
           { title: this.$t('events.meeting'), value: 'meeting', color: '#8e24aa' },
-          { title: this.$t('events.self_directed_training'), value: 'self_training', color: '#43a047' },
+          { title: this.$t('events.self_directed_training'), value: 'self_training', color: '#43a047', noStartAndEnd: true },
           { title: this.$t('events.other_event'), value: 'other_event', color: 'grey' }
         ]
       },
       formattedEventDate() {
+        // Prefer pickerDate (YYYY-MM-DD) to avoid any TZ conversion
+        if (this.pickerDate) {
+          const parts = this.pickerDate.split('-')
+          if (parts.length === 3) {
+            const [y, m, d] = parts.map(Number)
+            const dateObj = new Date(y, m - 1, d)
+            const locale = this.dateLocale
+            const formatter = new Intl.DateTimeFormat(locale, {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            })
+            return formatter.format(dateObj)
+          }
+        }
         if (!this.event.eventDate) return ''
         const ms = Number(this.event.eventDate) * 1000
         if (!Number.isFinite(ms) || ms <= 0) return ''
@@ -733,26 +784,43 @@
           repeats: this.event.repeats === 'never' ? undefined : this.event.repeats,
           repeatsOn: this.event.repeats === 'daily' ? this.weekdaysBinary : null,
           repeatsUntilUnixSec: (this.event.repeats && this.event.repeats !== 'never') ? this.repeatsUntilUnixSec : undefined,
-          locationId: this.event.locationId
+          locationId: this.event.locationId,
         }
-        // Optional duration for own-time events
-        const durationInMinsNum = Number(this.event.durationInMinutes)
-        if (Number.isFinite(durationInMinsNum) && durationInMinsNum > 0) {
-          // Send durationInMins and omit start/end unix to indicate flexible timing
-          payload.durationInMinutes = durationInMinsNum
+
+        // For noStartAndEnd events (like self_training), only send durationInMinutes
+        if (this.currentEventTypeHasNoStartAndEnd) {
+          const durationInMinsNum = Number(this.event.durationInMinutes)
+          if (Number.isFinite(durationInMinsNum) && durationInMinsNum > 0) {
+            payload['durationInMinutes'] = durationInMinsNum
+          }
         } else {
-          // Include unix times only when valid and no duration override
+          // For other events, include unix times
           const s = Number(this.startTimeUnixSec)
           const e = Number(this.endTimeUnixSec)
-          if (Number.isFinite(s)) payload.startTimeUnixSec = s
-          if (Number.isFinite(e)) payload.endTimeUnixSec = e
+          if (Number.isFinite(s)) payload['startTimeUnixSec'] = s
+          if (Number.isFinite(e)) payload['endTimeUnixSec'] = e
         }
         return payload
       }
     },
+    watch: {
+      edit: {
+        handler(newVal) {
+          if (newVal) {
+            this.initializeEventData()
+          }
+        },
+        immediate: false
+      }
+    },
     async mounted() {
-      await this.eventStore.initCreateEventData()
+      await this.eventStore.initCreatePlanData()
       await this.fetchTeamLocations()
+
+      // Initialize event data if editing
+      if (this.isEditing && this.edit) {
+        this.initializeEventData()
+      }
     },
     methods: {
       showMe(key: string) {
@@ -772,6 +840,146 @@
         }
         return this.event.eventType && (showMap[key]?.includes(this.event.eventType) || showMap[key]?.includes('all'))
       },
+      initializeEventData() {
+        if (!this.edit) return
+
+        // Derive event date values. Prefer startTimeUnixSec if present
+        let yyyyMmDd = ''
+        if (this.edit.startTimeUnixSec && Number(this.edit.startTimeUnixSec) > 0) {
+          yyyyMmDd = this.formatDateFromUnixSec(this.edit.startTimeUnixSec)
+        } else {
+          // Normalize various eventDate formats to YYYY-MM-DD in LOCAL time
+          const raw = this.edit.eventDate
+          if (typeof raw === 'string') {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+              yyyyMmDd = raw
+            } else if (raw.includes('T')) {
+              const d = new Date(raw)
+              if (Number.isNaN(d.getTime())) {
+                yyyyMmDd = raw.slice(0, 10)
+              } else {
+                const y = d.getFullYear()
+                const m = String(d.getMonth() + 1).padStart(2, '0')
+                const da = String(d.getDate()).padStart(2, '0')
+                yyyyMmDd = `${y}-${m}-${da}`
+              }
+            } else {
+              // Fallback try Date parsing
+              const d = new Date(raw)
+              if (Number.isNaN(d.getTime())) {
+                yyyyMmDd = ''
+              } else {
+                const y = d.getFullYear()
+                const m = String(d.getMonth() + 1).padStart(2, '0')
+                const da = String(d.getDate()).padStart(2, '0')
+                yyyyMmDd = `${y}-${m}-${da}`
+              }
+            }
+          } else if (typeof raw === 'number') {
+            // Heuristic: if it's seconds, it's around 10 digits; if ms, 13 digits
+            const n = Number(raw)
+            const ms = n > 1e12 ? n : n * 1000
+            const d = new Date(ms)
+            if (Number.isNaN(d.getTime())) {
+              // leave as empty
+            } else {
+              const y = d.getFullYear()
+              const m = String(d.getMonth() + 1).padStart(2, '0')
+              const da = String(d.getDate()).padStart(2, '0')
+              yyyyMmDd = `${y}-${m}-${da}`
+            }
+          } else {
+            yyyyMmDd = ''
+          }
+        }
+        const eventDateUnix = yyyyMmDd ? this.yyyyMmDdToLocalMidnightUnixSec(yyyyMmDd) : ''
+
+        // Decode repeatsOn binary to weekday numbers (Mon=1..Sun=0)
+        let decodedWeekdays = []
+        if (typeof this.edit.repeatsOn === 'string' && this.edit.repeatsOn.length === 7) {
+          decodedWeekdays = this.decodeWeekdaysFromBinary(this.edit.repeatsOn)
+        } else if (Array.isArray(this.edit.repeatsOn)) {
+          decodedWeekdays = this.edit.repeatsOn
+        }
+
+        // Derive repeatsUntilDate as YYYY-MM-DD from unix seconds (if provided)
+        const repeatsUntilDateStr = (this.edit.repeatsUntilUnixSec && Number(this.edit.repeatsUntilUnixSec) > 0)
+          ? this.formatDateFromUnixSec(this.edit.repeatsUntilUnixSec)
+          : ''
+
+        // Map the edit event data to our form structure
+        this.event = {
+          title: this.edit.title || '',
+          eventType: this.edit.type || '',
+          // Store unix seconds (string) for eventDate
+          eventDate: eventDateUnix ? String(eventDateUnix) : '',
+          startTime: this.edit.startTimeUnixSec ? this.formatTimeFromUnix(this.edit.startTimeUnixSec) : '',
+          endTime: this.edit.endTimeUnixSec ? this.formatTimeFromUnix(this.edit.endTimeUnixSec) : '',
+          durationInMinutes: this.edit.durationInMinutes || null,
+          notes: this.edit.notes || '',
+          coachesNotes: this.edit.coachesNotes || '',
+          ownNotes: this.edit.ownNotes || '',
+          repeats: this.edit.repeats || 'never',
+          weekdays: decodedWeekdays,
+          repeatsUntilDate: repeatsUntilDateStr,
+          locationId: this.edit.locationId || null,
+        }
+
+        // Set picker dates
+        this.pickerDate = yyyyMmDd || ''
+        this.endPickerDate = repeatsUntilDateStr
+      },
+      yyyyMmDdToLocalMidnightUnixSec(v) {
+        if (!v || typeof v !== 'string') return ''
+        const parts = v.split('-')
+        if (parts.length !== 3) return ''
+        const [yStr, mStr, dStr] = parts
+        const y = Number(yStr)
+        const m = Number(mStr)
+        const d = Number(dStr)
+        if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return ''
+        const local = new Date(y, m - 1, d)
+        const sec = Math.floor(local.getTime() / 1000)
+        return Number.isFinite(sec) ? sec : ''
+      },
+      formatDateFromUnixSec(unixSec) {
+        const n = Number(unixSec)
+        if (!Number.isFinite(n) || n <= 0) return ''
+        const d = new Date(n * 1000)
+        const yyyy = d.getFullYear()
+        const mm = String(d.getMonth() + 1).padStart(2, '0')
+        const dd = String(d.getDate()).padStart(2, '0')
+        return `${yyyy}-${mm}-${dd}`
+      },
+      decodeWeekdaysFromBinary(binaryStr) {
+        // binaryStr: 7 chars, Monday-first. '1' means included.
+        // Returns array of JS weekday numbers: Sun=0, Mon=1, ... Sat=6
+        if (!binaryStr || binaryStr.length !== 7) return []
+        const result = []
+        for (let i = 0; i < 7; i++) {
+          const char = binaryStr[i]
+          if (char === '1') {
+            // Map position to weekday value
+            // positions 0..5 -> 1..6 (Mon..Sat), position 6 -> 0 (Sun)
+            const value = i === 6 ? 0 : i + 1
+            result.push(value)
+          }
+        }
+        return result
+      },
+      formatDateForPicker(dateString) {
+        if (!dateString) return ''
+        const date = new Date(dateString)
+        return date.toISOString().split('T')[0]
+      },
+      formatTimeFromUnix(unixSec) {
+        if (!unixSec) return ''
+        const date = new Date(unixSec * 1000)
+        return date.toTimeString().slice(0, 5) // HH:MM format
+      },
+      toggleEdit() {
+        this.editing = !this.editing
+      },
       cancel() {
         this.$emit('close')
       },
@@ -779,15 +987,24 @@
         if (!this.formValid) return
 
         // Extra guard validations mirroring backend schema
-        const s = Number(this.startTimeUnixSec)
-        const e = Number(this.endTimeUnixSec)
-        if (Number.isFinite(s) && Number.isFinite(e)) {
-          if (s <= 0 || e <= 0) {
-            // Let field rules surface the error; stop submit
+        // For noStartAndEnd events (like self_training), durationInMinutes is required
+        if (this.currentEventTypeHasNoStartAndEnd) {
+          const duration = Number(this.event.durationInMinutes)
+          if (!Number.isFinite(duration) || duration <= 0) {
             return
           }
-          if (s >= e) {
-            return
+        } else {
+          // For other events, start and end times are required
+          const s = Number(this.startTimeUnixSec)
+          const e = Number(this.endTimeUnixSec)
+          if (Number.isFinite(s) && Number.isFinite(e)) {
+            if (s <= 0 || e <= 0) {
+              // Let field rules surface the error; stop submit
+              return
+            }
+            if (s >= e) {
+              return
+            }
           }
         }
 
@@ -799,10 +1016,30 @@
         }
 
         this.saving = true
-        this.eventStore.saveEvent(this.finalEvent)
-          .then((res) => {
+
+        // Choose the appropriate save method based on edit mode
+        const savePromise = this.isEditing
+          ? this.eventStore.updateEvent(this.edit.id, this.finalEvent)
+          : this.eventStore.saveEvent(this.finalEvent)
+
+        savePromise
+          .then(async (res) => {
             if (res?.success) {
-              this.notificationStore.success(this.$t('events.event_saved') || 'Event created')
+              // Save plan if it exists and has content
+              if (this.showMe('plan') && this.$refs.createPlanRef) {
+                try {
+                  const eventId = this.isEditing ? this.edit.id : (res.data?.id || res.data?.eventId)
+                  await this.savePlan(eventId)
+                } catch (planError) {
+                  console.warn('Failed to save plan:', planError)
+                  // Don't fail the entire save if plan saving fails
+                }
+              }
+
+              const successMessage = this.isEditing
+                ? this.$t('events.event_updated') || 'Event updated'
+                : this.$t('events.event_saved') || 'Event created'
+              this.notificationStore.success(successMessage)
               this.$emit('saved', res?.data || this.finalEvent)
               this.$emit('close')
             } else {
@@ -816,6 +1053,16 @@
           .finally(() => {
             this.saving = false
           })
+      },
+      savePlan(eventId) {
+        if (!this.$refs.createPlanRef) {
+          console.warn('CreatePlan component not found')
+          return Promise.resolve()
+        }
+
+        // Call the savePlan method on CreatePlan component
+        // This will handle the API call to POST /plan
+        return this.$refs.createPlanRef.savePlan(eventId)
       },
       async fetchTeamLocations() {
         try {
@@ -960,9 +1207,6 @@
         this.event.repeatsUntilDate = `${yyyy}-${mm}-${dd}`
         this.endPickerDate = `${yyyy}-${mm}-${dd}`
         this.endDateMenu = false
-      },
-      toggleEdit() {
-        this.editing = !this.editing
       },
       isRecurringDate(date) {
         if (!this.recurringDates || this.recurringDates.length === 0) {

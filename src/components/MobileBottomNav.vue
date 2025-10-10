@@ -64,6 +64,11 @@
         if (this.isAuthenticated) {
           items.push(
             {
+              name: 'Calendar',
+              icon: 'mdi-calendar-outline',
+              title: this.$t('sidebar.calendar')
+            },
+            {
               name: 'Users',
               icon: 'mdi-account-group-outline',
               title: this.$t('sidebar.userManagement')

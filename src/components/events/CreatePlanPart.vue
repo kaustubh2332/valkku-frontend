@@ -43,19 +43,26 @@
                     <span>{{ item.title }}</span>
                   </div>
                 </template>
-                <template #append-item>
+                <template #prepend-item>
+                  <div class="d-flex pa-4">
+                    <v-btn color="primary" size="x-small" variant="tonal" @click="openCreateTypeModal">
+                      <v-icon class="mr-2">mdi-plus</v-icon>
+                      {{ $t('events.add_new_type') }}
+                    </v-btn>
+                    <v-spacer />
+                    <v-btn size="x-small" variant="tonal" @click="openEditTypesDialog">
+                      <v-icon class="mr-2">mdi-pencil</v-icon>
+                      {{ $t('events.edit_types') }}
+                    </v-btn>
+                  </div>
                   <v-divider />
-                  <v-list-item @click.stop="openCreateTypeModal">
-                    <v-icon>mdi-plus</v-icon>
-                    {{ $t('events.add_new_type') }}
-                  </v-list-item>
                 </template>
               </v-select>
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
                 ref="duration"
-                v-model.number="formData.duration"
+                v-model.number="formData.durationInMinutes"
                 density="compact"
                 :label="$t('events.duration_minutes')"
                 max="480"
@@ -101,12 +108,19 @@
         @success="onTypeCreated"
       />
     </BottomSheetModal>
+
+    <!-- Edit Plan Part Types Dialog -->
+    <EditPlanPartTypesDialog
+      v-model="editTypesDialog"
+      @update:model-value="editTypesDialog = $event"
+    />
   </div>
 </template>
 
 <script lang="ts">
   import { useI18n } from 'vue-i18n'
   import { useEventStore } from '@/stores/event'
+  import { generateId } from '@/utils/id'
 
   export default {
     name: 'CreatePlanPart',
@@ -127,9 +141,10 @@
       return {
         saving: false,
         createTypeModal: false,
+        editTypesDialog: false,
         formData: {
           type: '',
-          duration: 30
+          durationInMinutes: 30
         }
       }
     },
@@ -163,7 +178,7 @@
         handler(newVal) {
           if (newVal) {
             this.formData.type = newVal.type?.id || newVal.type || ''
-            this.formData.duration = newVal.duration || 30
+            this.formData.durationInMinutes = newVal.durationInMinutes || newVal.duration || 30
           }
         },
         immediate: true
@@ -181,10 +196,10 @@
         try {
           const selectedType = this.planPartTypes.find(t => t.id === this.formData.type)
           const planPart = {
-            id: this.initial?.id || Date.now().toString(),
+            id: this.initial?.id || generateId(),
             type: selectedType,
             color: selectedType?.color || this.initial?.color || '#4CAF50',
-            duration: this.formData.duration,
+            durationInMinutes: this.formData.durationInMinutes,
             items: this.initial?.items || []
           }
 
@@ -198,8 +213,12 @@
         event.target.select()
       },
       openCreateTypeModal() {
-        console.log('Opening create type modal')
+        this.$refs.select.blur()
         this.createTypeModal = true
+      },
+      openEditTypesDialog() {
+        this.$refs.select.blur()
+        this.editTypesDialog = true
       },
       onTypeCreated(newType) {
         // Select the newly created type
