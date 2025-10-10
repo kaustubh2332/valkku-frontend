@@ -160,6 +160,7 @@
                     </div>
                     <div v-if="headerTimeChipText">
                       <v-chip
+                        v-tooltip:top="event.durationInMinutes ? $t('events.duration_in_minutes', { duration: event.durationInMinutes }) : $t('events.duration')"
                         class="hero-chip hero-time-chip"
                         color="white"
                         label
@@ -498,30 +499,24 @@
 
               <!-- Plan Content -->
               <div v-else-if="showMe('plan')">
-                <div class="d-flex align-center mb-4">
-                  <!-- <div class="text-h6">
-                    {{ $t('events.event_plan') }}
-                  </div> -->
-                  <v-spacer />
+                <CreatePlan
+                  ref="createPlanRef"
+                  :plan="eventPlan"
+                  @cancel="handlePlanCancelled"
+                  @save="handlePlanSaved"
+                />
+
+                <!-- Edit Plan Button at Bottom -->
+                <div v-if="!editing" class="mt-4 d-flex justify-end">
                   <v-btn
-                    v-if="!editing"
                     color="primary"
                     size="small"
-                    variant="text"
-                    @click="toggleEdit"
+                    @click="startPlanEditing"
                   >
+                    <v-icon class="mr-2">mdi-pencil</v-icon>
                     {{ $t('events.edit_event_plan') }}
                   </v-btn>
-                  <v-btn
-                    v-else
-                    color="error"
-                    icon="mdi-close"
-                    size="small"
-                    variant="text"
-                    @click="toggleEdit"
-                  />
                 </div>
-                <CreatePlan :editing="editing" :plan="eventPlan" />
               </div>
             </v-window-item>
           </v-window>
@@ -796,6 +791,32 @@
       },
       toggleEdit() {
         this.editing = !this.editing
+      },
+      startPlanEditing() {
+        this.editing = true
+        if (this.$refs.createPlanRef) {
+          this.$refs.createPlanRef.startEditing()
+        }
+      },
+      handlePlanSaved(updatedPlan) {
+        this.editing = false
+        if (updatedPlan) {
+          this.eventPlan = updatedPlan
+          this.$nextTick(() => {
+            if (this.$refs.createPlanRef) {
+              this.$refs.createPlanRef.refreshFromPlan()
+            }
+          })
+        } else {
+          // Fallback - reload from server if no payload
+          this.loadPlan()
+        }
+      },
+      handlePlanCancelled() {
+        this.editing = false
+        if (this.$refs.createPlanRef) {
+          this.$refs.createPlanRef.stopEditing()
+        }
       },
       navigateToTab(tab) {
         const eventId = this.$route.params.eventId

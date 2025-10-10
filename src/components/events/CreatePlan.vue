@@ -17,7 +17,7 @@
       :disabled="!editing"
       drag-class="drag-dragging"
       ghost-class="drag-ghost"
-      :group="editing ? topLevelGroup : false"
+      :group="topLevelGroup"
       item-key="id"
       style="width: 100%;"
       tag="div"
@@ -26,16 +26,16 @@
       <template #item="{ element, index }">
         <PlanPart
           v-if="element.nodeType === 'part'"
-          :key="'part-' + element.id + '-' + (element.__flash ? 'flash' : 'noflash')"
+          :key="'part-' + element.id"
           v-model="element.items"
           :colors="colors"
           data-node="part"
           :editing="editing"
-          :group="editing ? childrenGroup : false"
+          :group="childrenGroup"
           :part="element"
           :rounded-tip="nextItem(index) && nextItem(index)?.nodeType !== 'part'"
           @remove="handlePartRemove(index)"
-          @update="handlePartUpdate(index, $event)"
+          @update-part="handlePartUpdateById($event)"
         />
         <PlanPartItem
           v-else
@@ -59,7 +59,16 @@
         {{ $t('events.add_plan_part') }}
       </v-btn>
     </div>
-    <div v-if="editing" class="mt-4 d-flex justify-end">
+    <div v-if="editing" class="mt-4 d-flex">
+      <v-btn
+        size="small"
+        variant="text"
+        @click="cancelEdit"
+      >
+        <v-icon class="mr-2">mdi-close</v-icon>
+        {{ $t('cancel') }}
+      </v-btn>
+      <v-spacer />
       <v-btn
         color="primary"
         :disabled="!hasContent || saving"
@@ -67,6 +76,7 @@
         size="small"
         @click="savePlan(eventId)"
       >
+        <v-icon class="mr-2">mdi-content-save</v-icon>
         {{ $t('events.save_plan') }}
       </v-btn>
     </div>
@@ -109,16 +119,12 @@
       draggable
     },
     props: {
-      editing: {
-        type: Boolean,
-        default: true
-      },
       plan: {
         type: Object,
         default: null
       }
     },
-    emits: ['save'],
+    emits: ['save', 'cancel'],
     setup() {
       const eventStore = useEventStore()
       const { loadingPlanPartTypes } = eventStore
@@ -129,6 +135,7 @@
     data() {
       return {
         parts: [],
+        editing: false,
         createPlanPartOpen: false,
         createTextOpen: false,
         saving: false,
@@ -186,16 +193,53 @@
           this.updateAllPositions()
         },
         deep: true
-      }
+      },
+      // Removed plan watcher to prevent interference with user edits
     },
     async mounted() {
       await this.eventStore.initCreatePlanData()
       // Initialize parts from plan if provided
       if (this.plan && this.plan.parts) {
-        this.parts = [...this.plan.parts]
+        this.parts = this.transformPlanParts(this.plan.parts)
       }
     },
     methods: {
+      transformPlanParts(apiParts) {
+        // Transform API parts to component format
+        return apiParts.map(part => {
+          // Determine nodeType based on structure
+          const hasItems = part.items && Array.isArray(part.items) && part.items.length > 0
+          const hasType = part.type && part.type.id
+
+          if (hasType && hasItems) {
+            // This is a plan part with type and items
+            return {
+              ...part,
+              nodeType: 'part',
+              items: part.items.map(item => ({
+                ...item,
+                nodeType: 'item'
+              }))
+            }
+          } else if (part.type === 'text' && part.item) {
+            // This is a standalone text item
+            return {
+              ...part,
+              nodeType: 'item'
+            }
+          } else {
+            // Fallback - assume it's a part
+            return {
+              ...part,
+              nodeType: 'part',
+              items: part.items ? part.items.map(item => ({
+                ...item,
+                nodeType: 'item'
+              })) : []
+            }
+          }
+        })
+      },
       savePlan(eventId: number) {
         this.saving = true
 
@@ -223,8 +267,15 @@
 
         // Save plan to POST /plan
         return api.post('/plan', payload)
-          .then(() => {
+          .then((response) => {
+            const updatedPlan = (response && response.data && (response.data.data || response.data)) || null
+            if (updatedPlan && updatedPlan.parts) {
+              // Immediately reflect latest server state
+              this.parts = this.transformPlanParts(updatedPlan.parts)
+            }
             this.notificationStore.success(this.$t('plan.plan_saved'))
+            this.editing = false
+            this.$emit('save', updatedPlan)
           })
           .catch((error) => {
             this.notificationStore.handleBackendError(error)
@@ -234,11 +285,47 @@
             this.saving = false
           })
       },
+      cancelEdit() {
+        this.editing = false
+        this.$emit('cancel')
+      },
+      refreshFromPlan() {
+        // Manually refresh parts from plan data
+        if (this.plan && this.plan.parts) {
+          this.parts = this.transformPlanParts(this.plan.parts)
+        }
+      },
+      startEditing() {
+        this.editing = true
+      },
+      stopEditing() {
+        this.editing = false
+      },
       nextItem(index: number) {
         return this.parts[index + 1] || null
       },
-      handlePartUpdate(index: number, updated: any) {
-        this.parts[index] = { ...this.parts[index], ...updated }
+      handlePartUpdateById(updated: any) {
+        const targetId = updated?.id
+        if (!targetId) return
+        const next = this.parts.slice()
+        const idx = next.findIndex((p: any) => p.id === targetId)
+        if (idx !== -1) {
+          const beforeTypeId = next[idx]?.type?.id || next[idx]?.type
+          const afterTypeId = updated?.type?.id || updated?.type
+          console.log('[CreatePlan] apply type change', { id: targetId, beforeTypeId, afterTypeId })
+          next[idx] = { ...next[idx], ...updated }
+          this.parts = next
+          this.$nextTick(() => {
+            const now = (this.parts[idx] || this.parts.find((p: any) => p.id === targetId))
+            const nowTypeId = now?.type?.id || now?.type
+            console.log('[CreatePlan] after tick', { id: targetId, nowTypeId })
+            setTimeout(() => {
+              const later = (this.parts[idx] || this.parts.find((p: any) => p.id === targetId))
+              const laterTypeId = later?.type?.id || later?.type
+              console.log('[CreatePlan] after 150ms', { id: targetId, laterTypeId })
+            }, 150)
+          })
+        }
       },
       onItemEdit(updated: any) {
         // try top level first

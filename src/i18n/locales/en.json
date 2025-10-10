@@ -125,6 +125,8 @@
     "date": "Date",
     "days": "days",
     "delete_part": "Delete part",
+    "duration": "Time",
+    "duration_in_minutes": "Estimated duration",
     "duration_minutes": "Estimated duration (minutes)",
     "duration_range": "Duration must be between 1 and 480 minutes",
     "duration_required": "Duration is required",

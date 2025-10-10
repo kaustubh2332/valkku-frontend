@@ -125,6 +125,8 @@
     "date": "Päivämäärä",
     "days": "päivän",
     "delete_part": "Poista osio",
+    "duration": "Aika",
+    "duration_in_minutes": "Arvioitu kesto",
     "duration_minutes": "Arvioitu kesto (minuutteina)",
     "duration_range": "Kesto täytyy olla 1-480 minuuttia",
     "duration_required": "Kesto on pakollinen",

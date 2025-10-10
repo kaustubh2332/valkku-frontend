@@ -203,6 +203,8 @@
             items: this.initial?.items || []
           }
 
+          // Ensure id is present and visible to parent
+          console.log('[CreatePlanPart] emit add', { id: planPart.id, typeId: selectedType?.id })
           this.$emit('add', planPart)
         } finally {
           this.saving = false

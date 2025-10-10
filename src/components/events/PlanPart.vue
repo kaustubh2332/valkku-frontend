@@ -131,7 +131,7 @@
       :title="$t('events.edit_plan_part')"
     >
       <CreatePlanPart
-        :initial="part"
+        :initial="editPartInitial || part"
         @add="onPartEdited"
         @close="editingPart = false"
       />
@@ -178,7 +178,7 @@
         default: true
       }
     },
-    emits: ['update:modelValue', 'remove', 'update'],
+    emits: ['update:modelValue', 'remove', 'update-part'],
     setup() {
       const { locale } = useI18n()
       return { locale }
@@ -188,6 +188,7 @@
         editTypesModal: false,
         creatingText: false,
         editingPart: false,
+        editPartInitial: null,
         isDragging: false,
         creatingTextText: '',
         partTypes: [
@@ -278,24 +279,35 @@
         if (value === 'edit') {
           this.openEditTypes()
           this.$nextTick(() => {
-            this.$emit('update', this.part)
+            this.$emit('update-part', this.part)
           })
         } else if (value === '') {
-          this.$emit('update', { ...this.part, type: '' })
+          this.$emit('update-part', { ...this.part, type: '' })
         }
       },
       onColorChange(newColor) {
         const updated = { ...this.part, color: newColor, __flash: true }
-        this.$emit('update', updated)
+        this.$emit('update-part', updated)
         setTimeout(() => {
-          this.$emit('update', { ...updated, __flash: false })
+          this.$emit('update-part', { ...updated, __flash: false })
         }, 600)
       },
       editPart() {
+        // Snapshot the part to decouple from live reactivity while editing
+        try {
+          this.editPartInitial = structuredClone(this.part)
+        } catch {
+          this.editPartInitial = { ...this.part }
+        }
         this.editingPart = true
       },
       onPartEdited(updatedPart) {
-        this.$emit('update', updatedPart)
+        const safeId = updatedPart?.id || this.part?.id
+        const merged = { ...updatedPart, id: safeId }
+        const before = this.part?.type?.id || this.part?.type
+        const after = merged?.type?.id || merged?.type
+        console.log('[PlanPart] onPartEdited', { id: safeId, before, after })
+        this.$emit('update-part', merged)
         this.editingPart = false
       },
       getModalDepth() {
