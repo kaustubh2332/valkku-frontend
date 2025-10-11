@@ -739,7 +739,7 @@
           } else if (raw.includes('T')) {
             // ISO date string -> convert to local date to avoid timezone shifts
             const d = new Date(raw)
-            if (!Number.isNaN(d.getTime())) {
+            if (Number.isFinite(d.getTime())) {
               const yy = d.getFullYear()
               const mm = String(d.getMonth() + 1).padStart(2, '0')
               const dd2 = String(d.getDate()).padStart(2, '0')

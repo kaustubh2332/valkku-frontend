@@ -5,6 +5,7 @@ import { usePostHog } from '@/composables/usePostHog'
 import Calendar from '@/pages/Calendar.vue'
 import Home from '@/pages/Home.vue'
 import Library from '@/pages/Library.vue'
+import Program from '@/pages/Program.vue'
 import Settings from '@/pages/Settings.vue'
 import SignIn from '@/pages/SignIn.vue'
 import Users from '@/pages/Users.vue'
@@ -23,6 +24,11 @@ const routes = [
     path: '/calendar',
     name: 'Calendar',
     component: Calendar
+  },
+  {
+    path: '/program',
+    name: 'Program',
+    component: Program
   },
   {
     path: '/signin',

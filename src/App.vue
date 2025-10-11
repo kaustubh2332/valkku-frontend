@@ -3,6 +3,7 @@
     <AppSidebar v-if="!$route.meta.hideSidebar" ref="sidebar" />
     <v-main>
       <v-container
+        class="py-0"
         :class="{ 'mobile-bottom-spacing': $vuetify.display.mobile && !$route.meta.hideSidebar }"
       >
         <router-view />
@@ -99,5 +100,19 @@
 
 .mobile-bottom-spacing {
     padding-bottom: 80px !important;
+}
+
+/* Hide scrollbars on mobile devices */
+@media (max-width: 960px) {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    * {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
 }
 </style>

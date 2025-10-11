@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!hasContent" class="mb-4">
+    <div v-if="initialized && !hasContent" class="mb-4">
       <v-card class="pa-6 d-flex align-center justify-center" variant="tonal">
         <div class="text-center">
           <v-icon class="mb-2" color="primary" size="36">mdi-clipboard-text-outline</v-icon>
@@ -139,6 +139,7 @@
         createPlanPartOpen: false,
         createTextOpen: false,
         saving: false,
+        initialized: false,
         colors: [
           '#6366F1',
           '#EC4899',
@@ -196,12 +197,15 @@
       },
       // Removed plan watcher to prevent interference with user edits
     },
-    async mounted() {
-      await this.eventStore.initCreatePlanData()
-      // Initialize parts from plan if provided
+    created() {
+      // Initialize parts from plan synchronously to avoid initial flash
       if (this.plan && this.plan.parts) {
         this.parts = this.transformPlanParts(this.plan.parts)
       }
+      this.initialized = true
+    },
+    async mounted() {
+      await this.eventStore.initCreatePlanData()
     },
     methods: {
       transformPlanParts(apiParts) {

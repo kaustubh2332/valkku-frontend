@@ -188,6 +188,12 @@
             title: this.$t('sidebar.calendar')
           },
           {
+            name: 'Program',
+            path: '/program',
+            icon: 'mdi-clipboard-text',
+            title: this.$t('sidebar.program')
+          },
+          {
             name: 'Users',
             path: '/users',
             icon: 'mdi-account-group',
