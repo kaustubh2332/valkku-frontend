@@ -263,13 +263,13 @@
                           <v-list-item-subtitle class="mt-2">
                             <v-chip-group>
                               <v-chip
-                                v-for="day in event.repeatsOn"
+                                v-for="day in getWeekdayLabels(event.repeatsOn)"
                                 :key="day"
                                 color="primary"
                                 size="small"
                                 variant="tonal"
                               >
-                                {{ getWeekdayLabel(day) }}
+                                {{ day }}
                               </v-chip>
                             </v-chip-group>
                           </v-list-item-subtitle>
@@ -874,17 +874,29 @@
           return '-'
         }
       },
-      getWeekdayLabel(day) {
-        const weekdayMap = {
-          0: this.$t('events.sunday_short'),
-          1: this.$t('events.monday_short'),
-          2: this.$t('events.tuesday_short'),
-          3: this.$t('events.wednesday_short'),
-          4: this.$t('events.thursday_short'),
-          5: this.$t('events.friday_short'),
-          6: this.$t('events.saturday_short')
+      getWeekdayLabels(binaryStr: string) {
+        const weekdays = []
+        const chars = Array.from(binaryStr)
+        let index = 0
+        for (const char of chars) {
+          if(char === '1') {
+            weekdays.push(this.getWeekdays(index))
+          }
+          index++
         }
-        return weekdayMap[day] || day
+        return weekdays
+      },
+      getWeekdays(index: number) {
+        const weekdayMap = {
+          0: this.$t('events.monday_short'),
+          1: this.$t('events.tuesday_short'),
+          2: this.$t('events.wednesday_short'),
+          3: this.$t('events.thursday_short'),
+          4: this.$t('events.friday_short'),
+          5: this.$t('events.saturday_short'),
+          6: this.$t('events.sunday_short'),
+        }
+        return weekdayMap[index] || null
       }
     }
   }

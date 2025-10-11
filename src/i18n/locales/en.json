@@ -117,6 +117,8 @@
     "coach_notes_hint": "Only visible to coaches and admins",
     "color": "Color",
     "competition": "Competition",
+    "create_and_plan": "Create & plan",
+    "create_and_plan_tooltip": "Create event and go to event plan",
     "create_event": "Create event",
     "create_text": "Add text",
     "created_at": "Created at",

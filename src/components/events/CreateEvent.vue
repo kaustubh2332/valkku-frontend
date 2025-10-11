@@ -350,11 +350,25 @@
         {{ $t('events.stop_editing_event_plan') }}
       </v-tooltip>
     </div>
-    <CreatePlan v-if="showMe('plan')" ref="createPlanRef" :editing="editing" />
 
     <div class="d-flex justify-end ga-2 mt-4">
       <v-btn variant="text" @click="cancel">{{ $t('cancel') }}</v-btn>
       <v-spacer />
+      <v-tooltip location="top" :z-index="dropdownZIndex">
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            color="primary"
+            :disabled="!formValid || saving"
+            :loading="saving"
+            :menu-props="{ zIndex: dropdownZIndex }"
+            style="cursor: pointer;"
+            variant="text"
+            @click="save(true)"
+          >{{ $t('events.create_and_plan') }}</v-btn>
+        </template>
+        <span>{{ $t('events.create_and_plan_tooltip') }}</span>
+      </v-tooltip>
       <v-btn
         color="primary"
         :disabled="!formValid || saving"
@@ -385,11 +399,10 @@
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
-  import CreatePlan from './CreatePlan.vue'
 
   export default {
     name: 'CreateEvent',
-    components: { BottomSheetModal, CreatePlan },
+    components: { BottomSheetModal },
     props: {
       edit: {
         type: Object,
@@ -835,8 +848,7 @@
           repeatsUntilDate: ['all'],
           notes: ['all'],
           title: ['all'],
-          locationId: ['practise', 'match', 'meeting', 'other_event'],
-          plan: ['all']
+          locationId: ['practise', 'match', 'meeting', 'other_event']
         }
         return this.event.eventType && (showMap[key]?.includes(this.event.eventType) || showMap[key]?.includes('all'))
       },
@@ -983,7 +995,7 @@
       cancel() {
         this.$emit('close')
       },
-      save() {
+      save(createAndPlan = false) {
         if (!this.formValid) return
 
         // Extra guard validations mirroring backend schema
@@ -1042,6 +1054,9 @@
               this.notificationStore.success(successMessage)
               this.$emit('saved', res?.data || this.finalEvent)
               this.$emit('close')
+              if(createAndPlan) {
+                this.$router.push(`/events/${res?.data?.id}/plan`)
+              }
             } else {
               const message = res?.message || this.$t('something_went_wrong')
               this.notificationStore.error(message)
