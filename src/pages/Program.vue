@@ -61,34 +61,21 @@
 
     <!-- Swipeable Content -->
     <div class="swipe-container">
-      <!-- Debug info -->
-      <div v-if="swipeItems.length === 0" class="pa-4 text-center">
-        <p>Loading swipe items...</p>
-        <p>Items count: {{ swipeItems.length }}</p>
-        <p>Current index: {{ currentDateIndex }}</p>
-        <p>Selected date: {{ selectedDate?.toDateString() }}</p>
-      </div>
-
-      <!-- SwipePager with per-day page components -->
-      <SwipePager
-        v-else
-        v-model="currentDateIndex"
-        :count="swipeItems.length"
-        :debug-freeze="false"
-        :edge-resistance="0.4"
-        :flick-velocity="0.5"
-        :render-buffer="2"
-        :threshold="0.25"
-        @change="onDateChangeWithLog"
+      <!-- DateSwipePager with per-day page components -->
+      <DateSwipePager
+        :key="pagerKey"
+        :current-date="selectedDate"
+        :prefetched-data="prefetchedByIso"
+        @date-change="onSwipeDateChange"
       >
-        <template #page="{ index }">
+        <template #page="{ date, events, loading: pageLoading }">
           <ProgramDay
-            :date="swipeItems[index].date"
-            :events="swipeItems[index].events"
-            :loading="swipeItems[index].loading"
+            :date="date"
+            :events="events"
+            :loading="pageLoading"
           />
         </template>
-      </SwipePager>
+      </DateSwipePager>
     </div>
   </div>
 </template>
@@ -113,9 +100,8 @@
         prefetchedByIso: {} as Record<string, any[]>,
         weekEventsByIso: {} as Record<string, number>,
         loading: false,
-        // Swipe functionality
-        currentDateIndex: 0,
-        swipeItems: [] as any[]
+        // Swipe functionality - now date-based for infinite scrolling
+        pagerKey: 0 // Force re-render when clicking week dates
       }
     },
     computed: {
@@ -156,15 +142,15 @@
         this.weekReferenceDate = dateFromRoute
       }
 
-      await Promise.all([this.fetchWeekEvents(), this.selectedDate ? this.fetchDayEvents() : Promise.resolve()])
+      await Promise.all([
+        this.fetchWeekEvents(),
+        this.selectedDate ? this.fetchDayEvents() : Promise.resolve()
+      ])
 
-      // Generate swipe items after data is loaded
-      this.generateSwipeItems()
-      this.updateSwipeItems()
-
-      // Debug: log swipe items
-      console.log('Swipe items:', this.swipeItems)
-      console.log('Current date index:', this.currentDateIndex)
+      // Prefetch adjacent days after initial load
+      if (this.selectedDate) {
+        this.prefetchAdjacentDays(this.selectedDate)
+      }
     },
     methods: {
       toIso(date: Date): string {
@@ -185,31 +171,25 @@
       },
       async selectDate(date: Date) {
         this.selectedDate = date
+        this.weekReferenceDate = date
         const iso = this.toIso(date)
+
         if (this.$router && this.$route) {
           this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
         }
 
-        // Check if date is in swipe range, if not regenerate
-        const dateIndex = this.swipeItems.findIndex(item => this.toIso(item.date) === iso)
-        if (dateIndex === -1) {
-          console.log('Date outside swipe range, regenerating items...')
-          this.generateSwipeItems()
-          const newIndex = this.swipeItems.findIndex(item => this.toIso(item.date) === iso)
-          if (newIndex !== -1) {
-            this.currentDateIndex = newIndex
-          }
-        } else {
-          this.currentDateIndex = dateIndex
+        // Reset pager to center on this date
+        this.pagerKey++
+
+        // Fetch data if not cached
+        if (!this.prefetchedByIso[iso]) {
+          await this.fetchDayEvents()
         }
 
-        if (this.prefetchedByIso[iso]) {
-          this.dayEvents = this.prefetchedByIso[iso]
-          this.updateSwipeItems()
-          return
-        }
-        await this.fetchDayEvents()
-        this.updateSwipeItems()
+        await this.fetchWeekEvents()
+
+        // Prefetch adjacent days for smooth swiping
+        this.prefetchAdjacentDays(date)
       },
       async onDayHover(iso: string) {
         if (this.prefetchedByIso[iso]) return
@@ -220,6 +200,47 @@
         } catch {
           // ignore prefetch errors
         }
+      },
+      async prefetchAdjacentDays(centerDate: Date) {
+        // Prefetch previous day
+        const prevDate = new Date(centerDate)
+        prevDate.setDate(prevDate.getDate() - 1)
+        const prevIso = this.toIso(prevDate)
+
+        // Prefetch next day
+        const nextDate = new Date(centerDate)
+        nextDate.setDate(nextDate.getDate() + 1)
+        const nextIso = this.toIso(nextDate)
+
+        // Fetch both in parallel
+        const teamId = this.userStore.currentTeamId
+        const promises = []
+
+        if (!this.prefetchedByIso[prevIso]) {
+          promises.push(
+            api.get(`/event/team/${teamId}`, { params: { date: prevIso, withPlans: true } })
+              .then(res => {
+                this.prefetchedByIso[prevIso] = res?.data?.data || []
+              })
+              .catch(() => {
+                this.prefetchedByIso[prevIso] = []
+              })
+          )
+        }
+
+        if (!this.prefetchedByIso[nextIso]) {
+          promises.push(
+            api.get(`/event/team/${teamId}`, { params: { date: nextIso, withPlans: true } })
+              .then(res => {
+                this.prefetchedByIso[nextIso] = res?.data?.data || []
+              })
+              .catch(() => {
+                this.prefetchedByIso[nextIso] = []
+              })
+          )
+        }
+
+        await Promise.all(promises)
       },
       async goPrevWeek() {
         const d = new Date(this.weekReferenceDate)
@@ -291,52 +312,29 @@
           this.dayEvents = []
         } finally {
           this.loading = false
-          this.updateSwipeItems()
         }
       },
-      // Swipe functionality methods
-      generateSwipeItems() {
-        console.log('Generating swipe items...')
-        const items: any[] = []
-        const today = new Date()
-        // Generate a larger range: ±6 months (365 days total)
-        const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 182)
+      // Swipe functionality
+      async onSwipeDateChange(newDate: Date) {
+        if (!this.isSameDay(newDate, this.selectedDate || new Date())) {
+          this.selectedDate = newDate
+          this.weekReferenceDate = newDate
 
-        for (let i = 0; i < 365; i++) {
-          const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i)
-          const iso = this.toIso(date)
-          items.push({
-            date,
-            events: this.prefetchedByIso[iso] || [],
-            loading: false
-          })
+          const iso = this.toIso(newDate)
+          if (this.$router && this.$route) {
+            this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
+          }
+
+          // Fetch data if not cached
+          if (!this.prefetchedByIso[iso]) {
+            await this.fetchDayEvents()
+          }
+
+          await this.fetchWeekEvents()
+
+          // Prefetch adjacent days for smooth swiping
+          this.prefetchAdjacentDays(newDate)
         }
-
-        this.swipeItems = items
-        console.log('Generated items:', items.length)
-
-        // Find current date index
-        const currentDateIso = this.toIso(this.selectedDate || today)
-        const currentIndex = items.findIndex(item => this.toIso(item.date) === currentDateIso)
-        this.currentDateIndex = Math.max(0, currentIndex)
-        console.log('Current index:', this.currentDateIndex)
-      },
-      updateSwipeItems() {
-        this.swipeItems = this.swipeItems.map(item => ({
-          ...item,
-          events: this.prefetchedByIso[this.toIso(item.date)] || [],
-          loading: this.isSameDay(item.date, this.selectedDate || new Date()) && this.loading
-        }))
-      },
-      onDateChange(newIndex: number) {
-        const newDate = this.swipeItems[newIndex]?.date
-        if (newDate && !this.isSameDay(newDate, this.selectedDate || new Date())) {
-          this.selectDate(newDate)
-        }
-      },
-      onDateChangeWithLog(newIndex: number) {
-        try { console.log('[Program] swipe change', { newIndex, currentDate: this.swipeItems[newIndex]?.date }) } catch {}
-        this.onDateChange(newIndex)
       }
     }
   }
