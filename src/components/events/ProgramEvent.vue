@@ -5,23 +5,30 @@
     rounded="xl"
   >
     <!-- Event Header -->
-    <div class="pa-5 pb-3">
+    <div
+      class="pa-5 pb-3"
+      style="cursor: pointer;"
+      :style="{ borderLeft: `0px solid ${eventTypeColor}` }"
+      @click="navigateToEvent"
+    >
       <div class="d-flex align-center justify-space-between mb-2">
-        <div class="text-h6 font-weight-bold">
+        <div class="text-h6 font-weight-bold text-truncate">
           {{ event.title }}
         </div>
         <v-chip
           v-if="event.type"
+          :color="eventTypeColor"
           size="small"
           variant="tonal"
         >
           <v-icon
-            class="mr-1"
             size="small"
           >
             {{ eventTypeIcon }}
           </v-icon>
-          {{ eventTypeLabel }}
+          <span v-if="!$vuetify.display.mobile" class="ml-1">
+            {{ eventTypeLabel }}
+          </span>
         </v-chip>
       </div>
 
@@ -88,6 +95,7 @@
 </template>
 
 <script lang="ts">
+  import { getEventTypeColor, getEventTypeIcon, getEventTypeLabel } from '@/utils/eventTypes'
   import CreatePlan from './CreatePlan.vue'
 
   export default {
@@ -102,25 +110,14 @@
       }
     },
     computed: {
+      eventTypeColor(): string {
+        return getEventTypeColor(this.event.type)
+      },
       eventTypeIcon(): string {
-        const iconMap: Record<string, string> = {
-          game: 'mdi-trophy',
-          team_training: 'mdi-account-group',
-          self_training: 'mdi-run',
-          meeting: 'mdi-account-multiple',
-          other: 'mdi-calendar-blank'
-        }
-        return iconMap[this.event.type] || 'mdi-calendar-blank'
+        return getEventTypeIcon(this.event.type)
       },
       eventTypeLabel(): string {
-        const labelMap: Record<string, string> = {
-          game: this.$t('events.game'),
-          team_training: this.$t('events.team_training'),
-          self_training: this.$t('events.self_directed_training'),
-          meeting: this.$t('events.meeting'),
-          other: this.$t('events.other')
-        }
-        return labelMap[this.event.type] || this.$t('events.other')
+        return getEventTypeLabel(this.event.type, this.$t)
       },
       eventDate(): string {
         if (!this.event.eventDate) return ''
@@ -142,6 +139,11 @@
           minute: '2-digit'
         }).format(date)
       }
-    }
+    },
+    methods: {
+      navigateToEvent() {
+        this.$router.push(`/events/${this.event.id}`)
+      }
+    },
   }
 </script>

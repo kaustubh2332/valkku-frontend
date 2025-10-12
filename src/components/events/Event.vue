@@ -532,6 +532,7 @@
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
   import CreatePlan from './CreatePlan.vue'
+  import { getEventTypeColor, getEventTypeIcon, getEventTypeLabel } from '@/utils/eventTypes'
 
   export default {
     name: 'Event',
@@ -609,46 +610,13 @@
         return 'https://www.google.com/maps'
       },
       eventTypeLabel() {
-        const typeMap = {
-          'practise': this.$t('events.practise'),
-          'match': this.$t('events.match'),
-          'meeting': this.$t('events.meeting'),
-          'self_training': this.$t('events.self_directed_training'),
-          'other_event': this.$t('events.other_event'),
-          'training': this.$t('events.training'),
-          'competition': this.$t('events.competition'),
-          'mental_training': this.$t('events.mental_training'),
-          'other': this.$t('events.other')
-        }
-        return typeMap[this.event?.type] || this.event?.type || this.$t('events.other')
+        return getEventTypeLabel(this.event?.type, this.$t)
       },
       eventTypeColor() {
-        const colorMap = {
-          'practise': '#1e88e5',
-          'match': '#e53935',
-          'meeting': '#8e24aa',
-          'self_training': '#43a047',
-          'other_event': '#78909c',
-          'training': '#1e88e5',
-          'competition': '#e53935',
-          'mental_training': '#00acc1',
-          'other': '#78909c'
-        }
-        return colorMap[this.event?.type] || '#1e88e5'
+        return getEventTypeColor(this.event?.type)
       },
       eventTypeIcon() {
-        const iconMap = {
-          'practise': 'mdi-run',
-          'match': 'mdi-trophy',
-          'meeting': 'mdi-account-group',
-          'self_training': 'mdi-dumbbell',
-          'other_event': 'mdi-calendar-star',
-          'training': 'mdi-run',
-          'competition': 'mdi-trophy',
-          'mental_training': 'mdi-brain',
-          'other': 'mdi-calendar'
-        }
-        return iconMap[this.event?.type] || 'mdi-calendar'
+        return getEventTypeIcon(this.event?.type)
       },
       statusColor() {
         const statusMap = {

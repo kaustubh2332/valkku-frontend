@@ -1,5 +1,5 @@
 <template>
-  <div v-bind="$attrs">
+  <div v-bind="$attrs" class="mb-3">
     <!-- TYPE BAR -->
     <div class="d-flex align-center">
       <!-- {{ part }} -->
@@ -17,7 +17,7 @@
               {{ part.durationInMinutes }} min
             </div>
           </v-chip>
-          <div class="text-truncate text-overline ml-2">
+          <div class="text-truncate text-overline ml-2" style="font-size: 30px;">
             {{ title }}
           </div>
           <v-spacer />
@@ -52,7 +52,7 @@
       <!-- SIDE LINE -->
       <!-- <div :style="`width: 4px; background-color: ${color}; margin-left: 4px; border-radius: ${roundedTip ? '0 0 2px 2px' : '0'}; transition-duration: 0.2s;`" /> -->
       <!-- CONTENT -->
-      <div class="flex-grow-1" style="width: 100%;" :style="`border-left: 2px dashed lightgrey; margin-left: 6px;`">
+      <div class="flex-grow-1" style="width: 100%;" :style="`margin-left: 0px;`">
         <draggable
           v-model="itemsProxy"
           :animation="150"

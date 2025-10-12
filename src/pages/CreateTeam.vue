@@ -86,7 +86,8 @@
           .then((response) => {
             this.userStore.setUser(response.data.data.user)
             this.userStore.setCurrentTeam(response.data.data.team.id)
-            this.userStore.setCurrentRole(response.data.data.team.roles[0].role)
+            const role = response.data.data.team.roles[0]
+            this.userStore.setCurrentRole({ role: role.role, guardianOf: role.guardianOf })
             this.userStore.setToken(response.data.data.token)
             this.$router.push({
               path: '/',

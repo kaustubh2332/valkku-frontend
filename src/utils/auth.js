@@ -1,6 +1,6 @@
+import { jwtDecode } from 'jwt-decode'
 import { useUserStore } from '@/stores/user'
 import api from '@/utils/axios'
-import { jwtDecode } from 'jwt-decode'
 
 /**
  * Decodes a JWT token and returns the payload
@@ -165,17 +165,9 @@ export function removeUserFromLocalStorage() {
   }
 }
 
-export async function saveCurrentTeamToLocalStorage(teamId) {
+export function removeCurrentTeamFromLocalStorage() {
   try {
-    localStorage.setItem('valkku:currentTeamId', teamId)
-  } catch (error) {
-    console.error('Failed to save current team to localStorage:', error)
-  }
-}
-
-export async function removeCurrentTeamFromLocalStorage() {
-  try {
-    localStorage.removeItem('valkku:currentTeamId')
+    localStorage.removeItem('valkku:currentTeam')
   } catch (error) {
     console.error('Failed to remove current team from localStorage:', error)
   }

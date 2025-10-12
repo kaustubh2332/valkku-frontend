@@ -34,10 +34,10 @@
         <template v-for="team in teams" :key="team.teamId">
           <v-list-item
             v-for="role in team.roles"
-            :key="`${team.teamId}-${role.role}`"
-            :active="team.teamId === currentTeamId && role.role === currentRoleId"
+            :key="`${team.teamId}-${role.role}-${role.guardianOf}`"
+            :active="team.teamId === currentTeamId && role.role === currentRoleRole && role.guardianOf === currentRoleGuardianOf"
             class="px-1"
-            :value="`${team.teamId}-${role.role}`"
+            :value="`${team.teamId}-${role.role}-${role.guardianOf}`"
             @click="selectTeamAndRole(team, role)"
           >
             <div class="d-flex align-center justify-space-between w-100">
@@ -138,8 +138,11 @@
       currentTeamId() {
         return this.userStore.currentTeamId
       },
-      currentRoleId() {
-        return this.userStore.currentRoleId
+      currentRoleRole() {
+        return this.userStore.currentRole?.role
+      },
+      currentRoleGuardianOf() {
+        return this.userStore.currentRole?.guardianOf
       },
       currentTeamName() {
         return this.currentTeam?.teamName || null
@@ -168,7 +171,8 @@
 
         try {
           // Update user store with new current team and role
-          this.userStore.setCurrentTeamAndRole(team.teamId, role.role)
+          this.userStore.setCurrentTeam(team.teamId)
+          this.userStore.setCurrentRole({ role: role.role, guardianOf: role.guardianOf })
           if(this.main) {
             this.info(`${this.$t('chooseTeam.success')}: ${team.teamName} (${this.$t(`roles.${role.role}`)})`)
           }

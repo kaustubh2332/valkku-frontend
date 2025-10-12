@@ -1,5 +1,5 @@
 <template>
-  <div class="program-day px-4">
+  <div class="program-day px-1">
     <div class="py-4 py-md-8">
       <v-row justify="center">
         <v-col
@@ -46,7 +46,7 @@
               :key="event.id"
               :event="event"
             />
-            </div>
+          </div>
 
           <!-- No events state -->
           <v-card

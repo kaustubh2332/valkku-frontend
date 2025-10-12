@@ -171,7 +171,7 @@
         return this.$vuetify.display.mobile
       },
       filteredNavigationItems() {
-        return this.navigationItems.filter(item => item.roles?.includes(this.userStore.currentRoleId) || !item.roles)
+        return this.navigationItems.filter(item => item.roles?.includes(this.userStore.currentRole?.role) || !item.roles)
       },
       navigationItems() {
         return [

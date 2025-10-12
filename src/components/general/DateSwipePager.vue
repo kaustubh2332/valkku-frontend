@@ -2,14 +2,14 @@
   <div
     ref="container"
     class="date-swipe-pager"
-    @pointerdown.capture="onPointerDown"
-    @pointermove.capture="onPointerMove"
-    @pointerup.capture="onPointerUp"
-    @pointercancel.capture="onPointerUp"
-    @touchstart.capture="onTouchStart"
-    @touchmove.capture="onTouchMove"
-    @touchend.capture="onTouchEnd"
-    @touchcancel.capture="onTouchEnd"
+    @pointerdown="onPointerDown"
+    @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerUp"
+    @touchstart="onTouchStart"
+    @touchmove="onTouchMove"
+    @touchend="onTouchEnd"
+    @touchcancel="onTouchEnd"
   >
     <div
       class="date-swipe-track"
@@ -84,6 +84,7 @@ export default {
     return {
       width: 0 as number,
       isDragging: false as boolean,
+      isTracking: false as boolean,
       activePointerId: null as number | null,
       startX: 0 as number,
       startY: 0 as number,
@@ -261,7 +262,8 @@ export default {
     onTouchStart(e: TouchEvent) {
       if (this.animating) return
       const t = e.touches[0]
-      this.isDragging = true
+      this.isTracking = true
+      this.isDragging = false
       this.directionLocked = ''
       this.startX = this.lastX = t.clientX
       this.startY = this.lastY = t.clientY
@@ -272,23 +274,39 @@ export default {
       if (this.animating) return
       if (typeof e.button === 'number' && e.button !== 0) return
       this.activePointerId = e.pointerId
-      const container = this.$refs.container as HTMLElement | undefined
-      if (container && container.setPointerCapture) {
-        try {
-          container.setPointerCapture(e.pointerId)
-        } catch {}
-      }
-      this.isDragging = true
+      this.isTracking = true
+      this.isDragging = false
       this.directionLocked = ''
       this.startX = this.lastX = e.clientX
       this.startY = this.lastY = e.clientY
       this.deltaX = 0
       this.moves = [{ x: this.startX, t: performance.now() }]
+      // Don't prevent default or capture yet - wait to see if it's a drag or click
     },
     onPointerMove(e: PointerEvent) {
-      if (!this.isDragging || this.activePointerId !== e.pointerId) return
+      if (!this.isTracking || this.activePointerId !== e.pointerId) return
       const dx = e.clientX - this.startX
       const dy = e.clientY - this.startY
+
+      // Check if movement is significant enough to be considered a drag (not a click)
+      const isSignificantMove = Math.abs(dx) > 5 || Math.abs(dy) > 5
+
+      if (!isSignificantMove) {
+        // Not enough movement yet, could still be a click
+        return
+      }
+
+      // Now we know it's a drag, not a click
+      if (!this.isDragging) {
+        this.isDragging = true
+        // Capture pointer now that we know it's a drag
+        const container = this.$refs.container as HTMLElement | undefined
+        if (container && container.setPointerCapture && this.activePointerId !== null) {
+          try {
+            container.setPointerCapture(this.activePointerId)
+          } catch {}
+        }
+      }
 
       if (!this.directionLocked) {
         if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.1) {
@@ -318,11 +336,31 @@ export default {
       if (this.moves.length > 5) this.moves.shift()
     },
     onPointerUp(e: PointerEvent) {
-      if (!this.isDragging || (this.activePointerId !== null && this.activePointerId !== e.pointerId)) return
-      this.isDragging = false
-      this.activePointerId = null
+      if (!this.isTracking || (this.activePointerId !== null && this.activePointerId !== e.pointerId)) return
 
       const totalDx = this.lastX - this.startX
+      const totalDy = this.lastY - this.startY
+      const wasClick = Math.abs(totalDx) < 5 && Math.abs(totalDy) < 5
+
+      // Clean up tracking state
+      this.isTracking = false
+      this.activePointerId = null
+
+      // If this was a click, let it through to child elements
+      if (wasClick || !this.isDragging) {
+        this.isDragging = false
+        this.deltaX = 0
+        this.offset = -100
+        return
+      }
+
+      // This was a drag - prevent any click events
+      this.isDragging = false
+      if (this.directionLocked === 'horizontal') {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+
       const width = this.width || 1
 
       let vx = 0
@@ -385,10 +423,23 @@ export default {
       }
     },
     onTouchMove(e: TouchEvent) {
-      if (!this.isDragging) return
+      if (!this.isTracking) return
       const t = e.touches[0]
       const dx = t.clientX - this.startX
       const dy = t.clientY - this.startY
+
+      // Check if movement is significant enough to be considered a swipe (not a tap)
+      const isSignificantMove = Math.abs(dx) > 5 || Math.abs(dy) > 5
+
+      if (!isSignificantMove) {
+        // Not enough movement yet, could still be a tap
+        return
+      }
+
+      // Now we know it's a swipe, not a tap
+      if (!this.isDragging) {
+        this.isDragging = true
+      }
 
       if (!this.directionLocked) {
         if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.1) {
@@ -418,10 +469,30 @@ export default {
       if (this.moves.length > 5) this.moves.shift()
     },
     onTouchEnd(e: TouchEvent) {
-      if (!this.isDragging) return
-      this.isDragging = false
+      if (!this.isTracking) return
 
       const totalDx = this.lastX - this.startX
+      const totalDy = this.lastY - this.startY
+      const wasTap = Math.abs(totalDx) < 5 && Math.abs(totalDy) < 5
+
+      // Clean up tracking state
+      this.isTracking = false
+
+      // If this was a tap, let it through to child elements
+      if (wasTap || !this.isDragging) {
+        this.isDragging = false
+        this.deltaX = 0
+        this.offset = -100
+        return
+      }
+
+      // This was a swipe - prevent any click events
+      this.isDragging = false
+      if (this.directionLocked === 'horizontal') {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+
       const width = this.width || 1
 
       let vx = 0

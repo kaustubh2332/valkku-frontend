@@ -4,12 +4,28 @@ import router from '@/router'
 import { useNotificationStore } from '@/stores/notification'
 import { removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
 import api from '@/utils/axios'
+import type { MinimalTeamUserRole, PublicUser } from '@/types/user'
+import type { PublicUserSelf } from '@/types/user'
+import type { ROLES } from '@/types/team'
+
+interface UserState {
+  user: PublicUserSelf | null
+  currentTeamId: string | null
+  currentRole: {
+    role: ROLES
+    guardianOf?: string
+  } | null
+  pendingClickCount: number
+  batchTimer: ReturnType<typeof setTimeout> | null
+  fetchInterval: ReturnType<typeof setInterval> | null
+  token: string | null
+}
 
 export const useUserStore = defineStore('user', {
-  state: () => ({
+  state: (): UserState => ({
     user: null,
     currentTeamId: null,
-    currentRoleId: null,
+    currentRole: null,
     pendingClickCount: 0,
     batchTimer: null,
     fetchInterval: null,
@@ -20,31 +36,27 @@ export const useUserStore = defineStore('user', {
     getToken: (state) => state.token,
     firstName: (state) => state.user?.firstName,
     lastName: (state) => state.user?.lastName,
-    isStaff: (state) => ['owner', 'admin', 'coach'].includes(state.currentRoleId),
+    isStaff: (state) => ['owner', 'admin', 'coach'].includes(state.currentRole?.role as string),
     currentTeam: (state) => state.user?.teams?.find(team => team.teamId === state.currentTeamId),
-    currentRole: (state) => {
-      if (!state.currentTeamId || !state.currentRoleId) {
-        return null
-      }
-      const currentTeam = state.user?.teams?.find(team => team.teamId === state.currentTeamId)
-      return currentTeam?.roles?.find(role => role.role === state.currentRoleId) || null
-    },
     fullName: (state) => {
       return state.user?.firstName && state.user?.lastName
         ? state.user.firstName + ' ' + state.user.lastName
         : null
+    },
+    guardianOfId: state => {
+      return state.currentRole?.guardianOf
     }
   },
   actions: {
-    setToken(token) {
+    setToken(token: string) {
       this.token = token
       saveTokenToLocalStorage(token)
     },
-    setUser(user) {
+    setUser(user: PublicUser) {
       this.user = user
       saveUserToLocalStorage(user)
     },
-    fetchUser(periodic = null) {
+    fetchUser(periodic: boolean = false) {
       return new Promise((resolve, reject) => {
         if(!this.token) {
           return
@@ -64,10 +76,12 @@ export const useUserStore = defineStore('user', {
             this.setToken(token)
 
             const currentTeamId = window.localStorage.getItem('valkku:currentTeamId')
-            const currentRole = window.localStorage.getItem('valkku:currentRole')
+            const currentRoleString = window.localStorage.getItem('valkku:currentRole') as string;
+            const currentRoleFull = currentRoleString ? JSON.parse(currentRoleString) as any : null;
+            const currentRole = currentRoleFull ? { role: currentRoleFull.role, guardianOf: currentRoleFull.guardianOf } : null;
 
             if (currentTeamId) {
-              let team = this.user.teams.find(team => team.teamId === currentTeamId)
+              let team = this.user!.teams.find(team => team.teamId === currentTeamId)
               if(team) {
                 this.setCurrentTeam(currentTeamId)
 
@@ -78,22 +92,23 @@ export const useUserStore = defineStore('user', {
                     this.setCurrentRole(currentRole)
                   } else {
                     // Role doesn't exist in this team, use first available role
-                    this.setCurrentRole(team.roles?.[0]?.role || null)
+                    this.setCurrentRole(team.roles?.[0] || null)
                   }
                 } else {
                   // No stored role, use first available role
-                  this.setCurrentRole(team.roles?.[0]?.role || null)
+                  this.setCurrentRole(team.roles?.[0] || null)
                 }
               } else {
                 // Stored team doesn't exist, use first team
-                team = this.user.teams[0]
+                team = this.user!.teams[0]
                 this.setCurrentTeam(team.teamId)
-                this.setCurrentRole(team.roles?.[0]?.role || null)
+                this.setCurrentRole(team.roles?.[0] || null)
               }
-            } else if(this.user.teams && this.user.teams.length > 0) {
-              const firstTeam = this.user.teams[0]
+            } else if(this.user!.teams && this.user!.teams.length > 0) {
+              const firstTeam = this.user!.teams[0]
               if (firstTeam.roles && firstTeam.roles.length > 0) {
-                this.setCurrentTeamAndRole(firstTeam.teamId, firstTeam.roles[0].role)
+                this.setCurrentTeam(firstTeam.teamId)
+                this.setCurrentRole(firstTeam.roles[0] || null)
               } else {
                 this.setCurrentTeam(firstTeam.teamId)
               }
@@ -121,7 +136,7 @@ export const useUserStore = defineStore('user', {
           })
       })
     },
-    signin({ email, password }) {
+    signin({ email, password }: { email: string, password: string }) {
       return new Promise((resolve, reject) => {
         api.post('/auth/signin', { email, password })
           .then((response) => {
@@ -138,7 +153,7 @@ export const useUserStore = defineStore('user', {
       return new Promise((resolve, reject) => {
         api.post('/auth/logout')
           .then(() => {
-            resolve()
+            resolve(undefined)
           })
           .catch((error) => {
             reject(error)
@@ -148,7 +163,7 @@ export const useUserStore = defineStore('user', {
           })
       })
     },
-    finishLogout(expired = false) {
+    finishLogout(expired: boolean = false) {
       if (this.batchTimer) {
         clearTimeout(this.batchTimer)
         this.batchTimer = null
@@ -215,24 +230,23 @@ export const useUserStore = defineStore('user', {
       }, 3000) // 3 seconds
     },
 
-    setCurrentTeam(teamId) {
+    setCurrentTeam(teamId: string) {
       this.currentTeamId = teamId
       window.localStorage.setItem('valkku:currentTeamId', teamId)
     },
 
-    setCurrentRole(roleId) {
-      this.currentRoleId = roleId
-      window.localStorage.setItem('valkku:currentRole', roleId)
-    },
+    setCurrentRole(role: MinimalTeamUserRole | null) {
+      let setRole = { role: role?.role, guardianOf: role?.guardianOf }
+      if(setRole?.role !== 'guardian' && role?.guardianOf) {
+        throw new Error('GuardianOf is not allowed for non-guardian roles')
+      }
 
-    setCurrentTeamAndRole(teamId, roleId) {
-      this.currentTeamId = teamId
-      this.currentRoleId = roleId
-      window.localStorage.setItem('valkku:currentTeamId', teamId)
-      window.localStorage.setItem('valkku:currentRole', roleId)
+      this.currentRole = setRole
+      if (setRole && setRole.role) {
+        window.localStorage.setItem('valkku:currentRole', JSON.stringify(setRole))
+      }
     },
-
-    async updateUser(updates) {
+    async updateUser(updates: Partial<PublicUser>) {
       try {
         const response = await api.patch('/user/me', updates)
 
@@ -243,7 +257,7 @@ export const useUserStore = defineStore('user', {
         } else {
           return { success: false, message: response.data?.message || 'Update failed' }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to update user:', error)
         return {
           success: false,
@@ -252,7 +266,7 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async updateUserDetails(payload) {
+    async updateUserDetails(payload: any) {
       try {
         const response = await api.patch('/user/details', payload)
 
@@ -263,7 +277,7 @@ export const useUserStore = defineStore('user', {
         } else {
           return { success: false, message: response.data?.message || 'Update failed' }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to update user details:', error)
         return {
           success: false,
@@ -272,14 +286,14 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    joinTeam(payload) {
+    joinTeam(payload: any) {
       return api.post('/team/join', payload)
         .then(response => {
           return response.data && response.data.success
             ? { success: true, data: response.data }
             : { success: false, message: response.data?.message || 'Join failed' }
         })
-        .catch(error => {
+        .catch((error: any) => {
           console.error('Failed to join team:', error)
           return {
             success: false,
@@ -299,26 +313,26 @@ export const useUserStore = defineStore('user', {
 
       try {
         const result = await this.updateUser({
-          emojiClickedCount: this.user.emojiClickedCount
+          emojiClickedCount: this.user!.emojiClickedCount
         })
 
         if (!result.success) {
           // Revert the pending clicks on error
-          this.user.emojiClickedCount -= clicksToSend
+          this.user!.emojiClickedCount -= clicksToSend
           this.pendingClickCount += clicksToSend
         }
       } catch (error) {
         console.error('Failed to update emoji click count:', error)
         // Revert the pending clicks on error
-        this.user.emojiClickedCount -= clicksToSend
+        this.user!.emojiClickedCount -= clicksToSend
         this.pendingClickCount += clicksToSend
       }
     },
 
-    async changeLocale(locale) {
+    async changeLocale(locale: string) {
       try {
         // Update i18n locale immediately for responsive UI
-        i18n.global.locale.value = locale
+        i18n.global.locale.value = locale as any
 
         // Update Vuetify locale
         const { currentLocale } = await import('@/plugins/vuetify')
@@ -329,7 +343,7 @@ export const useUserStore = defineStore('user', {
 
         // Update user preference in backend if user is logged in
         if (this.user && this.token) {
-          await this.updateUser({ preferredLanguage: locale })
+          await this.updateUser({ preferredLanguage: locale as any })
         }
 
         return { success: true }
@@ -341,7 +355,6 @@ export const useUserStore = defineStore('user', {
 
     clearCurrentTeam() {
       this.currentTeamId = null
-      this.currentTeamName = null
     }
 
   }

@@ -1,5 +1,5 @@
 import { PublicTeamUser } from "./team";
-import { ROLES } from "@/schemas/team";
+import { ROLES } from "@/types/team";
 
 export type PREFERRED_LANGUAGE = 'fi' | 'en';
 export type USER_STATUS = 'invited' | 'active';
@@ -24,7 +24,7 @@ export interface User {
   superAdmin: boolean;
 }
 
-export interface PublicUser {
+export interface PublicUserSelf {
   id: string;
   email: string;
   status: USER_STATUS;
@@ -38,6 +38,13 @@ export interface PublicUser {
   updatedAt: Date;
   superAdmin: boolean;
   forcePasswordChange: boolean;
+}
+
+export interface PublicUser {
+  id: string;
+  email: string;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
 }
 
 export interface TokenUser {

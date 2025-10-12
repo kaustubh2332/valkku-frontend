@@ -208,12 +208,6 @@ function validateAndGetToken(userStore) {
 
   // Decode and validate token if it exists
   if (token) {
-    // Check if token is expired
-    if (isTokenExpired(token)) {
-      userStore.finishLogout(true)
-      return null
-    }
-
     // Decode token for additional validation or logging
     const decodedToken = decodeToken(token)
     // You can access token payload here
@@ -264,7 +258,7 @@ function beforeEachGuard(to, from, next) {
     return
   }
 
-  if(user && to.meta.roles && !to.meta.roles.includes(userStore?.currentRoleId)) {
+  if(user && to.meta.roles && !to.meta.roles.includes(userStore?.currentRole?.role)) {
     next('/')
     return
   }

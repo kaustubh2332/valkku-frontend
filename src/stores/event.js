@@ -8,23 +8,44 @@ export const useEventStore = defineStore('event', {
     planPartTypes: [],
     loadingPlanPartTypes: false,
     events: [],
-    loadingEvents: false
+    loadingEvents: false,
+    athletes: [],
+    loadingAthletes: false
   }),
   actions: {
     initCreatePlanData() {
       return new Promise((resolve, reject) => {
         this.loadingPlanPartTypes = true
+        this.loadingAthletes = true
         const userStore = useUserStore()
-        api.get(`/plan/plan-part-type/all/${userStore.currentTeamId}`)
+        const getPlanPartTypesPromise = api.get(`/plan/plan-part-type/all/${userStore.currentTeamId}`)
           .then((response) => {
             this.planPartTypes = response.data.data
-            resolve(response.data.data)
-          })
-          .catch((error) => {
-            reject(error)
           })
           .finally(() => {
             this.loadingPlanPartTypes = false
+          })
+
+        const url = userStore.isStaff
+          ? `/user/team/${userStore.currentTeamId}/athlete`
+          : `/user/${ userStore.currentRole?.role === 'guardian' ? userStore.currentRole?.guardianOf : userStore.user?.id }`
+
+        console.log(url)
+
+        const getAthletesPromise = api.get(url)
+          .then((response) => {
+            this.athletes = response.data.data
+          })
+          .finally(() => {
+            this.loadingAthletes = false
+          })
+
+        Promise.all([getPlanPartTypesPromise, getAthletesPromise])
+          .then(([planPartTypes, athletes]) => {
+            resolve([planPartTypes, athletes])
+          })
+          .catch((error) => {
+            reject(error)
           })
       })
     },

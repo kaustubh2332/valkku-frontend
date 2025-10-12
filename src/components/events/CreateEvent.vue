@@ -1,6 +1,6 @@
 <template>
   <div class="pa-2">
-    <v-form ref="form" v-model="formValid" class="mb-4" @submit.prevent="save">
+    <v-form ref="form" v-model="formValid" class="mb-4" @submit.prevent="save()">
       <v-row>
         <v-col cols="12" md="6">
           <!-- Event Type -->
@@ -159,6 +159,18 @@
               </v-list-item>
             </template>
           </v-autocomplete>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-select
+            density="compact"
+            hide-details="auto"
+            :items="eventStore.athletes"
+            :label="$t('events.athletes')"
+            :loading="eventStore.loadingAthletes"
+            :menu-props="{ zIndex: dropdownZIndex }"
+            multiple
+            variant="outlined"
+          />
         </v-col>
       </v-row>
 
@@ -399,6 +411,7 @@
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
+  import { eventTypeHasNoStartAndEnd, getEventTypesArray } from '@/utils/eventTypes'
 
   export default {
     name: 'CreateEvent',
@@ -500,8 +513,7 @@
         ]
       },
       currentEventTypeHasNoStartAndEnd() {
-        const selectedType = this.eventTypes.find(t => t.value === this.event.eventType)
-        return selectedType?.noStartAndEnd === true
+        return eventTypeHasNoStartAndEnd(this.event.eventType)
       },
       startTimeUnixSec() {
         return this.combineDateAndTimeToUnix(this.event.eventDate, this.event.startTime)
@@ -732,13 +744,7 @@
         ]
       },
       eventTypes() {
-        return [
-          { title: this.$t('events.practise'), value: 'practise', color: '#1e88e5' },
-          { title: this.$t('events.match'), value: 'match', color: '#e53935' },
-          { title: this.$t('events.meeting'), value: 'meeting', color: '#8e24aa' },
-          { title: this.$t('events.self_directed_training'), value: 'self_training', color: '#43a047', noStartAndEnd: true },
-          { title: this.$t('events.other_event'), value: 'other_event', color: 'grey' }
-        ]
+        return getEventTypesArray(this.$t)
       },
       formattedEventDate() {
         // Prefer pickerDate (YYYY-MM-DD) to avoid any TZ conversion
