@@ -1,5 +1,5 @@
 import { PublicTeamUser } from "./team";
-import { ROLES } from "@/types/team";
+import { ROLES } from "@/schemas/team";
 
 export type PREFERRED_LANGUAGE = 'fi' | 'en';
 export type USER_STATUS = 'invited' | 'active';

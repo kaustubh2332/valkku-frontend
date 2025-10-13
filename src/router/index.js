@@ -12,7 +12,7 @@ import Users from '@/pages/Users.vue'
 
 import { useUserStore } from '@/stores/user'
 
-import { decodeToken, getTokenFromLocalStorage, isTokenExpired } from '@/utils/auth'
+import { decodeToken, getTokenFromLocalStorage } from '@/utils/auth'
 
 const routes = [
   {

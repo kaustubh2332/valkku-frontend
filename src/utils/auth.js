@@ -167,9 +167,17 @@ export function removeUserFromLocalStorage() {
 
 export function removeCurrentTeamFromLocalStorage() {
   try {
-    localStorage.removeItem('valkku:currentTeam')
+    localStorage.removeItem('valkku:currentTeamId')
   } catch (error) {
     console.error('Failed to remove current team from localStorage:', error)
+  }
+}
+
+export function removeCurrentRoleFromLocalStorage() {
+  try {
+    localStorage.removeItem('valkku:currentRole')
+  } catch (error) {
+    console.error('Failed to remove current role from localStorage:', error)
   }
 }
 

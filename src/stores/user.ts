@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import i18n from '@/i18n'
 import router from '@/router'
 import { useNotificationStore } from '@/stores/notification'
-import { removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
+import { removeCurrentRoleFromLocalStorage, removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
 import api from '@/utils/axios'
 import type { MinimalTeamUserRole, PublicUser } from '@/types/user'
 import type { PublicUserSelf } from '@/types/user'
@@ -124,6 +124,13 @@ export const useUserStore = defineStore('user', {
           })
           .catch((error) => {
             console.error('Failed to fetch user:', error)
+            console.log(JSON.stringify(error.message))
+
+            if(error.message.includes('Unexpected token')) {
+              this.finishLogout()
+              return
+            }
+
             // Notification
             if(periodic) {
               return
@@ -172,6 +179,7 @@ export const useUserStore = defineStore('user', {
       // Clear fetch interval
       this.stopPeriodicFetch()
       removeCurrentTeamFromLocalStorage()
+      removeCurrentRoleFromLocalStorage()
 
       // Reset pending click count
       this.pendingClickCount = 0
