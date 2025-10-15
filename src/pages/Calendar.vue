@@ -1,7 +1,45 @@
 <template>
   <div>
-    <div class="text-h4 mt-4 mb-8">
-      {{ $t('calendar.title') }}
+    <div class="text-h4 mt-4 mb-8 d-flex align-center" :class="{ 'justify-space-between': !$vuetify.display.mobile }">
+      <div>
+        {{ $t('calendar.title') }}
+      </div>
+      <v-menu
+        v-model="fabMenu.show"
+        location="bottom end"
+      >
+        <template #activator="{ props }">
+          <v-btn
+            v-if="$vuetify.display.mobile"
+            v-bind="props"
+            class="calendar-menu-btn ml-2"
+            icon="mdi-dots-vertical"
+            size="small"
+            variant="text"
+          />
+          <v-btn
+            v-else
+            class="ml-2"
+            size="small"
+            variant="text"
+            @click="openExportModal"
+          >
+            <v-icon class="mr-2">mdi-sync</v-icon>
+            {{ $t('calendar.export_events') }}
+          </v-btn>
+        </template>
+        <v-list
+          density="compact"
+          min-width="200"
+        >
+          <v-list-item
+            prepend-icon="mdi-calendar-export"
+            @click="openExportModal"
+          >
+            <v-list-item-title>{{ $t('calendar.export_events') }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
 
     <div>
@@ -17,6 +55,13 @@
           />
         </template>
       </FullCalendar>
+
+      <BottomSheetModal
+        v-model="exportEventsModal"
+        :title="$t('calendar.export_events')"
+      >
+        <ExportEvents />
+      </BottomSheetModal>
 
       <!-- Loading overlay -->
       <v-overlay
@@ -164,8 +209,12 @@
           activator: null,
           date: null
         },
+        fabMenu: {
+          show: false
+        },
         editEventModal: false,
-        selectedEvent: null
+        selectedEvent: null,
+        exportEventsModal: false
       }
     },
     computed: {
@@ -715,6 +764,10 @@
         }
         this.emptySpaceMenu.show = false
       },
+      openExportModal() {
+        this.exportEventsModal = true
+        this.fabMenu.show = false
+      },
       mapBackendEventToCalendar(ev) {
         const startSec = Number(ev.startTimeUnixSec)
         const endSec = Number(ev.endTimeUnixSec)
@@ -781,14 +834,15 @@
           start: startIso,
           end: endIso,
           allDay: allDay,
-          color: colorMap[ev.type] || undefined,
+          classNames: ['custom-event'],
           extendedProps: {
             type: ev.type,
             typeLabel: ev.type,
             locationName: ev.locationName || ev.location?.name,
             likes: ev.likes,
             dislikes: ev.dislikes,
-            durationInMins: ev.durationInMinutes ?? ev.durationInMins
+            durationInMins: ev.durationInMinutes ?? ev.durationInMins,
+            eventColor: colorMap[ev.type] || undefined
           }
         }
       },
@@ -980,5 +1034,32 @@
   :deep(.fc-button-group) {
     gap: 2px;
   }
+}
+
+/* Calendar Menu Button */
+.calendar-menu-btn {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.calendar-menu-btn:hover {
+  color: rgba(0, 0, 0, 0.8) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Override FullCalendar default event styling to prevent double backgrounds */
+:deep(.fc-event.custom-event) {
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
+}
+
+:deep(.fc-event.custom-event .fc-event-main) {
+  background: transparent !important;
+  border: none !important;
+}
+
+:deep(.fc-event.custom-event .fc-event-main-frame) {
+  background: transparent !important;
+  border: none !important;
 }
 </style>

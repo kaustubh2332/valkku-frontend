@@ -50,7 +50,15 @@
     "delete_event": "Delete Event",
     "duplicate_event": "Duplicate Event",
     "edit_event": "Edit Event",
+    "export_events": "Subscribe to calendar",
+    "export_events_description": "Add this link to your calendar app to subscribe to the teams' calendar. Events will automatically sync.",
+    "export_events_help": "How to add this calendar to your app",
+    "export_events_instructions": "Click on the links below for step-by-step instructions for your calendar app:",
+    "export_events_title": "Calendar Subscription",
+    "hide_instructions": "Hide instructions",
+    "show_instructions": "Show instructions",
     "go_to_today": "Go to Today",
+    "more_options": "More options",
     "title": "Calendar",
     "view_event": "View Event"
   },
@@ -73,6 +81,7 @@
     "actions": "Actions",
     "archive": "Archive",
     "cancel": "Cancel",
+    "copied": "Copied to clipboard",
     "delete": "Delete",
     "edit": "Edit"
   },

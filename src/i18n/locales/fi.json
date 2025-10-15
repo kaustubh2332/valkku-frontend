@@ -50,7 +50,15 @@
     "delete_event": "Poista tapahtuma",
     "duplicate_event": "Kopioi tapahtuma",
     "edit_event": "Muokkaa tapahtumaa",
+    "export_events": "Tilaa kalenteri",
+    "export_events_description": "Lisää tämä linkki kalenterisovellukseesi. Tapahtumat synkronoituvat automaattisesti.",
+    "export_events_help": "Miten lisätä tämä kalenteri sovellukseesi",
+    "export_events_instructions": "Klikkaa alla olevia linkkejä saadaksesi vaiheittaiset ohjeet kalenterisovelluksellesi:",
+    "export_events_title": "Kalenteritilaus",
+    "hide_instructions": "Piilota ohjeet",
+    "show_instructions": "Näytä ohjeet",
     "go_to_today": "Siirry tähän päivään",
+    "more_options": "Lisää vaihtoehtoja",
     "title": "Kalenteri",
     "view_event": "Näytä tapahtuma"
   },
@@ -73,6 +81,7 @@
     "actions": "Muokkaa",
     "archive": "Arkistoi",
     "cancel": "Peru",
+    "copied": "Kopioitu leikepöydälle",
     "delete": "Poista",
     "edit": "Muokkaa"
   },
