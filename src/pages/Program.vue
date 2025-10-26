@@ -106,11 +106,27 @@
               :date="date"
               :events="events"
               :loading="pageLoading"
+              @open-event="openEventFromProgram"
             />
           </template>
         </DateSwipePager>
       </v-col>
     </v-row>
+
+    <!-- Mobile Event Details Modal -->
+    <BottomSheetModal
+      v-model="eventDetailsModal"
+      :title="$t('events.event')"
+      @close="handleCloseEventModal"
+    >
+      <Event
+        v-if="eventDetailsModal && openedEventId"
+        :embedded="true"
+        :event-id="openedEventId"
+        :recurrence-date="openedRecurrenceDate"
+        @close="handleCloseEventModal"
+      />
+    </BottomSheetModal>
   </div>
 </template>
 
@@ -118,9 +134,12 @@
 
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
+  import Event from '@/components/events/Event.vue'
+  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
 
   export default {
     name: 'Program',
+    components: { Event, BottomSheetModal },
     setup() {
       const userStore = useUserStore()
       return { userStore }
@@ -136,7 +155,11 @@
         weekEventsByIso: {} as Record<string, number>,
         loading: false,
         // Swipe functionality - now date-based for infinite scrolling
-        pagerKey: 0 // Force re-render when clicking week dates
+        pagerKey: 0, // Force re-render when clicking week dates
+        // Event details bottom sheet
+        eventDetailsModal: false,
+        openedEventId: null as any,
+        openedRecurrenceDate: '' as string
       }
     },
     computed: {
@@ -188,6 +211,17 @@
       // Prefetch adjacent days after initial load
       if (this.selectedDate) {
         this.prefetchAdjacentDays(this.selectedDate)
+      }
+
+      // Open event modal from URL on initial load
+      this.syncEventModalFromRoute()
+    },
+    watch: {
+      '$route.query': {
+        handler() {
+          this.syncEventModalFromRoute()
+        },
+        deep: true
       }
     },
     methods: {
@@ -374,6 +408,43 @@
         } finally {
           this.loading = false
         }
+      },
+      openEventFromProgram(event: any) {
+        try {
+          const isMobile = !!this.$vuetify.display.mobile
+          const eventId = String(event?.id)
+          const recurrenceDate = event?.eventDate ? String((event?.eventDate as any).toString().split('T')[0]) : undefined
+          if (isMobile) {
+            const newQuery: any = { ...this.$route.query, openEvent: eventId }
+            if (recurrenceDate) newQuery.recurrenceDate = recurrenceDate
+            this.$router.replace({ name: 'Program', query: newQuery }).catch(() => {})
+            this.openedEventId = eventId
+            this.openedRecurrenceDate = recurrenceDate || ''
+            this.eventDetailsModal = true
+          } else {
+            // Desktop: navigate
+            this.$router.push({ name: 'EventInfo', params: { eventId }, query: recurrenceDate ? { recurrenceDate } : undefined })
+          }
+        } catch {}
+      },
+      syncEventModalFromRoute() {
+        try {
+          if (!this.$vuetify.display.mobile) return
+          const id = this.$route?.query?.openEvent as any
+          if (id) {
+            this.openedEventId = String(id)
+            const rec = this.$route?.query?.recurrenceDate as any
+            this.openedRecurrenceDate = rec ? String(rec) : ''
+            this.eventDetailsModal = true
+          } else if (this.eventDetailsModal) {
+            this.eventDetailsModal = false
+          }
+        } catch {}
+      },
+      handleCloseEventModal() {
+        this.eventDetailsModal = false
+        const { openEvent, recurrenceDate, ...rest } = this.$route.query as any
+        this.$router.replace({ name: 'Program', query: { ...rest } }).catch(() => {})
       },
       // Swipe functionality
       async onSwipeDateChange(newDate: Date) {

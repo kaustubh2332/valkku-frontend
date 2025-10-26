@@ -102,6 +102,7 @@
     components: {
       CreatePlan
     },
+    emits: ['open-event'],
     props: {
       event: {
         type: Object,
@@ -145,6 +146,10 @@
     },
     methods: {
       navigateToEvent() {
+        if (this.$vuetify.display.mobile) {
+          this.$emit('open-event', this.event)
+          return
+        }
         const route = this.eventStore.buildEventRoute(this.event)
         this.$router.push(route)
       }

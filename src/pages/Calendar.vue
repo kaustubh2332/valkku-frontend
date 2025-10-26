@@ -34,6 +34,21 @@
         <ExportEvents />
       </BottomSheetModal>
 
+      <!-- Mobile Event Details Modal -->
+      <BottomSheetModal
+        v-model="eventDetailsModal"
+        :title="$t('events.event')"
+        @close="handleCloseEventModal"
+      >
+        <Event
+          v-if="eventDetailsModal && openedEventId"
+          :embedded="true"
+          :event-id="openedEventId"
+          :recurrence-date="openedRecurrenceDate"
+          @close="handleCloseEventModal"
+        />
+      </BottomSheetModal>
+
       <!-- Loading overlay -->
       <v-overlay
         class="align-center justify-center"
@@ -151,13 +166,14 @@
   import timeGridPlugin from '@fullcalendar/timegrid'
   import FullCalendar from '@fullcalendar/vue3'
   import { useI18n } from 'vue-i18n'
+  import Event from '@/components/events/Event.vue'
   import { useEventStore } from '@/stores/event'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
     name: 'Calendar',
-    components: { FullCalendar },
+    components: { FullCalendar, Event },
     setup() {
       const { locale } = useI18n()
       const eventStore = useEventStore()
@@ -188,6 +204,10 @@
         editEventModal: false,
         selectedEvent: null,
         exportEventsModal: false,
+        // Event details bottom sheet
+        eventDetailsModal: false,
+        openedEventId: null as any,
+        openedRecurrenceDate: '' as string,
         currentCalendarTs: Date.now(),
         currentViewType: '',
         // Calendar interaction settings - easily configurable
@@ -317,6 +337,7 @@
           if (!this.isUpdatingUrl) {
             this.updateCalendarFromUrl()
           }
+          this.syncEventModalFromRoute()
         },
         deep: true
       },
@@ -361,6 +382,9 @@
           })
         }
       })
+
+      // Open event modal from URL on initial load
+      this.syncEventModalFromRoute()
     },
     beforeUnmount() {
       if (this.urlUpdateTimeout) {
@@ -521,14 +545,27 @@
         try {
           // Get backend event data from extendedProps
           const backendEvent = clickInfo?.event?.extendedProps?.backendEvent
-          if (backendEvent) {
-            const route = this.eventStore.buildEventRoute(backendEvent)
-            this.$router.push(route)
+          const isMobile = !!this.$vuetify.display.mobile
+          if (isMobile) {
+            // Open bottom sheet and sync URL query
+            const eventId = String(backendEvent?.id || clickInfo?.event?.id)
+            const recurrenceDate = backendEvent?.eventDate ? String((backendEvent?.eventDate as any).toString().split('T')[0]) : undefined
+            const newQuery: any = { ...this.$route.query, openEvent: eventId }
+            if (recurrenceDate) newQuery.recurrenceDate = recurrenceDate
+            this.$router.replace({ name: 'Calendar', query: newQuery }).catch(() => {})
+            this.openedEventId = eventId
+            this.openedRecurrenceDate = recurrenceDate || ''
+            this.eventDetailsModal = true
           } else {
-            // Fallback to simple navigation if event data not available
-            const id = clickInfo?.event?.id
-            if (id) {
-              this.$router.push({ name: 'EventInfo', params: { eventId: id } })
+            if (backendEvent) {
+              const route = this.eventStore.buildEventRoute(backendEvent)
+              this.$router.push(route)
+            } else {
+              // Fallback to simple navigation if event data not available
+              const id = clickInfo?.event?.id
+              if (id) {
+                this.$router.push({ name: 'EventInfo', params: { eventId: id } })
+              }
             }
           }
         } catch (error) {
@@ -850,6 +887,26 @@
       openExportModal() {
         this.exportEventsModal = true
         this.fabMenu.show = false
+      },
+      syncEventModalFromRoute() {
+        try {
+          if (!this.$vuetify.display.mobile) return
+          const id = this.$route?.query?.openEvent as any
+          if (id) {
+            this.openedEventId = String(id)
+            const rec = this.$route?.query?.recurrenceDate as any
+            this.openedRecurrenceDate = rec ? String(rec) : ''
+            this.eventDetailsModal = true
+          } else if (this.eventDetailsModal) {
+            // Close if query was cleared externally
+            this.eventDetailsModal = false
+          }
+        } catch {}
+      },
+      handleCloseEventModal() {
+        this.eventDetailsModal = false
+        const { openEvent, recurrenceDate, ...rest } = this.$route.query as any
+        this.$router.replace({ name: 'Calendar', query: { ...rest } }).catch(() => {})
       },
       updateCalendarDate() {
         try {

@@ -72,13 +72,22 @@
             <div class="pa-6 pa-md-8">
               <!-- Top Action Bar -->
               <div class="d-flex align-center justify-space-between mb-4">
-                <!-- Back Button -->
+                <!-- Back/Close Button -->
                 <v-btn
+                  v-if="!embedded"
                   color="white"
                   icon="mdi-arrow-left"
                   size="small"
                   variant="text"
                   @click="$router.back()"
+                />
+                <v-btn
+                  v-else
+                  color="white"
+                  icon="mdi-close"
+                  size="small"
+                  variant="text"
+                  @click="$emit('close')"
                 />
 
                 <!-- Edit & Delete Actions (Staff Only) -->
@@ -583,6 +592,21 @@
       CreateEvent,
       CreatePlan
     },
+    props: {
+      embedded: {
+        type: Boolean,
+        default: false
+      },
+      eventId: {
+        type: [String, Number],
+        default: null
+      },
+      recurrenceDate: {
+        type: String,
+        default: ''
+      }
+    },
+    emits: ['close'],
     setup() {
       const eventStore = useEventStore()
       const userStore = useUserStore()
@@ -598,14 +622,16 @@
         eventPlan: null,
         deleteDialog: false,
         deleting: false,
-        editDialog: false
+        editDialog: false,
+        embeddedTab: 'info' as any
       }
     },
     computed: {
       currentTab() {
+        if (this.embedded) return this.embeddedTab
         const routeName = this.$route.name
         if (routeName === 'EventPlan') return 'plan'
-        return 'info' // Default to 'info' for EventInfo or any other route
+        return 'info'
       },
       hasLocation() {
         const e = this.event || {}
@@ -834,6 +860,11 @@
         }
       },
       navigateToTab(tab) {
+        if (this.embedded) {
+          this.embeddedTab = tab
+          if (tab === 'plan') this.loadPlan()
+          return
+        }
         const eventId = this.$route.params.eventId
         if (tab === 'plan') {
           this.$router.replace({ name: 'EventPlan', params: { eventId } })
@@ -847,7 +878,7 @@
 
         try {
           this.loadingPlan = true
-          const eventId = this.$route.params.eventId
+          const eventId = (this.eventId || this.$route.params.eventId || this.$route.query.openEvent) as any
           const response = await api.get(`/plan/event/${eventId}/team/${this.userStore.currentTeamId}`)
           this.eventPlan = response.data.data || null
         } catch (error) {
@@ -861,8 +892,11 @@
         try {
           this.loading = true
           this.error = null
-          const eventId = this.$route.params.eventId
-          this.event = await this.eventStore.getEvent(eventId, this.userStore.currentTeamId, { recurrenceDate: this.$route.query.recurrenceDate }) as PublicEvent;
+          const idFromRoute = this.$route && this.$route.params ? this.$route.params.eventId : null
+          const idFromQuery = this.$route && this.$route.query ? (this.$route.query.openEvent as any) : null
+          const eventId = (this.eventId || idFromRoute || idFromQuery) as any
+          const recurrence = this.recurrenceDate || (this.$route && this.$route.query ? (this.$route.query.recurrenceDate as string) : '')
+          this.event = await this.eventStore.getEvent(eventId, this.userStore.currentTeamId, { recurrenceDate: recurrence }) as PublicEvent
         } catch (error) {
           console.error('Error loading event:', error)
           this.error = this.$t('something_went_wrong')

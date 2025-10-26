@@ -43,6 +43,7 @@
               v-for="event in events as Event[]"
               :key="event.id"
               :event="event"
+              @open-event="$emit('open-event', $event)"
             />
           </div>
 
@@ -76,6 +77,7 @@
 
   export default {
     name: 'ProgramDay',
+    emits: ['open-event'],
     props: {
       date: {
         type: Date,
