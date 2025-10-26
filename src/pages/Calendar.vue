@@ -914,11 +914,11 @@
       handleCloseEventModal() {
         console.log('[Calendar] handleCloseEventModal called')
         console.log('[Calendar] Current route query:', JSON.stringify(this.$route.query))
-        
+
         // Clear local state
         this.openedEventId = null
         this.openedRecurrenceDate = ''
-        
+
         // Reset route - preserve only view and date parameters if they exist
         const currentQuery = this.$route.query as any
         const newQuery: any = {}

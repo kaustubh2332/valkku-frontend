@@ -455,11 +455,11 @@
       handleCloseEventModal() {
         console.log('[Program] handleCloseEventModal called')
         console.log('[Program] Current route query:', JSON.stringify(this.$route.query))
-        
+
         // Clear local state
         this.openedEventId = null
         this.openedRecurrenceDate = ''
-        
+
         // Reset route - preserve only the date parameter if it exists
         const currentQuery = this.$route.query as any
         const newQuery: any = currentQuery.date ? { date: currentQuery.date } : {}
