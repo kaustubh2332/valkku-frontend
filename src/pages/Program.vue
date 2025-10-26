@@ -443,8 +443,8 @@
       },
       handleCloseEventModal() {
         this.eventDetailsModal = false
-        const { openEvent, recurrenceDate, ...rest } = this.$route.query as any
-        this.$router.replace({ name: 'Program', query: { ...rest } }).catch(() => {})
+        // Reset route to base program route without any query parameters
+        this.$router.replace({ name: 'Program' }).catch(() => {})
       },
       // Swipe functionality
       async onSwipeDateChange(newDate: Date) {

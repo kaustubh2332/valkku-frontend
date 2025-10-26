@@ -905,8 +905,8 @@
       },
       handleCloseEventModal() {
         this.eventDetailsModal = false
-        const { openEvent, recurrenceDate, ...rest } = this.$route.query as any
-        this.$router.replace({ name: 'Calendar', query: { ...rest } }).catch(() => {})
+        // Reset route to base calendar route without any query parameters
+        this.$router.replace({ name: 'Calendar' }).catch(() => {})
       },
       updateCalendarDate() {
         try {
