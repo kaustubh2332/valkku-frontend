@@ -912,18 +912,23 @@
         } catch {}
       },
       handleCloseEventModal() {
-        // Clear local state immediately before closing
+        console.log('[Calendar] handleCloseEventModal called')
+        console.log('[Calendar] Current route query:', JSON.stringify(this.$route.query))
+        
+        // Clear local state
         this.openedEventId = null
         this.openedRecurrenceDate = ''
-        this.eventDetailsModal = false
-
-        // Reset route in next tick to ensure modal state is updated first
-        this.$nextTick(() => {
-          const currentQuery = this.$route.query as any
-          const newQuery: any = {}
-          if (currentQuery.view) newQuery.view = currentQuery.view
-          if (currentQuery.date) newQuery.date = currentQuery.date
-          this.$router.replace({ name: 'Calendar', query: newQuery }).catch(() => {})
+        
+        // Reset route - preserve only view and date parameters if they exist
+        const currentQuery = this.$route.query as any
+        const newQuery: any = {}
+        if (currentQuery.view) newQuery.view = currentQuery.view
+        if (currentQuery.date) newQuery.date = currentQuery.date
+        console.log('[Calendar] Replacing route with query:', JSON.stringify(newQuery))
+        this.$router.replace({ name: 'Calendar', query: newQuery }).then(() => {
+          console.log('[Calendar] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
+        }).catch((err) => {
+          console.log('[Calendar] Route replace error:', err)
         })
       },
       updateCalendarDate() {

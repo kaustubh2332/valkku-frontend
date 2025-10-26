@@ -456,21 +456,18 @@
         console.log('[Program] handleCloseEventModal called')
         console.log('[Program] Current route query:', JSON.stringify(this.$route.query))
         
-        // Clear local state immediately before closing
+        // Clear local state
         this.openedEventId = null
         this.openedRecurrenceDate = ''
-        this.eventDetailsModal = false
         
-        // Reset route in next tick to ensure modal state is updated first
-        this.$nextTick(() => {
-          const currentQuery = this.$route.query as any
-          const newQuery: any = currentQuery.date ? { date: currentQuery.date } : {}
-          console.log('[Program] Replacing route with query:', JSON.stringify(newQuery))
-          this.$router.replace({ name: 'Program', query: newQuery }).then(() => {
-            console.log('[Program] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
-          }).catch((err) => {
-            console.log('[Program] Route replace error:', err)
-          })
+        // Reset route - preserve only the date parameter if it exists
+        const currentQuery = this.$route.query as any
+        const newQuery: any = currentQuery.date ? { date: currentQuery.date } : {}
+        console.log('[Program] Replacing route with query:', JSON.stringify(newQuery))
+        this.$router.replace({ name: 'Program', query: newQuery }).then(() => {
+          console.log('[Program] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
+        }).catch((err) => {
+          console.log('[Program] Route replace error:', err)
         })
       },
       // Swipe functionality
