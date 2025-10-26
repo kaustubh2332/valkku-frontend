@@ -117,14 +117,13 @@
     <BottomSheetModal
       v-model="eventDetailsModal"
       :title="$t('events.event')"
-      @close="handleCloseEventModal"
     >
       <Event
         v-if="eventDetailsModal && openedEventId"
         :embedded="true"
         :event-id="openedEventId"
         :recurrence-date="openedRecurrenceDate"
-        @close="handleCloseEventModal"
+        @close="eventDetailsModal = false"
       />
     </BottomSheetModal>
   </div>
@@ -222,6 +221,13 @@
           this.syncEventModalFromRoute()
         },
         deep: true
+      },
+      eventDetailsModal(newValue, oldValue) {
+        // When modal closes, reset the route
+        if (oldValue === true && newValue === false) {
+          console.log('[Program] Modal closed, resetting route')
+          this.handleCloseEventModal()
+        }
       }
     },
     methods: {
@@ -431,20 +437,41 @@
         try {
           if (!this.$vuetify.display.mobile) return
           const id = this.$route?.query?.openEvent as any
+          console.log('[Program] syncEventModalFromRoute - openEvent:', id, 'modal open:', this.eventDetailsModal)
           if (id) {
             this.openedEventId = String(id)
             const rec = this.$route?.query?.recurrenceDate as any
             this.openedRecurrenceDate = rec ? String(rec) : ''
             this.eventDetailsModal = true
           } else if (this.eventDetailsModal) {
+            // Clear local state when no openEvent in URL
+            console.log('[Program] No openEvent in URL but modal is open, closing modal')
             this.eventDetailsModal = false
+            this.openedEventId = null
+            this.openedRecurrenceDate = ''
           }
         } catch {}
       },
       handleCloseEventModal() {
+        console.log('[Program] handleCloseEventModal called')
+        console.log('[Program] Current route query:', JSON.stringify(this.$route.query))
+        
+        // Clear local state immediately before closing
+        this.openedEventId = null
+        this.openedRecurrenceDate = ''
         this.eventDetailsModal = false
-        // Reset route to base program route without any query parameters
-        this.$router.replace({ name: 'Program' }).catch(() => {})
+        
+        // Reset route in next tick to ensure modal state is updated first
+        this.$nextTick(() => {
+          const currentQuery = this.$route.query as any
+          const newQuery: any = currentQuery.date ? { date: currentQuery.date } : {}
+          console.log('[Program] Replacing route with query:', JSON.stringify(newQuery))
+          this.$router.replace({ name: 'Program', query: newQuery }).then(() => {
+            console.log('[Program] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
+          }).catch((err) => {
+            console.log('[Program] Route replace error:', err)
+          })
+        })
       },
       // Swipe functionality
       async onSwipeDateChange(newDate: Date) {

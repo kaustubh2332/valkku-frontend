@@ -38,14 +38,13 @@
       <BottomSheetModal
         v-model="eventDetailsModal"
         :title="$t('events.event')"
-        @close="handleCloseEventModal"
       >
         <Event
           v-if="eventDetailsModal && openedEventId"
           :embedded="true"
           :event-id="openedEventId"
           :recurrence-date="openedRecurrenceDate"
-          @close="handleCloseEventModal"
+          @close="eventDetailsModal = false"
         />
       </BottomSheetModal>
 
@@ -340,6 +339,13 @@
           this.syncEventModalFromRoute()
         },
         deep: true
+      },
+      eventDetailsModal(newValue, oldValue) {
+        // When modal closes, reset the route
+        if (oldValue === true && newValue === false) {
+          console.log('[Calendar] Modal closed, resetting route')
+          this.handleCloseEventModal()
+        }
       },
       // Watch for calendar date changes to update title
       currentCalendarDate: {
@@ -898,15 +904,27 @@
             this.openedRecurrenceDate = rec ? String(rec) : ''
             this.eventDetailsModal = true
           } else if (this.eventDetailsModal) {
-            // Close if query was cleared externally
+            // Clear local state when no openEvent in URL
             this.eventDetailsModal = false
+            this.openedEventId = null
+            this.openedRecurrenceDate = ''
           }
         } catch {}
       },
       handleCloseEventModal() {
+        // Clear local state immediately before closing
+        this.openedEventId = null
+        this.openedRecurrenceDate = ''
         this.eventDetailsModal = false
-        // Reset route to base calendar route without any query parameters
-        this.$router.replace({ name: 'Calendar' }).catch(() => {})
+
+        // Reset route in next tick to ensure modal state is updated first
+        this.$nextTick(() => {
+          const currentQuery = this.$route.query as any
+          const newQuery: any = {}
+          if (currentQuery.view) newQuery.view = currentQuery.view
+          if (currentQuery.date) newQuery.date = currentQuery.date
+          this.$router.replace({ name: 'Calendar', query: newQuery }).catch(() => {})
+        })
       },
       updateCalendarDate() {
         try {
