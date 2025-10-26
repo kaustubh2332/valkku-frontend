@@ -226,7 +226,7 @@
 
   <BottomSheetModal
     v-model="userDetailDialog"
-    height="95vh"
+    height="80vh"
     :title="$t('userManagement.userDetails')"
     @update:model-value="closeUserDetail"
   >
