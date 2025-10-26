@@ -1,8 +1,6 @@
 <template>
   <v-card
-    class="mb-6"
-    elevation="2"
-    rounded="xl"
+    class="mb-3"
   >
     <!-- Event Header -->
     <div
@@ -12,7 +10,7 @@
       @click="navigateToEvent"
     >
       <div class="d-flex align-center justify-space-between mb-2">
-        <div class="text-h6 font-weight-bold text-truncate">
+        <div class="text-h6 text-truncate">
           {{ event.title }}
         </div>
         <v-chip
@@ -95,6 +93,7 @@
 </template>
 
 <script lang="ts">
+  import { useEventStore } from '@/stores/event'
   import { getEventTypeColor, getEventTypeIcon, getEventTypeLabel } from '@/utils/eventTypes'
   import CreatePlan from './CreatePlan.vue'
 
@@ -108,6 +107,10 @@
         type: Object,
         required: true
       }
+    },
+    setup() {
+      const eventStore = useEventStore()
+      return { eventStore }
     },
     computed: {
       eventTypeColor(): string {
@@ -142,7 +145,8 @@
     },
     methods: {
       navigateToEvent() {
-        this.$router.push(`/events/${this.event.id}`)
+        const route = this.eventStore.buildEventRoute(this.event)
+        this.$router.push(route)
       }
     },
   }

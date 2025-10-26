@@ -9,9 +9,9 @@
         @change="onTeamChange"
       /> -->
       <v-tabs
-        :model-value="currentTab"
         align-tabs="start"
         color="primary"
+        :model-value="currentTab"
       >
         <v-tab
           :to="{ name: 'UsersManagers' }"

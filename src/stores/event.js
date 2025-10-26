@@ -49,9 +49,17 @@ export const useEventStore = defineStore('event', {
           })
       })
     },
-    getEvent(eventId, teamId) {
+    getEvent(eventId, teamId, options = {}) {
       return new Promise((resolve, reject) => {
-        api.get(`/event/${eventId}/team/${teamId}`)
+        // Build query parameters for recurrence
+        const params = {}
+        if (options.recurrenceDate) {
+          params.recurrenceDate = options.recurrenceDate
+        }
+
+        const url = `/event/${eventId}/team/${teamId}`
+
+        api.get(url, { params })
           .then((response) => {
             resolve(response.data.data)
           })
@@ -59,6 +67,10 @@ export const useEventStore = defineStore('event', {
             reject(error)
           })
       })
+    },
+    async reloadEvent(eventId, teamId, options = {}) {
+      // This action ensures we always go through the store for event loading
+      return await this.getEvent(eventId, teamId, options)
     },
     saveEvent(eventData) {
       return new Promise((resolve, reject) => {
@@ -72,10 +84,20 @@ export const useEventStore = defineStore('event', {
           })
       })
     },
-    updateEvent(eventId, eventData) {
+    updateEvent(eventId, eventData, options = {}) {
       return new Promise((resolve, reject) => {
         const userStore = useUserStore()
-        api.put(`/event/${eventId}/team/${userStore.currentTeamId}`, eventData)
+        // Build query parameters for recurrence and edit mode
+        const params = {}
+        if (options.recurrenceDate) {
+          params.recurrenceDate = options.recurrenceDate
+        }
+        if (options.editScope) {
+          params.editMode = options.editScope
+        }
+        const queryString = new URLSearchParams(params).toString()
+        const url = `/event/${eventId}/team/${userStore.currentTeamId}${queryString ? `?${queryString}` : ''}`
+        api.put(url, eventData)
           .then((response) => {
             resolve(response.data)
           })
@@ -83,6 +105,63 @@ export const useEventStore = defineStore('event', {
             reject(error)
           })
       })
+    },
+    deleteEvent(eventId, options = {}) {
+      return new Promise((resolve, reject) => {
+        const userStore = useUserStore()
+        const { recurrenceDate } = options
+
+        // Build query parameters for recurring event occurrences
+        const params = {}
+        if (recurrenceDate) {
+          params.recurrenceDate = recurrenceDate
+        }
+
+        api.delete(`/event/${eventId}/team/${userStore.currentTeamId}`, { params })
+          .then((response) => {
+            resolve(response.data)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+    buildEventRoute(event) {
+      // Build route object for event page with proper query parameters for recurring events
+      const route = {
+        name: 'EventInfo',
+        params: {
+          eventId: event.id.toString()
+        }
+      }
+
+      // Add query parameters for recurring events
+      if (event.repeatId) {
+        const query = {}
+
+        // Add recurrenceDate if available (format: YYYY-MM-DD)
+        if (event.eventDate) {
+          // Extract YYYY-MM-DD from eventDate (handle various date formats)
+          let dateStr = event.eventDate
+          if (dateStr instanceof Date) {
+            const year = dateStr.getFullYear()
+            const month = String(dateStr.getMonth() + 1).padStart(2, '0')
+            const day = String(dateStr.getDate()).padStart(2, '0')
+            dateStr = `${year}-${month}-${day}`
+          } else if (typeof dateStr === 'string' && dateStr.includes('T')) {
+            // If it's an ISO string, extract the date part
+            dateStr = dateStr.split('T')[0]
+          }
+          query.recurrenceDate = dateStr
+        }
+
+
+        if (Object.keys(query).length > 0) {
+          route.query = query
+        }
+      }
+
+      return route
     },
     initEvents() {
       return new Promise((resolve, reject) => {

@@ -7,39 +7,58 @@
     open-on-hover
   >
     <template #activator="{ props }">
-      <div
-        class="event-card"
-        :class="{ 'year-view': isYearView }"
-        :style="styleVars"
+      <v-card
         v-bind="props"
+        class="event-card"
+        :class="eventCardClass"
+        :color="baseColor"
+        :elevation="isYearView ? 0 : 2"
+        variant="flat"
       >
         <!-- Year view: just a colored box -->
-        <div v-if="isYearView" class="year-event">
-          <!-- Just a colored box, no text -->
-        </div>
+        <div v-if="isYearView" class="year-event" />
 
         <!-- Mobile month view: start time and title -->
-        <div v-else-if="shouldShowStartTimeOnly" class="mobile-month-event">
-          <div class="mobile-start-time">{{ startTime }}</div>
-          <div class="mobile-title">{{ title }}</div>
-        </div>
+        <v-card-text v-else-if="shouldShowStartTimeOnly" class="pa-1">
+          <div class="text-caption font-weight-medium text-white mb-1">
+            {{ startTime }}
+          </div>
+          <div class="text-caption text-white text-truncate">
+            {{ title }}
+          </div>
+        </v-card-text>
 
         <!-- Regular view: full display -->
-        <div v-else>
-          <div class="top-row">
-            <span v-if="durationText" class="pill duration">{{ durationText }}</span>
+        <v-card-text v-else class="pa-2">
+          <div class="d-flex justify-space-between align-center mb-2">
+            <v-chip
+              v-if="durationText"
+              color="white"
+              label
+              size="x-small"
+              variant="tonal"
+            >
+              {{ durationText }}
+            </v-chip>
           </div>
-          <div class="title" :title="title">{{ title }}</div>
-        </div>
-      </div>
+          <div class="text-body-2 font-weight-medium text-white text-truncate" :title="title">
+            {{ title }}
+          </div>
+        </v-card-text>
+      </v-card>
     </template>
-    <v-card elevation="6" min-width="220">
-      <v-card-text class="py-3">
-        <strong class="evt-tt-title text-truncate">{{ title }}</strong>
-        <div v-if="durationText" class="evt-tt-line">{{ durationText }}</div>
-        <div v-if="typeLabel" class="evt-tt-line mt-2">
+
+    <v-card elevation="8" min-width="240">
+      <v-card-text class="pa-4">
+        <div class="text-h6 font-weight-medium mb-2">{{ title }}</div>
+
+        <div v-if="durationText" class="text-body-2 text-medium-emphasis mb-2">
+          <v-icon class="mr-1" size="small">mdi-clock-outline</v-icon>
+          {{ durationText }}
+        </div>
+
+        <div v-if="typeLabel" class="mb-2">
           <v-chip
-            class="evt-tt-chip"
             :color="typeColor"
             label
             size="small"
@@ -48,7 +67,11 @@
             {{ typeLabel }}
           </v-chip>
         </div>
-        <div v-if="locationName" class="evt-tt-line">{{ locationName }}</div>
+
+        <div v-if="locationName" class="text-body-2 text-medium-emphasis">
+          <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
+          {{ locationName }}
+        </div>
       </v-card-text>
     </v-card>
   </v-menu>
@@ -159,18 +182,10 @@
         }
         return map[t] || '#0ea5e9'
       },
-      styleVars() {
-        const base = this.baseColor
-        const lighter = this.shadeColor(base, 10)
-        const darker = this.shadeColor(base, -8)
-        const border = this.shadeColor(base, -14)
-        const glow = this.shadeColor(base, 12)
+      eventCardClass() {
         return {
-          '--evt-base': base,
-          '--evt-light': lighter,
-          '--evt-dark': darker,
-          '--evt-border': border,
-          '--evt-glow': glow
+          'year-view': this.isYearView,
+          'mobile-view': this.shouldShowStartTimeOnly
         }
       }
     },
@@ -205,135 +220,23 @@
 </script>
 
 <style scoped>
+/* Event card styling */
 .event-card {
-  position: relative;
-  background: linear-gradient(135deg, var(--evt-dark), var(--evt-base) 60%, var(--evt-light));
-  color: #f5fbff;
-  border-radius: 10px;
-  border: 1px solid var(--evt-border);
-  padding: 8px 10px;
-  line-height: 1.25;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.02) inset;
   width: 100%;
   height: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Desktop improvements */
-@media (min-width: 769px) {
-  .event-card {
-    padding: 12px 14px !important;
-    border-radius: 12px !important;
-  }
-
-  .title {
-    font-size: 15px !important;
-    line-height: 1.4 !important;
-  }
-
-  .pill {
-    font-size: 13px !important;
-    padding: 4px 10px !important;
-  }
+.event-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Mobile padding reduction */
-@media (max-width: 768px) {
-  .event-card {
-    padding: 2px 4px !important;
-    border-radius: 4px !important;
-  }
-
-  .event-card.year-view {
-    padding: 0 !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .event-card {
-    padding: 1px 2px !important;
-    border-radius: 2px !important;
-  }
-
-  .mobile-month-event {
-    padding: 0px 1px !important;
-  }
-}
-.event-card::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 10px;
-  box-shadow: 0 0 22px 0 var(--evt-glow);
-  opacity: 0.18;
-  pointer-events: none;
-}
-.top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-.pill {
-  display: inline-block;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.15);
-  backdrop-filter: blur(2px);
-}
-.pill.type { text-transform: capitalize; }
-.title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-clamp: 2;
-}
-.meta {
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #eaf4ff;
-  opacity: 0.9;
-  font-size: 11px;
-}
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.8);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.12);
-}
-.reactions {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-}
-.like, .dislike {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.icon.like { color: #86efac; }
-.icon.dislike { color: #f87171; }
-.count { color: #ffffff; }
-
-/* Year view styles - just a colored box */
+/* Year view - minimal colored box */
 .event-card.year-view {
-  padding: 0;
   min-height: 8px;
   height: 8px;
-  border-radius: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .year-event {
@@ -342,43 +245,16 @@
   border-radius: 2px;
 }
 
-/* Mobile month view styles */
-.mobile-month-event {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 1px 2px;
-  gap: 0px;
-  overflow: hidden;
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .event-card {
+    border-radius: 4px;
+  }
 }
 
-.mobile-start-time {
-  font-size: 9px;
-  font-weight: 600;
-  color: white;
-  text-align: left;
-  line-height: 1;
-  opacity: 0.9;
-  white-space: nowrap;
-}
-
-.mobile-title {
-  font-size: 8px;
-  font-weight: 500;
-  color: white;
-  text-align: left;
-  line-height: 1.1;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.8;
-  width: 100%;
-  word-wrap: break-word;
+@media (max-width: 480px) {
+  .event-card {
+    border-radius: 2px;
+  }
 }
 </style>

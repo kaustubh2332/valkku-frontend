@@ -1,79 +1,99 @@
 <template>
   <div>
     <v-form ref="form" @submit.prevent="save">
-      <div class="mb-4 d-flex align-start">
-        <!-- Admin mode: Dual language input -->
-        <template v-if="admin">
-          <v-row>
-            <v-col cols="12" sm="6">
-              <v-text-field
-                v-model="formData.titleEn"
-                autofocus
-                density="compact"
-                :label="$t('events.type_name') + ' (English)'"
-                required
-                :rules="titleEnRules"
-                variant="outlined"
-              />
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-text-field
-                v-model="formData.titleFi"
-                density="compact"
-                :label="$t('events.type_name') + ' (Finnish)'"
-                required
-                :rules="titleFiRules"
-                variant="outlined"
-              />
-            </v-col>
-          </v-row>
-        </template>
-
-        <!-- Regular mode: Single language input (but saves to both) -->
-        <template v-else>
+      <!-- Admin mode: Dual language input -->
+      <v-row v-if="admin" class="mb-4">
+        <v-col
+          cols="12"
+          sm="6"
+        >
           <v-text-field
-            v-model="currentLocaleTitle"
+            v-model="formData.titleEn"
             autofocus
             density="compact"
-            :label="$t('events.type_name')"
+            :label="$t('events.type_name') + ' (English)'"
             required
-            :rules="titleRules"
+            :rules="titleEnRules"
             variant="outlined"
           />
-        </template>
-
-        <div class="d-flex align-center">
-          <!-- Color picker -->
-          <div class="d-flex align-center mt-2 ml-4 mr-4">
+        </v-col>
+        <v-col
+          cols="12"
+          sm="6"
+        >
+          <v-text-field
+            v-model="formData.titleFi"
+            density="compact"
+            :label="$t('events.type_name') + ' (Finnish)'"
+            required
+            :rules="titleFiRules"
+            variant="outlined"
+          />
+        </v-col>
+        <v-col cols="12">
+          <div class="d-flex align-center">
+            <span class="text-body-2 text-medium-emphasis mr-3">{{ $t('events.color') }}</span>
             <ChooseColor
               v-model="formData.color"
               :colors="availableColors"
             />
           </div>
+        </v-col>
+      </v-row>
+
+      <!-- Regular mode: Single language input (but saves to both) -->
+      <div v-else class="mb-4">
+        <v-text-field
+          v-model="currentLocaleTitle"
+          autofocus
+          class="mb-4"
+          density="compact"
+          :label="$t('events.type_name')"
+          required
+          :rules="titleRules"
+          variant="outlined"
+        />
+
+        <div class="d-flex align-center">
+          <span class="text-body-2 text-medium-emphasis mr-3">{{ $t('events.color') }}</span>
+          <ChooseColor
+            v-model="formData.color"
+            :colors="availableColors"
+          />
         </div>
       </div>
-      <div v-if="userStore.isStaff && !initial">
-        {{ $t('events.who_sees') }}
-        <v-radio-group v-model="formData.scope">
-          <v-radio :label="$t('events.add_to_own')" value="user" />
-          <v-radio :label="$t('events.add_to_team')" value="team" />
+
+      <!-- Scope selection -->
+      <div v-if="userStore.isStaff && !initial" class="mb-6">
+        <div class="text-body-2 text-medium-emphasis mb-2">
+          {{ $t('events.who_sees') }}
+        </div>
+        <v-radio-group v-model="formData.scope" density="compact">
+          <v-radio
+            :label="$t('events.add_to_own')"
+            value="user"
+          />
+          <v-radio
+            :label="$t('events.add_to_team')"
+            value="team"
+          />
         </v-radio-group>
       </div>
 
       <!-- Actions -->
-      <div class="d-flex justify-end">
+      <div class="d-flex justify-end ga-2">
         <v-btn
           variant="text"
           @click="$emit('close')"
         >
           {{ $t('cancel') }}
         </v-btn>
-        <v-spacer />
         <v-btn
           color="primary"
           :disabled="!isFormValid"
           :loading="saving"
           type="submit"
+          variant="elevated"
         >
           {{ initial ? $t('events.save') : $t('events.add') }}
         </v-btn>

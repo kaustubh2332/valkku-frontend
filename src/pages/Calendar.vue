@@ -1,51 +1,22 @@
 <template>
   <div>
-    <div class="text-h4 mt-4 mb-8 d-flex align-center" :class="{ 'justify-space-between': !$vuetify.display.mobile }">
-      <div>
-        {{ $t('calendar.title') }}
-      </div>
-      <v-menu
-        v-model="fabMenu.show"
-        location="bottom end"
-      >
-        <template #activator="{ props }">
-          <v-btn
-            v-if="$vuetify.display.mobile"
-            v-bind="props"
-            class="calendar-menu-btn ml-2"
-            icon="mdi-dots-vertical"
-            size="small"
-            variant="text"
-          />
-          <v-btn
-            v-else
-            class="ml-2"
-            size="small"
-            variant="text"
-            @click="openExportModal"
-          >
-            <v-icon class="mr-2">mdi-sync</v-icon>
-            {{ $t('calendar.export_events') }}
-          </v-btn>
-        </template>
-        <v-list
-          density="compact"
-          min-width="200"
-        >
-          <v-list-item
-            prepend-icon="mdi-calendar-export"
-            @click="openExportModal"
-          >
-            <v-list-item-title>{{ $t('calendar.export_events') }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+    <div class="text-h4 mt-4 mb-2">
+      {{ calendarTitle }}
     </div>
-
+    <CalendarToolbar
+      :current-view="currentView"
+      :title="calendarTitle"
+      @export-calendar="openExportModal"
+      @next="goToNext"
+      @prev="goToPrev"
+      @today="goToToday"
+      @view-change="changeView"
+    />
     <div>
       <FullCalendar
         ref="calendarRef"
         :options="calendarOptions"
+        :style="{ '--event-cursor': eventCursorStyle }"
       >
         <template #eventContent="data">
           <CalendarEventCard
@@ -102,12 +73,13 @@
           >
             <v-list-item-title>{{ $t('calendar.edit_event') }}</v-list-item-title>
           </v-list-item>
-          <v-list-item
+          <!-- Temporarily hidden - will be re-enabled later -->
+          <!-- <v-list-item
             prepend-icon="mdi-content-duplicate"
             @click="duplicateEvent"
           >
             <v-list-item-title>{{ $t('calendar.duplicate_event') }}</v-list-item-title>
-          </v-list-item>
+          </v-list-item> -->
           <v-divider />
           <v-list-item
             class="text-error"
@@ -162,6 +134,7 @@
         <CreateEvent
           v-if="editEventModal"
           :edit="selectedEvent"
+          :go-to-event="false"
           @close="editEventModal = false"
           @saved="handleEventSaved"
         />
@@ -178,18 +151,18 @@
   import timeGridPlugin from '@fullcalendar/timegrid'
   import FullCalendar from '@fullcalendar/vue3'
   import { useI18n } from 'vue-i18n'
-  import CreateEvent from '@/components/events/CreateEvent.vue'
-  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
+  import { useEventStore } from '@/stores/event'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
 
   export default {
     name: 'Calendar',
-    components: { FullCalendar, BottomSheetModal, CreateEvent },
+    components: { FullCalendar },
     setup() {
       const { locale } = useI18n()
+      const eventStore = useEventStore()
       const userStore = useUserStore()
-      return { locale, userStore }
+      return { locale, eventStore, userStore }
     },
     data() {
       return {
@@ -214,7 +187,12 @@
         },
         editEventModal: false,
         selectedEvent: null,
-        exportEventsModal: false
+        exportEventsModal: false,
+        currentCalendarTs: Date.now(),
+        currentViewType: '',
+        // Calendar interaction settings - easily configurable
+        // Set to true to enable dragging and resizing of events
+        allowEventDragResize: false
       }
     },
     computed: {
@@ -229,6 +207,32 @@
       dateFirstDayOfWeek() {
         return this.$i18n?.locale === 'fi' ? 1 : 0
       },
+      calendarTitle() {
+        const apiCal = this.$refs.calendarRef?.getApi?.()
+        const currentView = this.currentViewType || (apiCal ? apiCal.view.type : this.urlView)
+        const baseDate = Number.isFinite(this.currentCalendarTs) ? new Date(this.currentCalendarTs) : new Date()
+
+        // For year view, show just the year
+        if (currentView === 'multiMonthYear') {
+          const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
+          const year = new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(baseDate)
+          return year
+        }
+
+        // For other views, show localized month and year
+        const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
+        const monthYear = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(baseDate)
+        return this.$t('calendar.title', { monthYear })
+      },
+      currentView() {
+        if (this.currentViewType) return this.currentViewType
+        const apiCal = this.$refs.calendarRef?.getApi?.()
+        if (apiCal) return apiCal.view.type
+        return this.urlView
+      },
+      eventCursorStyle() {
+        return this.allowEventDragResize ? 'move' : 'pointer'
+      },
       // URL query parameters for calendar state
       urlView() {
         return this.$route.query.view || 'dayGridMonth'
@@ -241,17 +245,15 @@
           plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, multimonthPlugin],
           initialView: this.urlView,
           initialDate: this.urlDate,
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay'
-          },
+          headerToolbar: false as const,
           locale: (this.locale && typeof this.locale === 'string' && this.locale === 'fi') ? fiLocale : null,
           firstDay: (this.locale && typeof this.locale === 'string' && this.locale === 'fi') ? 1 : 0,
           events: [],
           height: 'auto',
           slotMinTime: '06:00:00',
           slotMaxTime: '23:00:00',
+          // Force UTC timezone to prevent double conversion
+          timeZone: 'UTC',
           // MultiMonthYear specific options
           multiMonthMaxColumns: 3,
           multiMonthMinWidth: 300,
@@ -262,11 +264,33 @@
           datesSet: (info) => {
             this.onDatesSet(info)
             this.updateUrlFromCalendar()
+            this.currentViewType = info.view.type
+            try {
+              const start = info.view?.currentStart
+              if (start && Number.isFinite(start.getTime?.() || Number.NaN)) {
+                this.currentCalendarTs = start.getTime()
+              } else {
+                const api = (this.$refs.calendarRef as any)?.getApi?.()
+                const d = api?.getDate?.()
+                if (d && Number.isFinite(d.getTime())) this.currentCalendarTs = d.getTime()
+              }
+            } catch {}
           },
           eventClick: (clickInfo) => this.onEventClick(clickInfo),
           viewDidMount: (view) => {
             console.log('viewDidMount event fired', view.view.type) // Debug log
             this.updateUrlFromCalendar()
+            this.currentViewType = view.view.type
+            try {
+              const start = view.view?.currentStart
+              if (start && Number.isFinite(start.getTime?.() || Number.NaN)) {
+                this.currentCalendarTs = start.getTime()
+              } else {
+                const api = (this.$refs.calendarRef as any)?.getApi?.()
+                const d = api?.getDate?.()
+                if (d && Number.isFinite(d.getTime())) this.currentCalendarTs = d.getTime()
+              }
+            } catch {}
           },
           // Right-click context menu
           eventMouseEnter: (info) => this.onEventMouseEnter(info),
@@ -278,11 +302,11 @@
           eventResize: (info) => this.onEventResize(info),
           eventDragStart: (info) => this.onEventDragStart(info),
           eventDragStop: (info) => this.onEventDragStop(info),
-          // Enable drag and drop
-          editable: true,
-          eventResizableFromStart: true,
-          eventStartEditable: true,
-          eventDurationEditable: true
+          // Enable/disable drag and drop based on configuration
+          editable: this.allowEventDragResize,
+          eventResizableFromStart: this.allowEventDragResize,
+          eventStartEditable: this.allowEventDragResize,
+          eventDurationEditable: this.allowEventDragResize
         }
       }
     },
@@ -295,6 +319,15 @@
           }
         },
         deep: true
+      },
+      // Watch for calendar date changes to update title
+      currentCalendarDate: {
+        handler() {
+          // Force reactivity by accessing the computed property
+          this.$nextTick(() => {
+            this.$forceUpdate()
+          })
+        }
       }
     },
     mounted() {
@@ -344,11 +377,7 @@
             const newView = this.urlView
             const newDate = this.urlDate
 
-            console.log('Updating calendar from URL:', { newView, newDate }) // Debug log
-
-            // Change view if different
             if (apiCal.view.type !== newView) {
-              console.log('Changing view from', apiCal.view.type, 'to', newView) // Debug log
               apiCal.changeView(newView)
             }
 
@@ -401,8 +430,6 @@
               view: currentView,
               date: dateStr
             }
-
-            console.log('Current calendar state:', { currentView, dateStr }) // Debug log
 
             // Only update URL if values have changed
             const currentQuery = this.$route.query
@@ -492,11 +519,21 @@
       },
       onEventClick(clickInfo) {
         try {
-          const id = clickInfo?.event?.id
-          const idNum = Number(id)
-          if (!id || Number.isNaN(idNum)) return
-          this.$router.push({ name: 'EventInfo', params: { eventId: id } })
-        } catch {}
+          // Get backend event data from extendedProps
+          const backendEvent = clickInfo?.event?.extendedProps?.backendEvent
+          if (backendEvent) {
+            const route = this.eventStore.buildEventRoute(backendEvent)
+            this.$router.push(route)
+          } else {
+            // Fallback to simple navigation if event data not available
+            const id = clickInfo?.event?.id
+            if (id) {
+              this.$router.push({ name: 'EventInfo', params: { eventId: id } })
+            }
+          }
+        } catch (error) {
+          console.error('Error opening event:', error)
+        }
       },
       onEventMouseEnter(info) {
         // Add right-click listener to the event element
@@ -580,8 +617,16 @@
       // Context menu actions
       viewEvent() {
         if (this.contextMenu.event) {
-          const eventId = this.contextMenu.event.id
-          this.$router.push({ name: 'EventInfo', params: { eventId } })
+          // Get backend event data from extendedProps
+          const backendEvent = this.contextMenu.event.extendedProps?.backendEvent
+          if (backendEvent) {
+            const route = this.eventStore.buildEventRoute(backendEvent)
+            this.$router.push(route)
+          } else {
+            // Fallback to simple navigation if event data not available
+            const eventId = this.contextMenu.event.id
+            this.$router.push({ name: 'EventInfo', params: { eventId } })
+          }
         }
         this.contextMenu.show = false
       },
@@ -593,11 +638,10 @@
         }
         this.contextMenu.show = false
       },
-      duplicateEvent() {
+      async duplicateEvent() {
         if (this.contextMenu.event) {
           const eventId = this.contextMenu.event.id
-          console.log('Duplicate event:', eventId)
-          // TODO: Implement duplicate functionality
+          await this.copyEvent(eventId)
         }
         this.contextMenu.show = false
       },
@@ -631,15 +675,53 @@
       async fetchEventForEdit(eventId) {
         try {
           this.showLoading = true
-          const response = await api.get(`/event/${eventId}/team/${this.userStore.currentTeamId}`)
-          if (response?.data?.success) {
-            this.selectedEvent = response.data.data
-            this.editEventModal = true
-          } else {
-            console.error('Failed to fetch event for editing')
-          }
+
+          // Extract recurrence date from the event data if available
+          const backendEvent = this.contextMenu.event?.extendedProps?.backendEvent
+          const recurrenceDate = backendEvent?.eventDate
+
+          // Pass recurrence date as query parameter
+          const options = recurrenceDate ? { recurrenceDate } : {}
+          this.selectedEvent = await this.eventStore.getEvent(eventId, this.userStore.currentTeamId, options)
+          this.editEventModal = true
         } catch (error) {
           console.error('Error fetching event for edit:', error)
+        } finally {
+          this.showLoading = false
+        }
+      },
+      async copyEvent(eventId) {
+        try {
+          this.showLoading = true
+
+          // Extract recurrence date from the event data if available
+          const backendEvent = this.contextMenu.event?.extendedProps?.backendEvent
+          const recurrenceDate = backendEvent?.eventDate
+
+          // Pass recurrence date as query parameter
+          const options = recurrenceDate ? { recurrenceDate } : {}
+          const originalEvent = await this.eventStore.getEvent(eventId, this.userStore.currentTeamId, options)
+
+          // Create a copy of the event with modified title
+          const copyEventData = {
+            ...originalEvent,
+            title: `${originalEvent.title} ${this.$t('copy')}`,
+            // Remove fields that shouldn't be copied
+            id: undefined,
+            createdAt: undefined,
+            updatedAt: undefined,
+            createdById: undefined
+          }
+
+          // Save the copied event
+          const savedEvent = await this.eventStore.saveEvent(copyEventData)
+
+          // Optimistically show the copied event
+          this.handleEventSaved(savedEvent)
+
+          console.log('Event copied successfully:', savedEvent)
+        } catch (error) {
+          console.error('Error copying event:', error)
         } finally {
           this.showLoading = false
         }
@@ -761,12 +843,46 @@
         if (apiCal) {
           apiCal.today()
           this.updateUrlFromCalendar()
+          this.updateCalendarDate()
         }
         this.emptySpaceMenu.show = false
       },
       openExportModal() {
         this.exportEventsModal = true
         this.fabMenu.show = false
+      },
+      updateCalendarDate() {
+        try {
+          const api = (this.$refs.calendarRef as any)?.getApi?.()
+          const d = api?.getDate?.()
+          const t = d && Number.isFinite(d.getTime()) ? d.getTime() : Date.now()
+          this.currentCalendarTs = t
+          this.currentViewType = api?.view?.type || this.currentViewType
+        } catch {}
+      },
+      goToPrev() {
+        const apiCal = this.$refs.calendarRef?.getApi?.()
+        if (apiCal) {
+          apiCal.prev()
+          this.updateUrlFromCalendar()
+          this.updateCalendarDate()
+        }
+      },
+      goToNext() {
+        const apiCal = this.$refs.calendarRef?.getApi?.()
+        if (apiCal) {
+          apiCal.next()
+          this.updateUrlFromCalendar()
+          this.updateCalendarDate()
+        }
+      },
+      changeView(viewType) {
+        const apiCal = this.$refs.calendarRef?.getApi?.()
+        if (apiCal) {
+          apiCal.changeView(viewType)
+          this.updateUrlFromCalendar()
+          this.updateCalendarDate()
+        }
       },
       mapBackendEventToCalendar(ev) {
         const startSec = Number(ev.startTimeUnixSec)
@@ -779,6 +895,7 @@
 
         if (hasUnixTimes) {
           // Event has explicit start/end times
+          // Use toISOString() which correctly handles UTC conversion
           startIso = new Date(startSec * 1000).toISOString()
           endIso = new Date(endSec * 1000).toISOString()
           allDay = false
@@ -842,7 +959,9 @@
             likes: ev.likes,
             dislikes: ev.dislikes,
             durationInMins: ev.durationInMinutes ?? ev.durationInMins,
-            eventColor: colorMap[ev.type] || undefined
+            eventColor: colorMap[ev.type] || undefined,
+            // Store the complete backend event data for navigation
+            backendEvent: ev
           }
         }
       },
@@ -885,32 +1004,7 @@
   gap: 4px;
 }
 
-:deep(.fc-button) {
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  padding: 8px 12px !important;
-  min-height: 36px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  transition: all 0.2s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-}
-
-:deep(.fc-button:hover) {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}
-
-:deep(.fc-button:active) {
-  transform: translateY(0) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
-}
+/* Removed custom outline and hover effects for FullCalendar buttons to use defaults */
 
 :deep(.fc-button-primary) {
   background: #1976d2 !important;
@@ -958,10 +1052,10 @@
   height: 100% !important;
 }
 
-/* Drag and drop improvements */
+/* Drag and drop improvements - cursor controlled by allowEventDragResize */
 :deep(.fc-event) {
-  cursor: move;
   user-select: none;
+  cursor: var(--event-cursor, pointer);
 }
 
 :deep(.fc-event:hover) {

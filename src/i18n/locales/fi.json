@@ -44,10 +44,13 @@
     "title": "Valkku"
   },
   "back": "Takaisin",
+  "copy": "Kopioi",
   "calendar": {
     "add_event": "Lisää tapahtuma",
     "add_quick_event": "Lisää pikaisesti tapahtuma",
     "delete_event": "Poista tapahtuma",
+    "delete_event_confirm_message": "Haluatko varmasti poistaa tapahtuman \"{title}\"? Tätä toimintoa ei voi peruuttaa.",
+    "delete_event_confirm_title": "Poistetaanko tapahtuma?",
     "duplicate_event": "Kopioi tapahtuma",
     "edit_event": "Muokkaa tapahtumaa",
     "export_events": "Tilaa kalenteri",
@@ -57,10 +60,15 @@
     "export_events_title": "Kalenteritilaus",
     "hide_instructions": "Piilota ohjeet",
     "show_instructions": "Näytä ohjeet",
+    "day": "Päivä",
     "go_to_today": "Siirry tähän päivään",
+    "month": "Kuukausi",
+    "today": "Tänään",
     "more_options": "Lisää vaihtoehtoja",
-    "title": "Kalenteri",
-    "view_event": "Näytä tapahtuma"
+    "title": "{monthYear}",
+    "view_event": "Näytä tapahtuma",
+    "week": "Viikko",
+    "year": "Vuosi"
   },
   "callback": {
     "errorMessage": "Todennus epäonnistui. Yritä uudelleen.",
@@ -142,6 +150,8 @@
     "duration_minutes": "Arvioitu kesto (minuutteina)",
     "duration_range": "Kesto täytyy olla 1-480 minuuttia",
     "duration_required": "Kesto on pakollinen",
+    "delete_event_confirm_message": "Haluatko varmasti poistaa tapahtuman \"{title}\"? Tätä toimintoa ei voi peruuttaa.",
+    "delete_event_confirm_title": "Poistetaanko tapahtuma?",
     "edit_event": "Muokkaa tapahtumaa",
     "edit_event_plan": "Muokkaa suunnitelmaa",
     "edit_locations": "Muokkaa sijainteja",
@@ -193,8 +203,15 @@
     "practise": "Harjoitus",
     "repeat_hint": "Tapahtuma toistuu {count} kertaa {period} aikana",
     "repeat_on_weekdays": "Toista viikonpäivinä",
-    "repeat_until": "Toista asti",
+    "repeat_until": "Lopeta toisto",
     "repeats": "Toistuu",
+    "repeats_forever": "Toistuu ikuisesti",
+    "repeats_forever_hint": "Jätä tyhjäksi, jos toisto ei lopu koskaan",
+    "edit_scope": "Muokkaa laajuus",
+    "edit_this_event_only": "Muokkaa vain tätä tapahtumaa",
+    "edit_all_events": "Muokkaa kaikkia",
+    "repeat_rules_changed_warning": "Toistosäännöt on muutettu. Kaikki tapahtumat sarjassa päivitetään.",
+    "revert_rules": "Palauta",
     "saturday": "Lauantai",
     "saturday_short": "La",
     "save": "Tallenna",
@@ -299,7 +316,8 @@
     "no_program": "Ei ohjelmaa vielä",
     "no_program_description": "Luo harjoitusohjelma urheilijoidesi kehityksen organisointiin",
     "subtitle": "Hallinnoi harjoitusohjelmia ja urheilijoiden kehitystä",
-    "title": "Ohjelma"
+    "title": "Ohjelma",
+    "today": "Tänään"
   },
   "required": "Vaaditaan",
   "roles": {
@@ -324,6 +342,7 @@
       "title": "Vaihda salasana"
     },
     "emojiClicked": "Emojia klikattu {count} kertaa",
+    "timezone": "Aikavyöhyke: {timezone}",
     "general": "Yleiset",
     "language": "Kieli",
     "language_updated": "Kieli päivitetty",

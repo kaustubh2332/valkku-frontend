@@ -61,29 +61,44 @@
 
     <!-- Event Details -->
     <v-container v-else-if="event" class="py-4 py-md-8" :class="{ 'pa-0': $vuetify.display.mobile }">
-      <v-row justify="center">
-        <v-col
-          cols="12"
-          lg="10"
-          xl="8"
-        >
+      <v-row>
+        <v-col cols="12">
           <!-- Hero Section with Gradient Background -->
           <v-card
             class="mb-6 overflow-visible"
             :color="eventTypeColor"
-            elevation="8"
-            rounded="lg"
+            elevation="2"
           >
-            <div class="event-hero-gradient pa-6 pa-md-8">
-              <!-- Back Button -->
-              <v-btn
-                class="mb-4"
-                color="white"
-                icon="mdi-arrow-left"
-                size="small"
-                variant="text"
-                @click="$router.back()"
-              />
+            <div class="pa-6 pa-md-8">
+              <!-- Top Action Bar -->
+              <div class="d-flex align-center justify-space-between mb-4">
+                <!-- Back Button -->
+                <v-btn
+                  color="white"
+                  icon="mdi-arrow-left"
+                  size="small"
+                  variant="text"
+                  @click="$router.back()"
+                />
+
+                <!-- Edit & Delete Actions (Staff Only) -->
+                <div v-if="userStore.isStaff" class="d-flex ga-2">
+                  <v-btn
+                    color="white"
+                    icon="mdi-pencil"
+                    size="small"
+                    variant="text"
+                    @click="editEvent"
+                  />
+                  <v-btn
+                    color="white"
+                    icon="mdi-delete"
+                    size="small"
+                    variant="text"
+                    @click="confirmDelete"
+                  />
+                </div>
+              </div>
 
               <!-- Title Section -->
               <div class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between ga-4">
@@ -93,9 +108,7 @@
                     <!-- Location (moved to start) -->
                     <div
                       v-if="hasLocation"
-                      class="hero-location-btn d-flex align-center ga-3 cursor-pointer"
-                      color="white"
-                      prepend-icon="mdi-map-marker"
+                      class="d-flex align-center ga-3 cursor-pointer"
                       @click="openMaps"
                     >
                       <div>
@@ -115,7 +128,11 @@
                     <v-spacer />
 
                     <!-- Type and Status (moved to end) -->
-                    <v-chip class="hero-chip" color="white" label variant="elevated">
+                    <v-chip
+                      color="white"
+                      label
+                      variant="elevated"
+                    >
                       <v-icon
                         class="mr-2"
                         start
@@ -126,7 +143,6 @@
                     </v-chip>
                     <v-chip
                       v-if="event.status"
-                      class="hero-chip"
                       :color="statusColor"
                       label
                       variant="flat"
@@ -143,15 +159,15 @@
                   </div>
 
                   <!-- Title -->
-                  <h1 class="hero-title text-h5 text-md-h4 font-weight-bold text-white mb-2">
+                  <h1 class="text-h5 text-md-h4 font-weight-bold text-white mb-2">
                     {{ event.title || $t('events.event_type') }}
                   </h1>
 
                   <!-- Date and Time Row -->
                   <div class="d-flex align-center flex-wrap ga-3">
-                    <div class="hero-meta text-body-2 text-md-h6 text-white text-opacity-90">
+                    <div class="text-body-2 text-md-h6 text-white text-opacity-90">
                       <v-icon
-                        class="mr-1 hero-meta-icon"
+                        class="mr-1"
                         color="white"
                       >
                         mdi-calendar
@@ -161,7 +177,6 @@
                     <div v-if="headerTimeChipText">
                       <v-chip
                         v-tooltip:top="event.durationInMinutes ? $t('events.duration_in_minutes', { duration: event.durationInMinutes }) : $t('events.duration')"
-                        class="hero-chip hero-time-chip"
                         color="white"
                         label
                         variant="elevated"
@@ -208,18 +223,14 @@
                     v-if="event.repeats"
                     class="mb-6"
                     elevation="2"
-                    rounded="lg"
                   >
-                    <v-card-title class="d-flex align-center bg-surface-variant">
-                      <v-avatar
+                    <v-card-title class="d-flex align-center">
+                      <v-icon
                         class="mr-3"
                         color="primary"
-                        size="40"
                       >
-                        <v-icon color="white">
-                          mdi-repeat
-                        </v-icon>
-                      </v-avatar>
+                        mdi-repeat
+                      </v-icon>
                       <span class="text-h6">{{ $t('events.repeats') }}</span>
                     </v-card-title>
                     <v-divider />
@@ -275,10 +286,7 @@
                           </v-list-item-subtitle>
                         </v-list-item>
 
-                        <v-list-item
-                          v-if="repeatsUntilDate"
-                          class="px-0"
-                        >
+                        <v-list-item class="px-0">
                           <template #prepend>
                             <v-icon
                               class="mr-4"
@@ -291,7 +299,7 @@
                             {{ $t('events.repeat_until') }}
                           </v-list-item-title>
                           <v-list-item-subtitle class="text-body-1 font-weight-medium mt-1">
-                            {{ repeatsUntilDate }}
+                            {{ repeatsUntilDate || $t('events.repeats_forever') }}
                           </v-list-item-subtitle>
                         </v-list-item>
                       </v-list>
@@ -304,18 +312,14 @@
                     <v-card
                       class="mb-6"
                       elevation="2"
-                      rounded="lg"
                     >
-                      <v-card-title class="d-flex align-center bg-surface-variant">
-                        <v-avatar
+                      <v-card-title class="d-flex align-center">
+                        <v-icon
                           class="mr-3"
                           color="primary"
-                          size="40"
                         >
-                          <v-icon color="white">
-                            mdi-note-text
-                          </v-icon>
-                        </v-avatar>
+                          mdi-note-text
+                        </v-icon>
                         <span class="text-h6">{{ $t('events.notes') }}</span>
                       </v-card-title>
                       <v-divider />
@@ -332,18 +336,14 @@
                       v-if="event.coachesNotes"
                       class="mb-6"
                       elevation="2"
-                      rounded="lg"
                     >
-                      <v-card-title class="d-flex align-center bg-warning-lighten-4">
-                        <v-avatar
+                      <v-card-title class="d-flex align-center">
+                        <v-icon
                           class="mr-3"
                           color="warning"
-                          size="40"
                         >
-                          <v-icon color="white">
-                            mdi-clipboard-text
-                          </v-icon>
-                        </v-avatar>
+                          mdi-clipboard-text
+                        </v-icon>
                         <span class="text-h6">{{ $t('events.coach_notes') }}</span>
                       </v-card-title>
                       <v-divider />
@@ -366,18 +366,14 @@
                       v-if="event.ownNotes"
                       class="mb-6"
                       elevation="2"
-                      rounded="lg"
                     >
-                      <v-card-title class="d-flex align-center bg-info-lighten-4">
-                        <v-avatar
+                      <v-card-title class="d-flex align-center">
+                        <v-icon
                           class="mr-3"
                           color="info"
-                          size="40"
                         >
-                          <v-icon color="white">
-                            mdi-account-circle
-                          </v-icon>
-                        </v-avatar>
+                          mdi-account-circle
+                        </v-icon>
                         <span class="text-h6">{{ $t('events.own_notes') }}</span>
                       </v-card-title>
                       <v-divider />
@@ -405,9 +401,8 @@
                   <v-card
                     class="sticky-sidebar"
                     elevation="2"
-                    rounded="lg"
                   >
-                    <v-card-title class="bg-surface-variant">
+                    <v-card-title>
                       <v-icon
                         class="mr-2"
                         color="primary"
@@ -480,7 +475,7 @@
                           <v-list-item-title class="text-caption text-medium-emphasis">
                             {{ $t('events.team_id') }}
                           </v-list-item-title>
-                          <v-list-item-subtitle class="text-body-2 font-mono">
+                          <v-list-item-subtitle class="text-body-2 text-mono">
                             {{ event.teamId }}
                           </v-list-item-subtitle>
                         </v-list-item>
@@ -523,20 +518,69 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="500"
+    >
+      <v-card>
+        <v-card-title class="text-h6">
+          {{ $t('events.delete_event_confirm_title') }}
+        </v-card-title>
+        <v-card-text>
+          {{ $t('events.delete_event_confirm_message', { title: event?.title || $t('events.event') }) }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="deleteDialog = false"
+          >
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deleting"
+            variant="elevated"
+            @click="deleteEvent"
+          >
+            {{ $t('common.delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit Event Modal -->
+    <BottomSheetModal
+      v-model="editDialog"
+      :title="$t('events.edit_event')"
+    >
+      <CreateEvent
+        v-if="editDialog"
+        :edit="event"
+        @close="editDialog = false"
+        @saved="handleEventUpdated"
+      />
+    </BottomSheetModal>
   </div>
 </template>
 
 <script lang="ts">
   import type { PublicEvent } from '@/types/event'
+  import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
   import { useEventStore } from '@/stores/event'
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
-  import CreatePlan from './CreatePlan.vue'
   import { getEventTypeColor, getEventTypeIcon, getEventTypeLabel } from '@/utils/eventTypes'
+  import CreateEvent from './CreateEvent.vue'
+  import CreatePlan from './CreatePlan.vue'
 
   export default {
     name: 'Event',
     components: {
+      BottomSheetModal,
+      CreateEvent,
       CreatePlan
     },
     setup() {
@@ -551,7 +595,10 @@
         error: null,
         editing: false,
         loadingPlan: false,
-        eventPlan: null
+        eventPlan: null,
+        deleteDialog: false,
+        deleting: false,
+        editDialog: false
       }
     },
     computed: {
@@ -815,7 +862,7 @@
           this.loading = true
           this.error = null
           const eventId = this.$route.params.eventId
-          this.event = await this.eventStore.getEvent(eventId, this.userStore.currentTeamId) as PublicEvent;
+          this.event = await this.eventStore.getEvent(eventId, this.userStore.currentTeamId, { recurrenceDate: this.$route.query.recurrenceDate }) as PublicEvent;
         } catch (error) {
           console.error('Error loading event:', error)
           this.error = this.$t('something_went_wrong')
@@ -865,100 +912,49 @@
           6: this.$t('events.sunday_short'),
         }
         return weekdayMap[index] || null
+      },
+      editEvent() {
+        this.editDialog = true
+      },
+      confirmDelete() {
+        this.deleteDialog = true
+      },
+      async deleteEvent() {
+        try {
+          this.deleting = true
+          const eventId = this.$route.params.eventId
+          await this.eventStore.deleteEvent(eventId)
+
+          // Navigate to calendar after successful deletion
+          this.$router.push({ name: 'Calendar' })
+        } catch (error) {
+          console.error('Error deleting event:', error)
+          // Error is handled by axios interceptor
+        } finally {
+          this.deleting = false
+          this.deleteDialog = false
+        }
+      },
+      async handleEventUpdated() {
+        this.editDialog = false
+        // Reload the event through the store action to show updated data
+        await this.loadEvent()
       }
     }
   }
 </script>
 
 <style scoped>
-.event-page {
-  min-height: 100vh;
-}
-
-.font-mono {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9em;
-}
-
-.event-hero-gradient {
-  background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
-  position: relative;
-}
-
+/* Only essential custom CSS - sticky behavior can't be done with Vuetify utilities */
 .sticky-sidebar {
   position: sticky;
   top: 20px;
 }
 
-/* Smooth transitions */
-.v-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.v-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
-}
-
-/* Better text hierarchy */
-.text-h2, .text-h3 {
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.text-h6 {
-  letter-spacing: 0.01em;
-}
-
-/* Responsive adjustments */
 @media (max-width: 960px) {
   .sticky-sidebar {
     position: relative;
     top: 0;
   }
-  .hero-title {
-    font-size: 1.375rem; /* ~22px */
-  }
-  .hero-meta {
-    font-size: 0.9rem;
-  }
-  .hero-meta-icon {
-    font-size: 18px;
-  }
-  .hero-chip {
-    transform: scale(0.92);
-  }
-  .hero-time-chip {
-    transform: scale(0.92);
-  }
-  .hero-actions .v-btn.hero-action {
-    min-height: 30px;
-    padding: 0 10px;
-  }
-  .hero-location-btn {
-    min-height: 30px;
-    padding: 0 8px;
-  }
-  .hero-location-address {
-    font-size: 0.9rem;
-  }
-}
-
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,0,0,0.3);
 }
 </style>

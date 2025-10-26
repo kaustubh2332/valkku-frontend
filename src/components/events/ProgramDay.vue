@@ -1,18 +1,17 @@
 <template>
   <div class="program-day px-1">
     <div class="py-4 py-md-8">
-      <v-row justify="center">
+      <v-row>
         <v-col
           cols="12"
-          lg="10"
-          xl="8"
+          lg="12"
+          xl="12"
         >
           <!-- No date selected state -->
           <v-card
             v-if="!date"
             class="mb-6"
             elevation="2"
-            rounded="xl"
           >
             <div class="pa-8 text-center">
               <v-icon
@@ -33,7 +32,6 @@
             <v-card
               class="mb-6"
               elevation="2"
-              rounded="xl"
             >
               <v-skeleton-loader type="article, article" />
             </v-card>
@@ -42,7 +40,7 @@
           <!-- Events List -->
           <div v-else-if="events && events.length > 0">
             <ProgramEvent
-              v-for="event in events"
+              v-for="event in events as Event[]"
               :key="event.id"
               :event="event"
             />
@@ -53,7 +51,6 @@
             v-else
             class="mb-6"
             elevation="2"
-            rounded="xl"
           >
             <div class="pa-8 text-center">
               <v-icon
@@ -75,6 +72,8 @@
 </template>
 
 <script lang="ts">
+  import type { Event } from '@/types/event'
+
   export default {
     name: 'ProgramDay',
     props: {

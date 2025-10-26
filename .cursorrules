@@ -14,10 +14,12 @@
 - Use TypeScript for script blocks: `<script lang="ts">`
 - Follow Vue 3 Options API patterns
 - Use Vuetify components and styling
+- Use minimal custom css
 - Maintain consistent indentation and formatting
 - Use self-closing tags when possible: `<v-radio />` instead of `<v-radio></v-radio>`
 - Put attributes on separate lines when there are 2 or more: `<v-card variant="outlined" class="mb-4">` becomes multiple lines
 - Use 2 spaces for indentation inside script blocks (ESLint vue/script-indent rule)
+- Do not use the bordered variant of v-cards
 
 ### Project Structure
 - Components go in `src/components/`

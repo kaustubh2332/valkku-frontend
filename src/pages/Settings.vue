@@ -78,7 +78,7 @@
     </v-card>
     <v-card-text>
       <div class="text-caption text-grey-darken-3 mb-4" style="opacity: 0.6;">
-        {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.user?.emojiClickedCount }) }}.
+        {{ $t('settings.version') }} 1.0.0. {{ $t('settings.emojiClicked', { count: userStore.user?.emojiClickedCount }) }}. {{ $t('settings.timezone', { timezone: currentTimezone }) }}.
       </div>
     </v-card-text>
   </div>
@@ -138,6 +138,9 @@
       },
       currentTeamName() {
         return this.userStore.currentTeam?.teamName || ''
+      },
+      currentTimezone() {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone
       }
     },
     watch: {

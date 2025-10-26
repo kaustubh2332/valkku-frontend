@@ -44,10 +44,13 @@
     "title": "Valkku"
   },
   "back": "Back",
+  "copy": "Copy",
   "calendar": {
     "add_event": "Add Event",
     "add_quick_event": "Add Quick Event",
     "delete_event": "Delete Event",
+    "delete_event_confirm_message": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+    "delete_event_confirm_title": "Delete Event?",
     "duplicate_event": "Duplicate Event",
     "edit_event": "Edit Event",
     "export_events": "Subscribe to calendar",
@@ -57,10 +60,15 @@
     "export_events_title": "Calendar Subscription",
     "hide_instructions": "Hide instructions",
     "show_instructions": "Show instructions",
+    "day": "Day",
     "go_to_today": "Go to Today",
+    "month": "Month",
+    "today": "Today",
     "more_options": "More options",
-    "title": "Calendar",
-    "view_event": "View Event"
+    "title": "{monthYear}",
+    "view_event": "View Event",
+    "week": "Week",
+    "year": "Year"
   },
   "callback": {
     "errorMessage": "Authentication failed. Please try again.",
@@ -142,6 +150,8 @@
     "duration_minutes": "Estimated duration (minutes)",
     "duration_range": "Duration must be between 1 and 480 minutes",
     "duration_required": "Duration is required",
+    "delete_event_confirm_message": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+    "delete_event_confirm_title": "Delete Event?",
     "edit_event": "Edit Event",
     "edit_event_plan": "Edit plan",
     "edit_locations": "Edit locations",
@@ -193,8 +203,15 @@
     "practise": "Practise",
     "repeat_hint": "Event will repeat {count} times over {period}",
     "repeat_on_weekdays": "Repeat on weekdays",
-    "repeat_until": "Repeat until",
+    "repeat_until": "Stop repeating",
     "repeats": "Repeats",
+    "repeats_forever": "Repeats forever",
+    "repeats_forever_hint": "Leave empty to repeat forever",
+    "edit_scope": "Edit Scope",
+    "edit_this_event_only": "Edit this event only",
+    "edit_all_events": "Edit all",
+    "repeat_rules_changed_warning": "Repeat rules have been changed. All events in the series will be updated.",
+    "revert_rules": "Revert",
     "saturday": "Saturday",
     "saturday_short": "Sat",
     "save": "Save",
@@ -299,7 +316,8 @@
     "no_program": "No program yet",
     "no_program_description": "Create a training program to organize your athletes' development",
     "subtitle": "Manage training programs and athlete development",
-    "title": "Program"
+    "title": "Program",
+    "today": "Today"
   },
   "required": "Required",
   "roles": {
@@ -324,6 +342,7 @@
       "title": "Change Password"
     },
     "emojiClicked": "Emoji clicked {count} times",
+    "timezone": "Timezone: {timezone}",
     "general": "General",
     "language": "Language",
     "language_updated": "Language updated",

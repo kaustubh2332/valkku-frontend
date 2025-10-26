@@ -222,6 +222,7 @@ function validateAndGetToken(userStore) {
 }
 
 // BEFORE EACH GUARD
+// eslint-disable-next-line complexity
 function beforeEachGuard(to, from, next) {
   const userStore = useUserStore()
   const user = userStore.user
@@ -266,6 +267,22 @@ function beforeEachGuard(to, from, next) {
   if(to.path === '/admin' && !user?.superAdmin) {
     next('/')
     return
+  }
+
+  const message = JSON.stringify({
+    route: to.path
+  });
+
+  try {
+    window?.ReactNativeWebView?.postMessage(message);
+  } catch(error) {
+    console.log(error)
+  }
+
+  try {
+    document?.ReactNativeWebView?.postMessage(message);
+  } catch(error) {
+    console.log(error)
   }
 
   next()

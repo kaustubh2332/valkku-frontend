@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import i18n from '@/i18n'
 import router from '@/router'
 import { useNotificationStore } from '@/stores/notification'
-import { removeCurrentRoleFromLocalStorage, removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
+import { removeCurrentRoleFromLocalStorage, removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeRefreshTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveRefreshTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
 import api from '@/utils/axios'
 import type { MinimalTeamUserRole, PublicUser } from '@/types/user'
 import type { PublicUserSelf } from '@/types/user'
@@ -19,6 +19,7 @@ interface UserState {
   batchTimer: ReturnType<typeof setTimeout> | null
   fetchInterval: ReturnType<typeof setInterval> | null
   token: string | null
+  refreshToken: string | null
 }
 
 export const useUserStore = defineStore('user', {
@@ -30,6 +31,7 @@ export const useUserStore = defineStore('user', {
     batchTimer: null,
     fetchInterval: null,
     token: null,
+    refreshToken: null,
   }),
   getters: {
     getUser: (state) => state.user,
@@ -52,6 +54,10 @@ export const useUserStore = defineStore('user', {
       this.token = token
       saveTokenToLocalStorage(token)
     },
+    setRefreshToken(refreshToken: string) {
+      this.refreshToken = refreshToken
+      saveRefreshTokenToLocalStorage(refreshToken)
+    },
     setUser(user: PublicUser) {
       this.user = user
       saveUserToLocalStorage(user)
@@ -71,9 +77,13 @@ export const useUserStore = defineStore('user', {
 
             const user = response.data.data.user
             const token = response.data.data.token
+            const refreshToken = response.data.data.refreshToken
 
             this.setUser(user)
             this.setToken(token)
+            if (refreshToken) {
+              this.setRefreshToken(refreshToken)
+            }
 
             const currentTeamId = window.localStorage.getItem('valkku:currentTeamId')
             const currentRoleString = window.localStorage.getItem('valkku:currentRole') as string;
@@ -148,6 +158,9 @@ export const useUserStore = defineStore('user', {
         api.post('/auth/signin', { email, password })
           .then((response) => {
             this.setToken(response.data.data.token)
+            if (response.data.data.refreshToken) {
+              this.setRefreshToken(response.data.data.refreshToken)
+            }
             resolve(response.data.data.token)
           })
           .catch((error) => {
@@ -189,9 +202,11 @@ export const useUserStore = defineStore('user', {
       this.currentTeamId = null
       this.currentRoleId = null
       this.token = null
+      this.refreshToken = null
 
       // Clear data from localStorage
       removeTokenFromLocalStorage()
+      removeRefreshTokenFromLocalStorage()
       removeUserFromLocalStorage()
 
       // Redirect to home page using Vue Router

@@ -46,12 +46,11 @@
                 append-inner-icon="mdi-calendar"
                 autocomplete="off"
                 density="compact"
-                hide-details="auto"
+                hide-details
                 :label="$t('events.date')"
                 v-bind="props"
                 :model-value="formattedEventDate"
                 readonly
-                :rules="eventDateRules"
                 variant="outlined"
               />
             </template>
@@ -160,7 +159,7 @@
             </template>
           </v-autocomplete>
         </v-col>
-        <v-col cols="12" md="6">
+        <!-- <v-col cols="12" md="6">
           <v-select
             density="compact"
             hide-details="auto"
@@ -171,7 +170,7 @@
             multiple
             variant="outlined"
           />
-        </v-col>
+        </v-col> -->
       </v-row>
 
       <!-- Repeats Row -->
@@ -238,16 +237,17 @@
               <v-text-field
                 append-inner-icon="mdi-calendar"
                 autocomplete="off"
+                clearable
                 density="compact"
                 hide-details="auto"
                 :hint="repeatUntilHint"
                 :label="$t('events.repeat_until')"
                 :model-value="formattedEndDate"
-                :persistent-hint="!!repeatUntilHint"
+                persistent-hint
                 v-bind="props"
                 readonly
-                :rules="repeatsUntilRules"
                 variant="outlined"
+                @click:clear="clearRepeatUntil"
               />
             </template>
             <v-date-picker
@@ -363,6 +363,46 @@
       </v-tooltip>
     </div>
 
+    <!-- Edit Scope Selection for Repeating Events -->
+    <v-row v-if="isEditing && isRepeatingEvent" class="mb-4">
+      <v-col cols="12">
+        <v-sheet class="pa-2 pl-0">
+          <v-radio-group
+            v-model="editScope"
+            :disabled="forceAllEvents"
+            hide-details
+          >
+            <v-radio
+              :label="$t('events.edit_this_event_only')"
+              value="this"
+            />
+            <v-radio
+              :label="$t('events.edit_all_events')"
+              value="all"
+            />
+          </v-radio-group>
+          <v-alert
+            v-if="forceAllEvents"
+            class="mt-2"
+            type="info"
+            variant="tonal"
+          >
+            <div class="d-flex align-center justify-space-between">
+              <span>{{ $t('events.repeat_rules_changed_warning') }}</span>
+              <v-btn
+                color="primary"
+                size="small"
+                variant="text"
+                @click="revertRepeatRules"
+              >
+                {{ $t('events.revert_rules') }}
+              </v-btn>
+            </div>
+          </v-alert>
+        </v-sheet>
+      </v-col>
+    </v-row>
+
     <div class="d-flex justify-end ga-2 mt-4">
       <v-btn variant="text" @click="cancel">{{ $t('cancel') }}</v-btn>
       <v-spacer />
@@ -457,7 +497,9 @@
         loadingLocations: false,
         showCreateLocation: false,
         locationMenuOpen: false,
-        editing: true
+        editing: true,
+        editScope: 'this',
+        originalRepeatRules: null
       }
     },
     computed: {
@@ -499,9 +541,8 @@
         ]
       },
       repeatsUntilRules() {
-        return [
-          () => (!this.event.repeats || this.event.repeats === 'never' || !!this.event.repeatsUntilDate) || this.$t('required')
-        ]
+        // No longer required - empty means repeats forever
+        return []
       },
       durationInMinutesRules() {
         return [
@@ -559,19 +600,20 @@
       repeatsUntilUnixSec() {
         // Convert YYYY-MM-DD to Unix seconds at GMT+0 midnight of the NEXT day
         // (so the selected day is fully included regardless of local timezone)
+        // If no date is set, return null (means repeats forever)
         const v = this.event.repeatsUntilDate
-        if (!v || typeof v !== 'string') return ''
+        if (!v || typeof v !== 'string') return null
         const parts = v.split('-')
-        if (parts.length !== 3) return ''
+        if (parts.length !== 3) return null
         const [yStr, mStr, dStr] = parts
         const y = Number(yStr)
         const m = Number(mStr)
         const d = Number(dStr)
-        if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return ''
+        if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null
         // UTC midnight of next day
         const ms = Date.UTC(y, m - 1, d + 1, 0, 0, 0, 0)
         const sec = Math.floor(ms / 1000)
-        return Number.isFinite(sec) ? sec : ''
+        return Number.isFinite(sec) ? sec : null
       },
       weekdaysBinary() {
         // Convert weekday array to 7-digit binary string (Monday=0, Sunday=6)
@@ -592,6 +634,11 @@
         return binary.join('')
       },
       repeatUntilHint() {
+        // Show "repeats forever" message when no end date is set
+        if (!this.event.repeatsUntilDate && this.event.repeats && this.event.repeats !== 'never') {
+          return this.$t('events.repeats_forever_hint')
+        }
+
         if (!this.event.repeatsUntilDate || !this.event.eventDate || this.event.repeats === 'never') {
           return ''
         }
@@ -804,6 +851,7 @@
           repeatsOn: this.event.repeats === 'daily' ? this.weekdaysBinary : null,
           repeatsUntilUnixSec: (this.event.repeats && this.event.repeats !== 'never') ? this.repeatsUntilUnixSec : undefined,
           locationId: this.event.locationId,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         }
 
         // For noStartAndEnd events (like self_training), only send durationInMinutes
@@ -820,9 +868,31 @@
           if (Number.isFinite(e)) payload['endTimeUnixSec'] = e
         }
         return payload
+      },
+      isRepeatingEvent() {
+        return this.isEditing && this.edit && this.edit.repeatId
+      },
+      forceAllEvents() {
+        if (!this.isRepeatingEvent || !this.originalRepeatRules) return false
+
+        // Check if any repeat rules have changed
+        return (
+          this.event.repeats !== this.originalRepeatRules.repeats ||
+          JSON.stringify(this.event.weekdays) !== JSON.stringify(this.originalRepeatRules.weekdays) ||
+          this.event.repeatsUntilDate !== this.originalRepeatRules.repeatsUntilDate
+        )
       }
     },
     watch: {
+      'event.repeats'() {
+        this.checkAndForceAllEvents()
+      },
+      'event.weekdays'() {
+        this.checkAndForceAllEvents()
+      },
+      'event.repeatsUntilDate'() {
+        this.checkAndForceAllEvents()
+      },
       edit: {
         handler(newVal) {
           if (newVal) {
@@ -857,6 +927,22 @@
           locationId: ['practise', 'match', 'meeting', 'other_event']
         }
         return this.event.eventType && (showMap[key]?.includes(this.event.eventType) || showMap[key]?.includes('all'))
+      },
+      checkAndForceAllEvents() {
+        if (this.forceAllEvents) {
+          this.editScope = 'all'
+        }
+      },
+      revertRepeatRules() {
+        if (!this.originalRepeatRules) return
+
+        // Revert to original repeat rules
+        this.event.repeats = this.originalRepeatRules.repeats
+        this.event.weekdays = [...this.originalRepeatRules.weekdays]
+        this.event.repeatsUntilDate = this.originalRepeatRules.repeatsUntilDate
+
+        // Reset edit scope to "this event only"
+        this.editScope = 'this'
       },
       initializeEventData() {
         if (!this.edit) return
@@ -946,6 +1032,13 @@
         // Set picker dates
         this.pickerDate = yyyyMmDd || ''
         this.endPickerDate = repeatsUntilDateStr
+
+        // Store original repeat rules for comparison
+        this.originalRepeatRules = {
+          repeats: this.event.repeats,
+          weekdays: [...this.event.weekdays],
+          repeatsUntilDate: this.event.repeatsUntilDate
+        }
       },
       yyyyMmDdToLocalMidnightUnixSec(v) {
         if (!v || typeof v !== 'string') return ''
@@ -1004,6 +1097,11 @@
       save(createAndPlan = false) {
         if (!this.formValid) return
 
+        // Validate eventDate
+        if (!this.event.eventDate) {
+          return
+        }
+
         // Extra guard validations mirroring backend schema
         // For noStartAndEnd events (like self_training), durationInMinutes is required
         if (this.currentEventTypeHasNoStartAndEnd) {
@@ -1026,18 +1124,19 @@
           }
         }
 
-        if (this.finalEvent.repeats === 'weekly' && (!Array.isArray(this.event.weekdays) || this.event.weekdays.length === 0)) {
+        if (this.finalEvent.repeats === 'daily' && (!Array.isArray(this.event.weekdays) || this.event.weekdays.length === 0)) {
           return
         }
-        if (this.finalEvent.repeats && this.finalEvent.repeats !== 'never' && !this.event.repeatsUntilDate) {
-          return
-        }
+        // repeatsUntilDate is now optional - empty means repeats forever
 
         this.saving = true
 
         // Choose the appropriate save method based on edit mode
         const savePromise = this.isEditing
-          ? this.eventStore.updateEvent(this.edit.id, this.finalEvent)
+          ? this.eventStore.updateEvent(this.edit.id, this.finalEvent, {
+            recurrenceDate: this.finalEvent.eventDate,
+            editScope: this.editScope
+          })
           : this.eventStore.saveEvent(this.finalEvent)
 
         savePromise
@@ -1228,6 +1327,10 @@
         this.event.repeatsUntilDate = `${yyyy}-${mm}-${dd}`
         this.endPickerDate = `${yyyy}-${mm}-${dd}`
         this.endDateMenu = false
+      },
+      clearRepeatUntil() {
+        this.event.repeatsUntilDate = ''
+        this.endPickerDate = ''
       },
       isRecurringDate(date) {
         if (!this.recurringDates || this.recurringDates.length === 0) {

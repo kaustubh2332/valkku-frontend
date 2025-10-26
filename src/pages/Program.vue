@@ -1,58 +1,89 @@
 <template>
   <div class="program-page">
+    <div class="text-h4 mt-4 mb-2">
+      {{ $t('program.title') }}
+    </div>
     <!-- Sticky Header -->
     <div class="sticky-header">
-      <div class="py-4 py-md-8">
-        <v-row justify="center">
+      <div class="py-4 py-md-6">
+        <v-row>
           <v-col
             cols="12"
-            lg="10"
-            xl="8"
+            lg="12"
+            md="12"
+            xl="12"
           >
             <!-- Calendar-like header -->
-            <v-card
-              elevation="3"
-              rounded="xl"
-            >
-              <v-toolbar class="px-2 px-md-4 pt-1" flat>
-                <v-btn icon="mdi-chevron-left" variant="text" @click="goPrevWeek" />
-                <v-toolbar-title class="text-subtitle-1 text-medium-emphasis">
-                  {{ monthLabel }}
-                </v-toolbar-title>
-                <v-spacer />
-                <v-btn icon="mdi-chevron-right" variant="text" @click="goNextWeek" />
-                <v-btn icon="mdi-dots-vertical" variant="text" />
-              </v-toolbar>
-              <div class="px-4 px-md-6 pb-4 pt-2 d-flex justify-space-between align-center">
-                <div
-                  v-for="d in weekDays"
-                  :key="d.iso"
-                  class="text-center"
-                  style="cursor: pointer;"
-                  @click="selectDate(d.date)"
-                  @mouseenter="onDayHover(d.iso)"
-                >
-                  <div class="text-caption text-medium-emphasis mb-1">
-                    {{ d.weekdayShort }}
-                  </div>
-                  <v-badge
-                    color="success"
-                    dot
-                    location="bottom end"
-                    :model-value="d.hasDot"
-                    offset-x="2"
-                    offset-y="2"
-                  >
-                    <v-avatar
-                      :color="selectedDate && isSameDay(d.date, selectedDate) ? 'primary' : undefined"
-                      size="36"
-                      :variant="selectedDate && isSameDay(d.date, selectedDate) ? 'tonal' : 'outlined'"
+            <v-card elevation="2">
+              <v-card-text class="pa-4 pa-md-6">
+                <!-- Month Navigation -->
+                <div class="d-flex align-center justify-space-between mb-4">
+                  <div class="d-flex align-center ga-2">
+                    <v-btn
+                      icon="mdi-chevron-left"
+                      size="small"
+                      variant="text"
+                      @click="goPrevWeek"
+                    />
+                    <v-btn
+                      color="primary"
+                      prepend-icon="mdi-calendar-today"
+                      size="small"
+                      variant="text"
+                      @click="goToToday"
                     >
-                      <span class="text-body-2">{{ d.day }}</span>
-                    </v-avatar>
-                  </v-badge>
+                      {{ $t('program.today') }}
+                    </v-btn>
+                  </div>
+                  <h3 class="text-h6 text-center flex-grow-1">
+                    {{ monthLabel }}
+                  </h3>
+                  <v-btn
+                    icon="mdi-chevron-right"
+                    size="small"
+                    variant="text"
+                    @click="goNextWeek"
+                  />
                 </div>
-              </div>
+
+                <!-- Week Days -->
+                <div class="d-flex justify-space-between align-center">
+                  <v-hover
+                    v-for="d in weekDays"
+                    :key="d.iso"
+                    v-slot="{ isHovering, props }"
+                  >
+                    <div
+                      v-bind="props"
+                      class="text-center day-item"
+                      @click="selectDate(d.date)"
+                      @mouseenter="onDayHover(d.iso)"
+                    >
+                      <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
+                        {{ d.weekdayShort }}
+                      </div>
+                      <v-badge
+                        color="success"
+                        dot
+                        location="bottom end"
+                        :model-value="d.hasDot"
+                        offset-x="2"
+                        offset-y="2"
+                      >
+                        <v-avatar
+                          :class="{ 'today-highlight': d.isToday && (!selectedDate || !isSameDay(d.date, selectedDate)) }"
+                          :color="selectedDate && isSameDay(d.date, selectedDate) ? 'primary' : undefined"
+                          :elevation="isHovering ? 4 : 0"
+                          :size="$vuetify.display.xs ? 32 : 44"
+                          :variant="selectedDate && isSameDay(d.date, selectedDate) ? 'flat' : 'outlined'"
+                        >
+                          <span :class="$vuetify.display.xs ? 'text-body-2 font-weight-medium' : 'text-body-1 font-weight-medium'">{{ d.day }}</span>
+                        </v-avatar>
+                      </v-badge>
+                    </div>
+                  </v-hover>
+                </div>
+              </v-card-text>
             </v-card>
           </v-col>
         </v-row>
@@ -60,23 +91,26 @@
     </div>
 
     <!-- Swipeable Content -->
-    <div class="swipe-container">
-      <!-- DateSwipePager with per-day page components -->
-      <DateSwipePager
-        :key="pagerKey"
-        :current-date="selectedDate"
-        :prefetched-data="prefetchedByIso"
-        @date-change="onSwipeDateChange"
-      >
-        <template #page="{ date, events, loading: pageLoading }">
-          <ProgramDay
-            :date="date"
-            :events="events"
-            :loading="pageLoading"
-          />
-        </template>
-      </DateSwipePager>
-    </div>
+    <v-row class="swipe-container">
+      <v-col cols="12">
+        <!-- DateSwipePager with per-day page components -->
+        <!-- Use swipeDate for smoother transitions, selectedDate for header -->
+        <DateSwipePager
+          :key="pagerKey"
+          :current-date="swipeDate || selectedDate"
+          :prefetched-data="prefetchedByIso"
+          @date-change="onSwipeDateChange"
+        >
+          <template #page="{ date, events, loading: pageLoading }">
+            <ProgramDay
+              :date="date"
+              :events="events"
+              :loading="pageLoading"
+            />
+          </template>
+        </DateSwipePager>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -96,6 +130,7 @@
       return {
         weekReferenceDate: today,
         selectedDate: today as Date | null,
+        swipeDate: null as Date | null, // Separate state for DateSwipePager to prevent flash
         dayEvents: [] as any[],
         prefetchedByIso: {} as Record<string, any[]>,
         weekEventsByIso: {} as Record<string, number>,
@@ -113,6 +148,8 @@
       },
       weekDays(): Array<any> {
         const start = this.getStartOfWeek(this.weekReferenceDate)
+        const today = new Date()
+        const todayIso = this.toIso(today)
         const days: any[] = []
         for (let i = 0; i < 7; i++) {
           const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
@@ -127,7 +164,8 @@
             iso,
             weekdayShort,
             day: d.getDate(),
-            hasDot: Boolean(this.weekEventsByIso[iso])
+            hasDot: Boolean(this.weekEventsByIso[iso]),
+            isToday: iso === todayIso
           })
         }
         return days
@@ -254,6 +292,29 @@
         this.weekReferenceDate = d
         await this.fetchWeekEvents()
       },
+      async goToToday() {
+        const today = new Date()
+        this.selectedDate = today
+        this.weekReferenceDate = today
+        const iso = this.toIso(today)
+
+        if (this.$router && this.$route) {
+          this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
+        }
+
+        // Reset pager to center on today
+        this.pagerKey++
+
+        // Fetch data if not cached
+        if (!this.prefetchedByIso[iso]) {
+          await this.fetchDayEvents()
+        }
+
+        await this.fetchWeekEvents()
+
+        // Prefetch adjacent days for smooth swiping
+        this.prefetchAdjacentDays(today)
+      },
       async fetchWeekEvents() {
         try {
           const teamId = this.userStore.currentTeamId
@@ -317,22 +378,61 @@
       // Swipe functionality
       async onSwipeDateChange(newDate: Date) {
         if (!this.isSameDay(newDate, this.selectedDate || new Date())) {
+          // Ensure data exists for the new date AND its adjacent dates
+          // This prevents any flash during the transition
+          const datesToEnsure = [
+            new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate() - 1), // prev
+            newDate, // current
+            new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate() + 1)  // next
+          ]
+
+          const updates = {}
+          const fetchPromises = []
+
+          for (const date of datesToEnsure) {
+            const dateIso = this.toIso(date)
+            if (!(dateIso in this.prefetchedByIso)) {
+              // Initialize with empty array to prevent loading state
+              updates[dateIso] = []
+
+              // Fetch actual data immediately and wait for it
+              const fetchPromise = api.get(`/event/team/${this.userStore.currentTeamId}`, { params: { date: dateIso, withPlans: true } })
+                .then(res => {
+                  this.prefetchedByIso = { ...this.prefetchedByIso, [dateIso]: res?.data?.data || [] }
+                })
+                .catch(() => {
+                  // Keep empty array on error
+                  this.prefetchedByIso = { ...this.prefetchedByIso, [dateIso]: [] }
+                })
+              fetchPromises.push(fetchPromise)
+            }
+          }
+
+          // Apply all updates at once for better performance
+          if (Object.keys(updates).length > 0) {
+            this.prefetchedByIso = { ...this.prefetchedByIso, ...updates }
+          }
+
+          // Wait for the current date's data to be fetched before updating
+          const currentDateIso = this.toIso(newDate)
+          if (fetchPromises.length > 0) {
+            await Promise.all(fetchPromises)
+          }
+
+          // Only update dates AFTER data is available
           this.selectedDate = newDate
           this.weekReferenceDate = newDate
+          this.swipeDate = newDate
 
           const iso = this.toIso(newDate)
           if (this.$router && this.$route) {
             this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
           }
 
-          // Fetch data if not cached
-          if (!this.prefetchedByIso[iso]) {
-            await this.fetchDayEvents()
-          }
+          // Update week view asynchronously
+          this.fetchWeekEvents()
 
-          await this.fetchWeekEvents()
-
-          // Prefetch adjacent days for smooth swiping
+          // Continue prefetching more adjacent days for smooth swiping
           this.prefetchAdjacentDays(newDate)
         }
       }
@@ -341,32 +441,38 @@
 </script>
 
 <style scoped>
+/* Page layout with scrolling logic */
 .program-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* Sticky header for navigation */
 .sticky-header {
   position: sticky;
   top: 0;
   z-index: 10;
   background: white;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
+/* Swipe container */
 .swipe-container {
-  /* Let pager grow with content; page already full-height */
   flex: none;
 }
 
-/* Smooth transitions */
-.v-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Day item cursor */
+.day-item {
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.v-card:hover {
+.day-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Highlight today's date */
+.today-highlight {
+  border: 2px solid rgb(var(--v-theme-primary)) !important;
 }
 </style>

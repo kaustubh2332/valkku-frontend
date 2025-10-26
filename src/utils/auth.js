@@ -127,11 +127,41 @@ export function saveTokenToLocalStorage(token) {
   }
 }
 
+export function saveRefreshTokenToLocalStorage(refreshToken) {
+  if(!refreshToken) {
+    return
+  }
+
+  try {
+    localStorage.setItem('valkku:refreshToken', refreshToken)
+  } catch (error) {
+    console.error('Failed to save refresh token to localStorage:', error)
+  }
+}
+
+export function getRefreshTokenFromLocalStorage() {
+  try {
+    const refreshToken = localStorage.getItem('valkku:refreshToken')
+    return refreshToken
+  } catch (error) {
+    console.error('Failed to fetch refresh token from localStorage:', error)
+    return null
+  }
+}
+
 export function removeTokenFromLocalStorage() {
   try {
     localStorage.removeItem('valkku:accessToken')
   } catch (error) {
     console.error('Failed to remove token from localStorage:', error)
+  }
+}
+
+export function removeRefreshTokenFromLocalStorage() {
+  try {
+    localStorage.removeItem('valkku:refreshToken')
+  } catch (error) {
+    console.error('Failed to remove refresh token from localStorage:', error)
   }
 }
 
