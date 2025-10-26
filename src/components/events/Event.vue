@@ -532,6 +532,7 @@
     <v-dialog
       v-model="deleteDialog"
       max-width="500"
+      :z-index="deleteDialogZIndex"
     >
       <v-card>
         <v-card-title class="text-h6">
@@ -811,6 +812,10 @@
         } catch {
           return null
         }
+      },
+      deleteDialogZIndex(): number {
+        // Ensure delete dialog overlays the bottom sheet when embedded on mobile
+        return this.embedded ? 40000 : 2000
       }
     },
     async created() {

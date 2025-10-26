@@ -38,6 +38,7 @@
 
 <script lang="ts">
   import { useUserStore } from '@/stores/user'
+  import { triggerHaptic } from '@/utils/nativeBridge'
 
   export default {
     name: 'MobileBottomNav',
@@ -57,17 +58,17 @@
             name: 'Home',
             icon: 'mdi-home-outline',
             title: this.$t('sidebar.home')
-          }
+          },
+          {
+            name: 'Program',
+            icon: 'mdi-clipboard-text',
+            title: this.$t('sidebar.program')
+          },
         ]
 
         // Only show these items if user is authenticated
         if (this.isAuthenticated) {
           items.push(
-            {
-              name: 'Calendar',
-              icon: 'mdi-calendar-outline',
-              title: this.$t('sidebar.calendar')
-            },
             {
               name: 'Users',
               icon: 'mdi-account-group-outline',
@@ -86,7 +87,10 @@
     },
     watch: {
       '$route.name': {
-        handler(newRouteName) {
+        handler(newRouteName, oldRouteName) {
+          if (oldRouteName != null && newRouteName !== oldRouteName) {
+            triggerHaptic('light')
+          }
           this.activeTab = newRouteName
         },
         immediate: true
