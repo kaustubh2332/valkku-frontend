@@ -3,29 +3,23 @@
     <div id="confetti-trigger" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 20050;" />
 
     <div class="hero-section mb-6 mb-md-8">
-      <div class="d-flex align-center justify-space-between flex-wrap ga-4">
-        <div>
-          <div class="text-h3 text-md-h2 font-weight-bold mb-2">
-            {{ greeting }}, {{ userStore.firstName }}!
-            <BigEmoji />
-          </div>
-          <div v-if="userStore.currentTeam" class="text-subtitle-1 text-medium-emphasis">
-            {{ userStore.currentTeam.teamName }}
-          </div>
-        </div>
+      <div class="mb-4">
+        <h1 class="text-h3 mb-2 d-flex align-center">
+          {{ greeting }}, {{ userStore.firstName }}!
+          <BigEmoji />
+        </h1>
 
-        <!-- Quick Action Buttons (Staff Only) -->
-        <div v-if="userStore.isStaff" class="d-flex ga-2 flex-wrap">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            size="large"
-            variant="elevated"
-            @click="openCreateEvent"
-          >
-            {{ $t('home.addEvent') }}
-          </v-btn>
-        </div>
+        <!-- Add Event Button (Staff Only) -->
+        <v-btn
+          v-if="userStore.isStaff"
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="large"
+          variant="elevated"
+          @click="openCreateEvent"
+        >
+          {{ $t('home.addEvent') }}
+        </v-btn>
       </div>
     </div>
 
@@ -347,18 +341,6 @@
 .hero-section {
   padding: 1.5rem 0;
   animation: fadeInDown 0.6s ease-out;
-}
-
-.hero-section .text-h3,
-.hero-section .text-h2 {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  background: linear-gradient(135deg, rgb(var(--v-theme-primary)) 0%, rgb(var(--v-theme-secondary)) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Card Enhancements */
