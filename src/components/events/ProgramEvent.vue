@@ -102,13 +102,13 @@
     components: {
       CreatePlan
     },
-    emits: ['open-event'],
     props: {
       event: {
         type: Object,
         required: true
       }
     },
+    emits: ['open-event'],
     setup() {
       const eventStore = useEventStore()
       return { eventStore }

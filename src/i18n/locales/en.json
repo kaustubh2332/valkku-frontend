@@ -253,11 +253,17 @@
   "home": {
     "addEvent": "Add event",
     "addEventOwn": "Add practise",
+    "comingSoon": "Coming soon",
     "goodAfternoon": "Afternoon",
     "goodEvening": "Evening",
     "goodMorning": "Morning",
     "goodNight": "Evening",
+    "noEventsNextMonth": "No events in the next month",
+    "tasks": "Tasks",
     "team": "Team",
+    "thisWeek": "This week",
+    "upcomingEvents": "Upcoming events",
+    "viewAll": "View all",
     "welcome": "Welcome"
   },
   "join": {
@@ -313,6 +319,7 @@
     "add_program": "Add Program",
     "create_first_program": "Create Your First Program",
     "current_program": "Current Program",
+    "no_events_today": "No events for this day",
     "no_program": "No program yet",
     "no_program_description": "Create a training program to organize your athletes' development",
     "subtitle": "Manage training programs and athlete development",

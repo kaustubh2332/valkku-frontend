@@ -253,11 +253,17 @@
   "home": {
     "addEvent": "Lisää tapahtuma",
     "addEventOwn": "Lisää treeni",
+    "comingSoon": "Tulossa pian",
     "goodAfternoon": "Päivää",
     "goodEvening": "Iltaa",
     "goodMorning": "Huomenta",
     "goodNight": "Iltaa",
+    "noEventsNextMonth": "Ei tapahtumia seuraavan kuukauden aikana",
+    "tasks": "Tehtävät",
     "team": "Joukkue",
+    "thisWeek": "Tämä viikko",
+    "upcomingEvents": "Tulevat tapahtumat",
+    "viewAll": "Näytä kaikki",
     "welcome": "Tervetuloa"
   },
   "join": {
@@ -313,6 +319,7 @@
     "add_program": "Lisää ohjelma",
     "create_first_program": "Luo ensimmäinen ohjelmasi",
     "current_program": "Nykyinen ohjelma",
+    "no_events_today": "Ei tapahtumia tälle päivälle",
     "no_program": "Ei ohjelmaa vielä",
     "no_program_description": "Luo harjoitusohjelma urheilijoidesi kehityksen organisointiin",
     "subtitle": "Hallinnoi harjoitusohjelmia ja urheilijoiden kehitystä",

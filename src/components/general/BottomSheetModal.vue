@@ -260,12 +260,10 @@
           setTimeout(() => { this.isAnimating = true }, 10)
         })
       },
-
       animateToPosition(targetY) {
         // Use CSS transition for smoother animation
         this.translateY = targetY
       },
-
       handleTouchStart(event) {
         if (!this.$vuetify.display.mobile) return
 
@@ -282,7 +280,6 @@
         event.preventDefault()
         event.stopPropagation()
       },
-
       handleTouchMove(event) {
         if (!this.isDragging || !this.$vuetify.display.mobile) return
 
@@ -336,13 +333,6 @@
           this.translateY = 0
         }
       },
-
-      calculateVelocity() {
-        // Simple velocity calculation based on recent movement
-        // In a real implementation, you'd track velocity over time
-        return 0 // Placeholder - would need touch history tracking
-      },
-
       getModalHeight() {
         const screenHeight = window.innerHeight
         let modalHeight
@@ -361,9 +351,6 @@
 
         return modalHeight
       },
-
-
-
       close() {
         this.isClosing = true
         if (this.$vuetify.display.mobile) {

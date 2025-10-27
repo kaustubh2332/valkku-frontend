@@ -25,103 +25,99 @@
       </v-btn>
     </v-card-title>
 
-    <div v-if="loading" class="pa-4 text-center">
-      <v-progress-circular indeterminate />
-    </div>
+    <v-data-table
+      class="mb-4"
+      density="comfortable"
+      :headers="headers"
+      item-key="id"
+      :items="filteredItems"
+      :items-per-page="50"
+      :loading="loading"
+    >
+      <template #loading>
+        <div class="pa-4 text-center">
+          <v-progress-circular indeterminate />
+        </div>
+      </template>
 
-    <!-- Empty State -->
-    <div v-else-if="items.length === 0" class="empty-state">
-      <v-icon color="grey-lighten-1" size="64">mdi-shape-outline</v-icon>
-      <div class="text-h6 mt-4 text-grey-darken-1">
-        {{ $t('admin.noTypesYet') }}
-      </div>
-      <div class="text-body-2 text-grey mt-2">
-        {{ $t('admin.noTypesDescription') }}
-      </div>
-      <v-btn
-        class="mt-4"
-        color="primary"
-        variant="tonal"
-        @click="openCreateDialog"
-      >
-        <v-icon class="mr-2">mdi-plus</v-icon>
-        {{ $t('admin.createFirstType') }}
-      </v-btn>
-    </div>
-
-    <div v-else class="custom-table">
-      <!-- Table Header -->
-      <div class="table-header">
-        <div class="header-cell drag-column" />
-        <div class="header-cell title-column">{{ $t('admin.typeName') }}</div>
-        <div class="header-cell color-column">{{ $t('admin.color') }}</div>
-        <div class="header-cell actions-column">{{ $t('common.actions') }}</div>
-      </div>
-
-      <!-- Draggable Table Body -->
-      <draggable
-        :animation="150"
-        chosen-class="drag-chosen"
-        class="table-body"
-        drag-class="drag-dragging"
-        ghost-class="drag-ghost"
-        handle=".drag-handle"
-        item-key="id"
-        :model-value="items"
-        @end="onDragEnd"
-        @update:model-value="onItemsUpdate"
-      >
-        <template #item="{ element }">
-          <div
-            v-if="showArchived ? true : !element.archived"
-            class="table-row"
-            :class="{ 'archived': element.archived }"
-          >
-            <div class="table-cell drag-column justify-center">
-              <v-icon class="drag-handle">mdi-drag</v-icon>
-            </div>
-            <div class="table-cell title-column">
-              <div v-if="admin" class="d-flex flex-column">
-                <div class="d-flex align-center">
-                  <span class="mr-2 text-caption">EN:</span>
-                  <span>{{ element.titleObject?.en || 'N/A' }}</span>
-                </div>
-                <div class="d-flex align-center">
-                  <span class="mr-2 text-caption">FI:</span>
-                  <span>{{ element.titleObject?.fi || 'N/A' }}</span>
-                </div>
-              </div>
-              <div v-else>
-                {{ getLocalizedTitle(element.titleObject || {}) }}
-              </div>
-            </div>
-            <div class="table-cell color-column justify-center">
-              <div
-                class="color-preview"
-                :style="{ backgroundColor: element.color, width: '24px', height: '24px', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.1)' }"
-              />
-            </div>
-            <div class="table-cell actions-column">
-              <v-btn
-                v-tooltip:top="{ text: $t('common.edit'), zIndex: dropdownZIndex }"
-                icon="mdi-pencil"
-                size="small"
-                variant="text"
-                @click="editType(element)"
-              />
-              <v-btn
-                v-tooltip:top="{ text: $t('common.archive'), zIndex: dropdownZIndex }"
-                :color="element.archived ? 'success' : 'warning'"
-                :icon="element.archived ? 'mdi-archive-arrow-up' : 'mdi-archive'"
-                size="small"
-                variant="text"
-                @click="toggleArchive(element)"
-              />
-            </div>
+      <template #no-data>
+        <div class="pa-8 text-center">
+          <v-icon color="grey-lighten-1" size="64">mdi-shape-outline</v-icon>
+          <div class="text-h6 mt-4 text-grey-darken-1">
+            {{ $t('admin.noTypesYet') }}
           </div>
-        </template>
-      </draggable>
-    </div>
+          <div class="text-body-2 text-grey mt-2">
+            {{ $t('admin.noTypesDescription') }}
+          </div>
+          <v-btn
+            class="mt-4"
+            color="primary"
+            variant="tonal"
+            @click="openCreateDialog"
+          >
+            <v-icon class="mr-2">mdi-plus</v-icon>
+            {{ $t('admin.createFirstType') }}
+          </v-btn>
+        </div>
+      </template>
+
+      <template #item.position="{ index }">
+        <div class="d-flex align-center">
+          <v-btn
+            :disabled="index === 0"
+            icon="mdi-arrow-up"
+            size="small"
+            variant="text"
+            @click="moveUpByIndex(index)"
+          />
+          <v-btn
+            :disabled="index === filteredItems.length - 1"
+            icon="mdi-arrow-down"
+            size="small"
+            variant="text"
+            @click="moveDownByIndex(index)"
+          />
+        </div>
+      </template>
+
+      <template #item.title="{ item }">
+        <div v-if="admin" class="d-flex flex-column">
+          <div class="d-flex align-center">
+            <span class="mr-2 text-caption">EN:</span>
+            <span>{{ (item as any).titleObject?.en || 'N/A' }}</span>
+          </div>
+          <div class="d-flex align-center">
+            <span class="mr-2 text-caption">FI:</span>
+            <span>{{ (item as any).titleObject?.fi || 'N/A' }}</span>
+          </div>
+        </div>
+        <div v-else>
+          {{ getLocalizedTitle((item as any).titleObject || {}) }}
+        </div>
+      </template>
+
+      <template #item.color="{ item }">
+        <v-avatar :color="(item as any).color" size="24" />
+      </template>
+
+      <template #item.actions="{ item }">
+        <v-btn
+          v-tooltip:top="{ text: $t('common.edit'), zIndex: dropdownZIndex }"
+          icon="mdi-pencil"
+          size="small"
+          variant="text"
+          @click="editType(item as any)"
+        />
+        <v-btn
+          v-tooltip:top="{ text: $t('common.archive'), zIndex: dropdownZIndex }"
+          :color="(item as any).archived ? 'success' : 'warning'"
+          :icon="(item as any).archived ? 'mdi-archive-arrow-up' : 'mdi-archive'"
+          size="small"
+          variant="text"
+          @click="toggleArchive(item as any)"
+        />
+      </template>
+    </v-data-table>
 
     <BottomSheetModal
       v-model="dialog"
@@ -140,7 +136,6 @@
 
 <script lang="ts">
   import { useI18n } from 'vue-i18n'
-  import draggable from 'vuedraggable'
   import { useZIndex } from '@/composables/useZIndex'
   import { useNotificationStore } from '@/stores/notification'
   import { useUserStore } from '@/stores/user'
@@ -148,9 +143,7 @@
 
   export default {
     name: 'PlanPartsTable',
-    components: {
-      draggable
-    },
+    components: {},
     props: {
       loading: {
         type: Boolean,
@@ -192,6 +185,14 @@
       }
     },
     computed: {
+      headers() {
+        return [
+          { title: '', key: 'position', sortable: false, width: 96 },
+          { title: this.$t('admin.typeName') as any, key: 'title' },
+          { title: this.$t('admin.color') as any, key: 'color', sortable: false, width: 100 },
+          { title: this.$t('common.actions') as any, key: 'actions', sortable: false, width: 140 }
+        ]
+      },
       dropdownZIndex() {
         const { dropdownZIndex } = useZIndex()
         return dropdownZIndex.value
@@ -335,33 +336,35 @@
         // Try current locale first, then English, then Finnish, then any available value
         return titleObject[this.locale] || titleObject.en || titleObject.fi || Object.values(titleObject)[0] || ''
       },
-      moveUp(item) {
-        const currentIndex = this.eventPlanPartTypes.indexOf(item)
-        if (currentIndex > 0) {
-          // Swap with the item above
-          const newItems = [...this.eventPlanPartTypes]
-          const temp = newItems[currentIndex]
-          newItems[currentIndex] = newItems[currentIndex - 1]
-          newItems[currentIndex - 1] = temp
-          this.eventPlanPartTypes = newItems
-
-          // Update positions in backend
-          this.updatePositions()
-        }
+      moveUpByIndex(filteredIndex) {
+        if (filteredIndex <= 0) return
+        const filtered = this.filteredItems
+        const currentItem = filtered[filteredIndex]
+        const previousItem = filtered[filteredIndex - 1]
+        const list = [...this.items]
+        const i = list.findIndex(it => it.id === currentItem.id)
+        const j = list.findIndex(it => it.id === previousItem.id)
+        if (i === -1 || j === -1) return
+        const tmp = list[i]
+        list[i] = list[j]
+        list[j] = tmp
+        this.$emit('update:items', list)
+        this.updatePositions()
       },
-      moveDown(item) {
-        const currentIndex = this.eventPlanPartTypes.indexOf(item)
-        if (currentIndex < this.eventPlanPartTypes.length - 1) {
-          // Swap with the item below
-          const newItems = [...this.eventPlanPartTypes]
-          const temp = newItems[currentIndex]
-          newItems[currentIndex] = newItems[currentIndex + 1]
-          newItems[currentIndex + 1] = temp
-          this.eventPlanPartTypes = newItems
-
-          // Update positions in backend
-          this.updatePositions()
-        }
+      moveDownByIndex(filteredIndex) {
+        const filtered = this.filteredItems
+        if (filteredIndex >= filtered.length - 1) return
+        const currentItem = filtered[filteredIndex]
+        const nextItem = filtered[filteredIndex + 1]
+        const list = [...this.items]
+        const i = list.findIndex(it => it.id === currentItem.id)
+        const j = list.findIndex(it => it.id === nextItem.id)
+        if (i === -1 || j === -1) return
+        const tmp = list[i]
+        list[i] = list[j]
+        list[j] = tmp
+        this.$emit('update:items', list)
+        this.updatePositions()
       },
       async updatePositions() {
         try {
@@ -381,134 +384,8 @@
           this.notificationStore.handleBackendError(error)
         }
       },
-      onItemsUpdate(newItems) {
-        // Update the items array when dragging
-        this.$emit('update:items', [...newItems])
-      },
-      onDragEnd() {
-        // Optimistically update positions without showing loading
-        this.updatePositions()
-      }
+      onItemsUpdate() {},
+      onDragEnd() {}
     }
   }
 </script>
-
-<style scoped>
-.custom-table {
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 4px;
-  overflow: hidden;
-  width: 100%;
-}
-
-.table-header {
-  display: flex;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid rgba(0,0,0,0.12);
-  font-weight: 500;
-}
-
-.header-cell {
-  padding: 12px 16px;
-  border-right: 1px solid rgba(0,0,0,0.12);
-  display: flex;
-  align-items: center;
-}
-
-.header-cell:last-child {
-  border-right: none;
-}
-
-.drag-column {
-  width: 60px;
-  text-align: center;
-  justify-content: center;
-}
-
-.title-column {
-  flex: 1;
-  min-width: 200px;
-}
-
-.color-column {
-  width: 100px;
-  text-align: center;
-  justify-content: center;
-}
-
-.actions-column {
-  width: 140px;
-  text-align: center;
-  justify-content: center;
-}
-
-.table-body {
-  background-color: white;
-}
-
-.table-row {
-  display: flex;
-  border-bottom: 1px solid rgba(0,0,0,0.12);
-  transition: background-color 0.2s;
-}
-
-.table-row:hover {
-  background-color: #fafafa;
-}
-
-.table-row.archived {
-  opacity: 0.6;
-  background-color: #f9f9f9;
-}
-
-.table-row:last-child {
-  border-bottom: none;
-}
-
-.table-cell {
-  padding: 12px 16px;
-  border-right: 1px solid rgba(0,0,0,0.12);
-  display: flex;
-  align-items: center;
-}
-
-.table-cell:last-child {
-  border-right: none;
-}
-
-.drag-handle {
-  cursor: grab;
-  color: #666;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-.color-preview {
-  flex-shrink: 0;
-}
-
-.drag-chosen {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-.drag-dragging {
-  cursor: grabbing;
-  opacity: 0.8;
-}
-
-.drag-ghost {
-  opacity: 0.3;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 32px;
-  text-align: center;
-  min-height: 300px;
-}
-</style>

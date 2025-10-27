@@ -14,6 +14,8 @@ interface UserState {
   currentRole: {
     role: ROLES
     guardianOf?: string
+    guardianOfEmail?: string
+    guardianOfFullName?: string
   } | null
   pendingClickCount: number
   batchTimer: ReturnType<typeof setTimeout> | null
@@ -63,14 +65,28 @@ export const useUserStore = defineStore('user', {
       saveUserToLocalStorage(user)
     },
     fetchUser(periodic: boolean = false) {
+      console.log('[UserStore] fetchUser called, periodic:', periodic)
       return new Promise((resolve, reject) => {
         if(!this.token) {
+          console.log('[UserStore] No token available, returning early')
           return
         }
 
-        api.get(`/user/me${periodic ? '?periodic=true' : ''}`)
+        console.log('[UserStore] Making API call to /user/me')
+        const endpoint = `/user/me${periodic ? '?periodic=true' : ''}`
+        console.log('[UserStore] Endpoint:', endpoint)
+
+        api.get(endpoint)
           .then((response) => {
+            console.log('[UserStore] API response received:', {
+              hasResponse: !!response,
+              hasData: !!response?.data,
+              success: response?.data?.success,
+              hasDataData: !!response?.data?.data
+            })
+
             if(!response ||!response.data || !response.data.success || !response.data.data) {
+              console.error('[UserStore] Invalid response format:', response)
               reject(new Error('Invalid response format from user endpoint'))
               return
             }
@@ -79,76 +95,129 @@ export const useUserStore = defineStore('user', {
             const token = response.data.data.token
             const refreshToken = response.data.data.refreshToken
 
+            console.log('[UserStore] User data received:', {
+              userId: user?.id,
+              email: user?.email,
+              teamsCount: user?.teams?.length,
+              hasToken: !!token,
+              hasRefreshToken: !!refreshToken
+            })
+
             this.setUser(user)
             this.setToken(token)
             if (refreshToken) {
+              console.log('[UserStore] Setting refresh token')
               this.setRefreshToken(refreshToken)
             }
 
             const currentTeamId = window.localStorage.getItem('valkku:currentTeamId')
             const currentRoleString = window.localStorage.getItem('valkku:currentRole') as string;
             const currentRoleFull = currentRoleString ? JSON.parse(currentRoleString) as any : null;
-            const currentRole = currentRoleFull ? { role: currentRoleFull.role, guardianOf: currentRoleFull.guardianOf } : null;
+            const currentRole = currentRoleFull ? {
+              role: currentRoleFull.role,
+              guardianOf: currentRoleFull.guardianOf,
+              guardianOfEmail: currentRoleFull.guardianOfEmail,
+              guardianOfFullName: currentRoleFull.guardianOfFullName
+            } : null;
+
+            console.log('[UserStore] LocalStorage values:', {
+              currentTeamId,
+              currentRole,
+              userTeams: this.user!.teams.map(t => ({ teamId: t.teamId, name: t.teamName }))
+            })
 
             if (currentTeamId) {
+              console.log('[UserStore] Found stored team ID:', currentTeamId)
               let team = this.user!.teams.find(team => team.teamId === currentTeamId)
               if(team) {
+                console.log('[UserStore] Team found in user teams:', team.teamName)
                 this.setCurrentTeam(currentTeamId)
 
                 // Check if the stored currentRole exists in this team's roles
                 if (currentRole) {
-                  const hasRole = team.roles?.some(role => role.role === currentRole)
+                  console.log('[UserStore] Checking stored role:', currentRole)
+                  const hasRole = team.roles?.some(role => role.role === currentRole.role && role.guardianOf === currentRole.guardianOf)
                   if (hasRole) {
+                    console.log('[UserStore] Stored role exists in team, setting it')
                     this.setCurrentRole(currentRole)
                   } else {
+                    console.log('[UserStore] Stored role not found in team, using first available role:', team.roles?.[0])
                     // Role doesn't exist in this team, use first available role
                     this.setCurrentRole(team.roles?.[0] || null)
                   }
                 } else {
+                  console.log('[UserStore] No stored role, using first available role:', team.roles?.[0])
                   // No stored role, use first available role
                   this.setCurrentRole(team.roles?.[0] || null)
                 }
               } else {
+                console.log('[UserStore] Stored team not found in user teams, using first team')
                 // Stored team doesn't exist, use first team
                 team = this.user!.teams[0]
+                console.log('[UserStore] First team:', team?.teamName)
                 this.setCurrentTeam(team.teamId)
                 this.setCurrentRole(team.roles?.[0] || null)
               }
             } else if(this.user!.teams && this.user!.teams.length > 0) {
+              console.log('[UserStore] No stored team, using first team from user')
               const firstTeam = this.user!.teams[0]
+              console.log('[UserStore] First team:', firstTeam.teamName, 'roles:', firstTeam.roles)
               if (firstTeam.roles && firstTeam.roles.length > 0) {
                 this.setCurrentTeam(firstTeam.teamId)
                 this.setCurrentRole(firstTeam.roles[0] || null)
               } else {
+                console.log('[UserStore] First team has no roles')
                 this.setCurrentTeam(firstTeam.teamId)
               }
+            } else {
+              console.log('[UserStore] User has no teams')
             }
 
             if(this.user && this.user?.preferredLanguage && this.user?.preferredLanguage !== i18n.global.locale.value) {
+              console.log('[UserStore] Changing locale from', i18n.global.locale.value, 'to', this.user?.preferredLanguage)
               this.changeLocale(this.user?.preferredLanguage)
               window.localStorage.setItem('valkku:locale', this.user?.preferredLanguage)
+            } else {
+              console.log('[UserStore] Locale unchanged:', i18n.global.locale.value)
             }
 
+            console.log('[UserStore] Final state:', {
+              currentTeamId: this.currentTeamId,
+              currentRole: this.currentRole,
+              locale: i18n.global.locale.value
+            })
 
+            console.log('[UserStore] fetchUser completed successfully')
             resolve(user)
           })
           .catch((error) => {
-            console.error('Failed to fetch user:', error)
-            console.log(JSON.stringify(error.message))
+            console.error('[UserStore] Failed to fetch user:', error)
+            console.error('[UserStore] Error details:', {
+              message: error.message,
+              response: error.response?.data,
+              status: error.response?.status,
+              stack: error.stack
+            })
+            console.log('[UserStore] Error message JSON:', JSON.stringify(error.message))
 
             if(error.message.includes('Unexpected token')) {
+              console.log('[UserStore] Unexpected token error, finishing logout')
               this.finishLogout()
               return
             }
 
             // Notification
             if(periodic) {
+              console.log('[UserStore] Periodic fetch, not showing notification')
               return
             }
             if(this.token) {
+              console.log('[UserStore] Showing error notification')
               const notiStore = useNotificationStore()
               notiStore.handleBackendError(error)
               reject(error)
+            } else {
+              console.log('[UserStore] No token, not showing notification')
             }
           })
       })
@@ -258,8 +327,13 @@ export const useUserStore = defineStore('user', {
       window.localStorage.setItem('valkku:currentTeamId', teamId)
     },
 
-    setCurrentRole(role: MinimalTeamUserRole | null) {
-      let setRole = { role: role?.role, guardianOf: role?.guardianOf }
+    setCurrentRole(role: any | null) {
+      let setRole = {
+        role: role?.role,
+        guardianOf: role?.guardianOf,
+        guardianOfEmail: role?.guardianOfEmail,
+        guardianOfFullName: role?.guardianOfFullName
+      }
       if(setRole?.role !== 'guardian' && role?.guardianOf) {
         throw new Error('GuardianOf is not allowed for non-guardian roles')
       }

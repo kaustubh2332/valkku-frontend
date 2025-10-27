@@ -1,10 +1,10 @@
 <template>
   <div class="program-page">
-    <div class="text-h4 mt-4 mb-2">
+    <div v-if="!embedded" class="text-h4 mt-4 mb-2">
       {{ $t('program.title') }}
     </div>
     <!-- Sticky Header -->
-    <div class="sticky-header">
+    <div :class="{ 'sticky-header': !embedded }">
       <div class="py-4 py-md-6">
         <v-row>
           <v-col
@@ -16,73 +16,21 @@
             <!-- Calendar-like header -->
             <v-card elevation="2">
               <v-card-text class="pa-4 pa-md-6">
-                <!-- Month Navigation -->
-                <div class="d-flex align-center justify-space-between mb-4">
-                  <div class="d-flex align-center ga-2">
-                    <v-btn
-                      icon="mdi-chevron-left"
-                      size="small"
-                      variant="text"
-                      @click="goPrevWeek"
-                    />
-                    <v-btn
-                      color="primary"
-                      prepend-icon="mdi-calendar-today"
-                      size="small"
-                      variant="text"
-                      @click="goToToday"
-                    >
-                      {{ $t('program.today') }}
-                    </v-btn>
-                  </div>
-                  <h3 class="text-h6 text-center flex-grow-1">
-                    {{ monthLabel }}
-                  </h3>
-                  <v-btn
-                    icon="mdi-chevron-right"
-                    size="small"
-                    variant="text"
-                    @click="goNextWeek"
-                  />
-                </div>
-
-                <!-- Week Days -->
-                <div class="d-flex justify-space-between align-center">
-                  <v-hover
-                    v-for="d in weekDays"
-                    :key="d.iso"
-                    v-slot="{ isHovering, props }"
-                  >
-                    <div
-                      v-bind="props"
-                      class="text-center day-item"
-                      @click="selectDate(d.date)"
-                      @mouseenter="onDayHover(d.iso)"
-                    >
-                      <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
-                        {{ d.weekdayShort }}
-                      </div>
-                      <v-badge
-                        color="success"
-                        dot
-                        location="bottom end"
-                        :model-value="d.hasDot"
-                        offset-x="2"
-                        offset-y="2"
-                      >
-                        <v-avatar
-                          :class="{ 'today-highlight': d.isToday && (!selectedDate || !isSameDay(d.date, selectedDate)) }"
-                          :color="selectedDate && isSameDay(d.date, selectedDate) ? 'primary' : undefined"
-                          :elevation="isHovering ? 4 : 0"
-                          :size="$vuetify.display.xs ? 32 : 44"
-                          :variant="selectedDate && isSameDay(d.date, selectedDate) ? 'flat' : 'outlined'"
-                        >
-                          <span :class="$vuetify.display.xs ? 'text-body-2 font-weight-medium' : 'text-body-1 font-weight-medium'">{{ d.day }}</span>
-                        </v-avatar>
-                      </v-badge>
-                    </div>
-                  </v-hover>
-                </div>
+                <WeekView
+                  :avatar-elevation="0"
+                  :avatar-hover-elevation="4"
+                  :avatar-size="$vuetify.display.xs ? 32 : 44"
+                  avatar-text-class="text-body-2 font-weight-medium text-md-body-1"
+                  :selected-date="selectedDate"
+                  show-navigation
+                  :week-events-by-iso="weekEventsByIso"
+                  :week-reference-date="weekReferenceDate"
+                  @date-selected="selectDate"
+                  @day-hover="onDayHover"
+                  @go-today="goToToday"
+                  @next-week="goNextWeek"
+                  @prev-week="goPrevWeek"
+                />
               </v-card-text>
             </v-card>
           </v-col>
@@ -134,11 +82,18 @@
   import { useUserStore } from '@/stores/user'
   import api from '@/utils/axios'
   import Event from '@/components/events/Event.vue'
+  import WeekView from '@/components/program/WeekView.vue'
   import BottomSheetModal from '@/components/general/BottomSheetModal.vue'
 
   export default {
     name: 'Program',
-    components: { Event, BottomSheetModal },
+    components: { Event, WeekView, BottomSheetModal },
+    props: {
+      embedded: {
+        type: Boolean,
+        default: false
+      }
+    },
     setup() {
       const userStore = useUserStore()
       return { userStore }
@@ -161,38 +116,7 @@
         openedRecurrenceDate: '' as string
       }
     },
-    computed: {
-
-      monthLabel(): string {
-        const d = this.weekReferenceDate
-        const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
-        return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(d)
-      },
-      weekDays(): Array<any> {
-        const start = this.getStartOfWeek(this.weekReferenceDate)
-        const today = new Date()
-        const todayIso = this.toIso(today)
-        const days: any[] = []
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
-          const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
-          const weekdayShort = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(d)
-          const year = d.getFullYear()
-          const month = String(d.getMonth() + 1).padStart(2, '0')
-          const day = String(d.getDate()).padStart(2, '0')
-          const iso = `${year}-${month}-${day}`
-          days.push({
-            date: d,
-            iso,
-            weekdayShort,
-            day: d.getDate(),
-            hasDot: Boolean(this.weekEventsByIso[iso]),
-            isToday: iso === todayIso
-          })
-        }
-        return days
-      }
-    },
+    computed: {},
     async mounted() {
       const qd = (this.$route && this.$route.query && this.$route.query.date) ? String(this.$route.query.date) : undefined
       if (qd && /^\d{4}-\d{2}-\d{2}$/.test(qd)) {
@@ -252,8 +176,10 @@
         this.weekReferenceDate = date
         const iso = this.toIso(date)
 
-        if (this.$router && this.$route) {
-          this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
+        if (!this.embedded) {
+          if (this.$router && this.$route) {
+            this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
+          }
         }
 
         // Reset pager to center on this date
@@ -338,8 +264,10 @@
         this.weekReferenceDate = today
         const iso = this.toIso(today)
 
-        if (this.$router && this.$route) {
-          this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
+        if (!this.embedded) {
+          if (this.$router && this.$route) {
+            this.$router.replace({ path: this.$route.path, query: { ...this.$route.query, date: iso } }).catch(() => {})
+          }
         }
 
         // Reset pager to center on today
@@ -420,6 +348,13 @@
           const isMobile = !!this.$vuetify.display.mobile
           const eventId = String(event?.id)
           const recurrenceDate = event?.eventDate ? String((event?.eventDate as any).toString().split('T')[0]) : undefined
+          if (this.embedded) {
+            // Embedded: open modal in-place, do not navigate/replace route
+            this.openedEventId = eventId
+            this.openedRecurrenceDate = recurrenceDate || ''
+            this.eventDetailsModal = true
+            return
+          }
           if (isMobile) {
             const newQuery: any = { ...this.$route.query, openEvent: eventId }
             if (recurrenceDate) newQuery.recurrenceDate = recurrenceDate
@@ -435,6 +370,7 @@
       },
       syncEventModalFromRoute() {
         try {
+          if (this.embedded) return
           if (!this.$vuetify.display.mobile) return
           const id = this.$route?.query?.openEvent as any
           console.log('[Program] syncEventModalFromRoute - openEvent:', id, 'modal open:', this.eventDetailsModal)
@@ -459,16 +395,17 @@
         // Clear local state
         this.openedEventId = null
         this.openedRecurrenceDate = ''
-
-        // Reset route - preserve only the date parameter if it exists
-        const currentQuery = this.$route.query as any
-        const newQuery: any = currentQuery.date ? { date: currentQuery.date } : {}
-        console.log('[Program] Replacing route with query:', JSON.stringify(newQuery))
-        this.$router.replace({ name: 'Program', query: newQuery }).then(() => {
-          console.log('[Program] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
-        }).catch((err) => {
-          console.log('[Program] Route replace error:', err)
-        })
+        if (!this.embedded) {
+          // Reset route - preserve only the date parameter if it exists
+          const currentQuery = this.$route.query as any
+          const newQuery: any = currentQuery.date ? { date: currentQuery.date } : {}
+          console.log('[Program] Replacing route with query:', JSON.stringify(newQuery))
+          this.$router.replace({ name: 'Program', query: newQuery }).then(() => {
+            console.log('[Program] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
+          }).catch((err) => {
+            console.log('[Program] Route replace error:', err)
+          })
+        }
       },
       // Swipe functionality
       async onSwipeDateChange(newDate: Date) {

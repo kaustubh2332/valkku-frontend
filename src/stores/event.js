@@ -180,6 +180,42 @@ export const useEventStore = defineStore('event', {
             this.loadingEvents = false
           })
       })
+    },
+    fetchEventsForRange(startDate, endDate) {
+      return new Promise((resolve, reject) => {
+        const userStore = useUserStore()
+        if (!userStore.currentTeamId) {
+          reject(new Error('No team selected'))
+          return
+        }
+
+        this.loadingEvents = true
+
+        // Format dates as YYYY-MM-DD
+        const formatYMD = (date) => {
+          const d = new Date(date)
+          const year = d.getFullYear()
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const day = String(d.getDate()).padStart(2, '0')
+          return `${year}-${month}-${day}`
+        }
+
+        const startDateStr = formatYMD(startDate)
+        const endDateStr = formatYMD(endDate)
+
+        api.get(`/event/team/${userStore.currentTeamId}`, {
+          params: { startDate: startDateStr, endDate: endDateStr }
+        })
+          .then((response) => {
+            resolve(response.data.data)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+          .finally(() => {
+            this.loadingEvents = false
+          })
+      })
     }
   }
 })

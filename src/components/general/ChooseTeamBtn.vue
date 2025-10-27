@@ -172,7 +172,7 @@
         try {
           // Update user store with new current team and role
           this.userStore.setCurrentTeam(team.teamId)
-          this.userStore.setCurrentRole({ role: role.role, guardianOf: role.guardianOf })
+          this.userStore.setCurrentRole(role)
           if(this.main) {
             this.info(`${this.$t('chooseTeam.success')}: ${team.teamName} (${this.$t(`roles.${role.role}`)})`)
           }

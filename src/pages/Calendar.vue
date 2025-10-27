@@ -82,6 +82,7 @@
             <v-list-item-title>{{ $t('calendar.view_event') }}</v-list-item-title>
           </v-list-item>
           <v-list-item
+            v-if="userStore.isStaff"
             prepend-icon="mdi-pencil"
             @click="editEvent"
           >
@@ -94,8 +95,9 @@
           >
             <v-list-item-title>{{ $t('calendar.duplicate_event') }}</v-list-item-title>
           </v-list-item> -->
-          <v-divider />
+          <v-divider v-if="userStore.isStaff" />
           <v-list-item
+            v-if="userStore.isStaff"
             class="text-error"
             prepend-icon="mdi-delete"
             @click="deleteEvent"
@@ -254,7 +256,7 @@
       },
       // URL query parameters for calendar state
       urlView() {
-        return this.$route.query.view || 'dayGridMonth'
+        return this.$route.query.view || (this.$vuetify.display.mobile ? 'timeGridWeek' : 'dayGridMonth')
       },
       urlDate() {
         return this.$route.query.date || new Date().toISOString().split('T')[0]
@@ -515,14 +517,9 @@
           }
         }, 500)
 
-        const startDateStr = this.formatYMD(startDate)
-        const endDateStr = this.formatYMD(endDate)
-
-        api.get(`/event/team/${this.userStore.currentTeamId}`, {
-          params: { startDate: startDateStr, endDate: endDateStr }
-        })
-          .then((res) => {
-            const list = res?.data?.data || []
+        // Use the event store method
+        this.eventStore.fetchEventsForRange(startDate, endDate)
+          .then((list) => {
             this.events = Array.isArray(list) ? list.map((e) => this.mapBackendEventToCalendar(e)) : []
 
             // Inject into FullCalendar
@@ -927,8 +924,8 @@
         console.log('[Calendar] Replacing route with query:', JSON.stringify(newQuery))
         this.$router.replace({ name: 'Calendar', query: newQuery }).then(() => {
           console.log('[Calendar] Route replaced successfully, new query:', JSON.stringify(this.$route.query))
-        }).catch((err) => {
-          console.log('[Calendar] Route replace error:', err)
+        }).catch((error) => {
+          console.log('[Calendar] Route replace error:', error)
         })
       },
       updateCalendarDate() {

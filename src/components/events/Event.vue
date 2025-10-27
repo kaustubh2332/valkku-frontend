@@ -510,8 +510,8 @@
                   @save="handlePlanSaved"
                 />
 
-                <!-- Edit Plan Button at Bottom -->
-                <div v-if="!editing" class="mt-4 d-flex justify-end">
+                <!-- Edit Plan Button at Bottom (Staff Only) -->
+                <div v-if="!editing && userStore.isStaff" class="mt-4 d-flex justify-end">
                   <v-btn
                     color="primary"
                     size="small"

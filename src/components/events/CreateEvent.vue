@@ -335,7 +335,7 @@
         </div>
       </div>
       <v-spacer />
-      <v-tooltip v-if="!editing" location="bottom" :z-index="dropdownZIndex">
+      <v-tooltip v-if="!editing && userStore.isStaff" location="bottom" :z-index="dropdownZIndex">
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
@@ -348,7 +348,7 @@
         </template>
         {{ $t('events.edit_event_plan') }}
       </v-tooltip>
-      <v-tooltip v-else location="bottom" :z-index="dropdownZIndex">
+      <v-tooltip v-else-if="editing && userStore.isStaff" location="bottom" :z-index="dropdownZIndex">
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
@@ -466,9 +466,8 @@
     setup() {
       const eventStore = useEventStore()
       const userStore = useUserStore()
-      const currentRoleId = userStore.currentRoleId
       const notificationStore = useNotificationStore()
-      return { eventStore, userStore, currentRoleId, notificationStore }
+      return { eventStore, userStore, notificationStore }
     },
     data() {
       return {
@@ -1064,14 +1063,14 @@
       },
       decodeWeekdaysFromBinary(binaryStr) {
         // binaryStr: 7 chars, Monday-first. '1' means included.
-        // Returns array of JS weekday numbers: Sun=0, Mon=1, ... Sat=6
+        // Returns array of JS weekday numbers: Mon=0, Tue=1, ... Sat=5, Sun=6
         if (!binaryStr || binaryStr.length !== 7) return []
         const result = []
         for (let i = 0; i < 7; i++) {
           const char = binaryStr[i]
           if (char === '1') {
             // Map position to weekday value
-            // positions 0..5 -> 1..6 (Mon..Sat), position 6 -> 0 (Sun)
+            // positions 0..5 -> 0..5 (Mon..Sat), position 6 -> 7 (Sun)
             const value = i === 6 ? 0 : i + 1
             result.push(value)
           }

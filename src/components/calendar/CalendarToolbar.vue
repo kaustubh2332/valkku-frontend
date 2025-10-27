@@ -40,20 +40,20 @@
           {{ $t('calendar.year') }}
         </v-btn>
         <v-btn
-          value="dayGridMonth"
           size="small"
+          value="dayGridMonth"
         >
           {{ $t('calendar.month') }}
         </v-btn>
         <v-btn
-          value="timeGridWeek"
           size="small"
+          value="timeGridWeek"
         >
           {{ $t('calendar.week') }}
         </v-btn>
         <v-btn
-          value="timeGridDay"
           size="small"
+          value="timeGridDay"
         >
           {{ $t('calendar.day') }}
         </v-btn>
@@ -61,8 +61,8 @@
 
       <v-menu
         v-model="menu.show"
-        location="bottom end"
         class="ml-2"
+        location="bottom end"
       >
         <template #activator="{ props }">
           <v-btn
