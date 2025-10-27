@@ -1410,6 +1410,4 @@
     border: 2px solid #1565c0 !important;
     box-shadow: 0 0 0 1px #1565c0 !important;
   }
-
-
 </style>

@@ -815,7 +815,7 @@
       },
       deleteDialogZIndex(): number {
         // Ensure delete dialog overlays the bottom sheet when embedded on mobile
-        return this.embedded ? 40000 : 2000
+        return this.embedded ? 40_000 : 2000
       }
     },
     async created() {
