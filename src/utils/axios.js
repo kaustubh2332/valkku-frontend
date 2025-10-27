@@ -32,24 +32,15 @@ async function refreshAccessToken(suppressLogoutOnFail = false) {
       let lastError
       for (let attempt = 1; attempt <= MAX_REFRESH_RETRIES; attempt++) {
         try {
-          // Get refresh token from localStorage
-          const refreshToken = window.localStorage.getItem('valkku:refreshToken')
-          if (!refreshToken) {
-            throw new Error('No refresh token available')
-          }
-
-          const res = await api.post('/auth/refresh', { refreshToken })
+          // Refresh token is sent automatically via HTTP-only cookie
+          const res = await api.post('/auth/refresh')
           const newToken = res?.data?.token
-          const newRefreshToken = res?.data?.refreshToken
 
           if (!newToken) {
             throw new Error('No access token in refresh response')
           }
 
           userStore.setToken(newToken)
-          if (newRefreshToken) {
-            userStore.setRefreshToken(newRefreshToken)
-          }
 
           return newToken
         } catch (error) {

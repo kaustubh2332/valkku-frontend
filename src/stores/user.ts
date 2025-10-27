@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import i18n from '@/i18n'
 import router from '@/router'
 import { useNotificationStore } from '@/stores/notification'
-import { removeCurrentRoleFromLocalStorage, removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeRefreshTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveRefreshTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
+import { removeCurrentRoleFromLocalStorage, removeCurrentTeamFromLocalStorage, removeTokenFromLocalStorage, removeUserFromLocalStorage, saveTokenToLocalStorage, saveUserToLocalStorage } from '@/utils/auth'
 import api from '@/utils/axios'
-import type { MinimalTeamUserRole, PublicUser } from '@/types/user'
+
+import type { PublicUser } from '@/types/user'
 import type { PublicUserSelf } from '@/types/user'
 import type { ROLES } from '@/types/team'
 
@@ -21,7 +22,6 @@ interface UserState {
   batchTimer: ReturnType<typeof setTimeout> | null
   fetchInterval: ReturnType<typeof setInterval> | null
   token: string | null
-  refreshToken: string | null
 }
 
 export const useUserStore = defineStore('user', {
@@ -33,7 +33,6 @@ export const useUserStore = defineStore('user', {
     batchTimer: null,
     fetchInterval: null,
     token: null,
-    refreshToken: null,
   }),
   getters: {
     getUser: (state) => state.user,
@@ -56,10 +55,6 @@ export const useUserStore = defineStore('user', {
       this.token = token
       saveTokenToLocalStorage(token)
     },
-    setRefreshToken(refreshToken: string) {
-      this.refreshToken = refreshToken
-      saveRefreshTokenToLocalStorage(refreshToken)
-    },
     setUser(user: PublicUser) {
       this.user = user
       saveUserToLocalStorage(user)
@@ -72,43 +67,20 @@ export const useUserStore = defineStore('user', {
           return
         }
 
-        console.log('[UserStore] Making API call to /user/me')
         const endpoint = `/user/me${periodic ? '?periodic=true' : ''}`
-        console.log('[UserStore] Endpoint:', endpoint)
 
         api.get(endpoint)
           .then((response) => {
-            console.log('[UserStore] API response received:', {
-              hasResponse: !!response,
-              hasData: !!response?.data,
-              success: response?.data?.success,
-              hasDataData: !!response?.data?.data
-            })
-
             if(!response ||!response.data || !response.data.success || !response.data.data) {
-              console.error('[UserStore] Invalid response format:', response)
               reject(new Error('Invalid response format from user endpoint'))
               return
             }
 
             const user = response.data.data.user
             const token = response.data.data.token
-            const refreshToken = response.data.data.refreshToken
-
-            console.log('[UserStore] User data received:', {
-              userId: user?.id,
-              email: user?.email,
-              teamsCount: user?.teams?.length,
-              hasToken: !!token,
-              hasRefreshToken: !!refreshToken
-            })
 
             this.setUser(user)
             this.setToken(token)
-            if (refreshToken) {
-              console.log('[UserStore] Setting refresh token')
-              this.setRefreshToken(refreshToken)
-            }
 
             const currentTeamId = window.localStorage.getItem('valkku:currentTeamId')
             const currentRoleString = window.localStorage.getItem('valkku:currentRole') as string;
@@ -119,12 +91,6 @@ export const useUserStore = defineStore('user', {
               guardianOfEmail: currentRoleFull.guardianOfEmail,
               guardianOfFullName: currentRoleFull.guardianOfFullName
             } : null;
-
-            console.log('[UserStore] LocalStorage values:', {
-              currentTeamId,
-              currentRole,
-              userTeams: this.user!.teams.map(t => ({ teamId: t.teamId, name: t.teamName }))
-            })
 
             if (currentTeamId) {
               console.log('[UserStore] Found stored team ID:', currentTeamId)
@@ -138,30 +104,23 @@ export const useUserStore = defineStore('user', {
                   console.log('[UserStore] Checking stored role:', currentRole)
                   const hasRole = team.roles?.some(role => role.role === currentRole.role && role.guardianOf === currentRole.guardianOf)
                   if (hasRole) {
-                    console.log('[UserStore] Stored role exists in team, setting it')
                     this.setCurrentRole(currentRole)
                   } else {
-                    console.log('[UserStore] Stored role not found in team, using first available role:', team.roles?.[0])
                     // Role doesn't exist in this team, use first available role
                     this.setCurrentRole(team.roles?.[0] || null)
                   }
                 } else {
-                  console.log('[UserStore] No stored role, using first available role:', team.roles?.[0])
                   // No stored role, use first available role
                   this.setCurrentRole(team.roles?.[0] || null)
                 }
               } else {
-                console.log('[UserStore] Stored team not found in user teams, using first team')
                 // Stored team doesn't exist, use first team
                 team = this.user!.teams[0]
-                console.log('[UserStore] First team:', team?.teamName)
                 this.setCurrentTeam(team.teamId)
                 this.setCurrentRole(team.roles?.[0] || null)
               }
             } else if(this.user!.teams && this.user!.teams.length > 0) {
-              console.log('[UserStore] No stored team, using first team from user')
               const firstTeam = this.user!.teams[0]
-              console.log('[UserStore] First team:', firstTeam.teamName, 'roles:', firstTeam.roles)
               if (firstTeam.roles && firstTeam.roles.length > 0) {
                 this.setCurrentTeam(firstTeam.teamId)
                 this.setCurrentRole(firstTeam.roles[0] || null)
@@ -227,9 +186,7 @@ export const useUserStore = defineStore('user', {
         api.post('/auth/signin', { email, password })
           .then((response) => {
             this.setToken(response.data.data.token)
-            if (response.data.data.refreshToken) {
-              this.setRefreshToken(response.data.data.refreshToken)
-            }
+            // Refresh token is now handled via HTTP-only cookie
             resolve(response.data.data.token)
           })
           .catch((error) => {
@@ -271,12 +228,11 @@ export const useUserStore = defineStore('user', {
       this.currentTeamId = null
       this.currentRoleId = null
       this.token = null
-      this.refreshToken = null
 
       // Clear data from localStorage
       removeTokenFromLocalStorage()
-      removeRefreshTokenFromLocalStorage()
       removeUserFromLocalStorage()
+      // Refresh token is cleared via HTTP-only cookie by the backend
 
       // Redirect to home page using Vue Router
       if(expired) {
