@@ -92,7 +92,7 @@ export const useUserStore = defineStore('user', {
               guardianOfFullName: currentRoleFull.guardianOfFullName
             } : null;
 
-            if (currentTeamId) {
+            if (currentTeamId && this.user!.teams?.length > 0) {
               console.log('[UserStore] Found stored team ID:', currentTeamId)
               let team = this.user!.teams.find(team => team.teamId === currentTeamId)
               if(team) {
@@ -113,13 +113,13 @@ export const useUserStore = defineStore('user', {
                   // No stored role, use first available role
                   this.setCurrentRole(team.roles?.[0] || null)
                 }
-              } else {
+              } else if (this.user!.teams.length > 0) {
                 // Stored team doesn't exist, use first team
                 team = this.user!.teams[0]
                 this.setCurrentTeam(team.teamId)
                 this.setCurrentRole(team.roles?.[0] || null)
               }
-            } else if(this.user!.teams && this.user!.teams.length > 0) {
+            } else if(this.user!.teams?.length > 0) {
               const firstTeam = this.user!.teams[0]
               if (firstTeam.roles && firstTeam.roles.length > 0) {
                 this.setCurrentTeam(firstTeam.teamId)
@@ -226,7 +226,7 @@ export const useUserStore = defineStore('user', {
       // Clear user data from store
       this.user = null
       this.currentTeamId = null
-      this.currentRoleId = null
+      this.currentRole = null
       this.token = null
 
       // Clear data from localStorage

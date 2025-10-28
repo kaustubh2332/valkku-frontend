@@ -475,7 +475,6 @@
 <style scoped>
 /* Page layout with scrolling logic */
 .program-page {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }

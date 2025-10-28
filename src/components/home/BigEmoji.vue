@@ -20,7 +20,7 @@
       >
         {{ currentEmoji }}
       </div>
-      <div id="emoji-trigger" style="position: absolute; bottom: -10px; left: 0; height: 10px; width: 10px; transform: translate(-50%, -50%);" />
+      <div id="emoji-trigger" style="z-index: 9999999; position: absolute; bottom: -10px; left: 0; height: 10px; width: 10px; transform: translate(-50%, -50%);" />
     </div>
   </div>
 </template>
@@ -129,7 +129,6 @@
           elementSize: 30,
           emoji: [this.currentEmoji], // Use the current emoji
           lifetime: 200,
-          zIndex: 9_999_999
         }
 
         const { reward } = this.$reward('emoji-trigger', 'emoji', config)

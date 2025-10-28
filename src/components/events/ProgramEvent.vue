@@ -33,18 +33,6 @@
       <!-- Event metadata -->
       <div class="d-flex flex-wrap ga-3 text-body-2 text-medium-emphasis">
         <div
-          v-if="event.durationInMinutes"
-          class="d-flex align-center"
-        >
-          <v-icon
-            class="mr-1"
-            size="small"
-          >
-            mdi-clock-outline
-          </v-icon>
-          {{ event.durationInMinutes }} {{ $t('events.minutes') }}
-        </div>
-        <div
           v-if="eventDate"
           class="d-flex align-center"
         >
@@ -57,16 +45,16 @@
           {{ eventDate }}
         </div>
         <div
-          v-if="eventTime"
+          v-if="timeDisplay"
           class="d-flex align-center"
         >
           <v-icon
             class="mr-1"
             size="small"
           >
-            mdi-clock
+            mdi-clock-outline
           </v-icon>
-          {{ eventTime }}
+          {{ timeDisplay }}
         </div>
       </div>
     </div>
@@ -125,7 +113,21 @@
       },
       eventDate(): string {
         if (!this.event.eventDate) return ''
+
         const date = new Date(this.event.eventDate)
+        if (Number.isNaN(date.getTime())) return ''
+
+        // Relative labels for today/tomorrow
+        const now = new Date()
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+        const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+        const isToday = startOfDay.getTime() === startOfToday.getTime()
+        const isTomorrow = startOfDay.getTime() === startOfTomorrow.getTime()
+        if (isToday) return this.$t('events.today')
+        if (isTomorrow) return this.$t('events.tomorrow')
+
         const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
         return new Intl.DateTimeFormat(locale, {
           weekday: 'long',
@@ -134,14 +136,52 @@
           day: 'numeric'
         }).format(date)
       },
-      eventTime(): string {
-        if (!this.event.startTimeUnixSec) return ''
-        const date = new Date(this.event.startTimeUnixSec * 1000)
-        const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
-        return new Intl.DateTimeFormat(locale, {
-          hour: '2-digit',
-          minute: '2-digit'
-        }).format(date)
+      formattedStartTime(): string | null {
+        if (!this.event?.startTimeUnixSec) return null
+
+        try {
+          const date = new Date(this.event.startTimeUnixSec * 1000)
+          if (Number.isNaN(date.getTime())) return null
+
+          const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
+          return new Intl.DateTimeFormat(locale, {
+            hour: '2-digit',
+            minute: '2-digit'
+          }).format(date)
+        } catch {
+          return null
+        }
+      },
+      formattedEndTime(): string | null {
+        if (!this.event?.endTimeUnixSec) return null
+
+        try {
+          const date = new Date(this.event.endTimeUnixSec * 1000)
+          if (Number.isNaN(date.getTime())) return null
+
+          const locale = this.$i18n?.locale === 'fi' ? 'fi-FI' : 'en-US'
+          return new Intl.DateTimeFormat(locale, {
+            hour: '2-digit',
+            minute: '2-digit'
+          }).format(date)
+        } catch {
+          return null
+        }
+      },
+      timeDisplay(): string {
+        // If explicit duration is provided, show that
+        if (this.event?.durationInMinutes && Number(this.event.durationInMinutes) > 0) {
+          return `${this.event.durationInMinutes} ${this.$t('events.minutes')}`
+        }
+        // Otherwise, show start-end if both available
+        if (this.formattedStartTime && this.formattedEndTime) {
+          return `${this.formattedStartTime} – ${this.formattedEndTime}`
+        }
+        // Show just start time if that's all we have
+        if (this.formattedStartTime) {
+          return this.formattedStartTime
+        }
+        return ''
       }
     },
     methods: {
