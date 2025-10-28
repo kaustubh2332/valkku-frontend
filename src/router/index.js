@@ -41,6 +41,26 @@ const routes = [
     component: SignIn
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    meta: {
+      hideSidebar: true,
+      allowWithoutAuth: true,
+      disallowWithAuth: true
+    },
+    component: () => import('@/pages/ForgotPassword.vue')
+  },
+  {
+    path: '/reset-password/:hashedToken',
+    name: 'ResetPassword',
+    meta: {
+      hideSidebar: true,
+      allowWithoutAuth: true,
+      disallowWithAuth: true
+    },
+    component: () => import('@/pages/ResetPassword.vue')
+  },
+  {
     path: '/join',
     name: 'Join',
     meta: {

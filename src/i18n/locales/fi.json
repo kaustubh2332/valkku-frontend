@@ -302,12 +302,36 @@
       "password_min_length": "Salasanan tulee olla vähintään 6 merkkiä",
       "password_required": "Salasana on pakollinen"
     },
+    "forgotPassword": "Unohditko salasanan?",
     "noAccount": "Eikö sinulla ole tiliä? Rekisteröidy",
     "password": "Salasana",
     "sessionExpired": "Istunto vanhentunut",
     "sessionExpiredDescription": "Istuntosi on vanhentunut. Kirjaudu sisään uudelleen jatkaaksesi.",
     "submit": "Kirjaudu sisään",
     "title": "Kirjaudu"
+  },
+  "forgotPassword": {
+    "title": "Unohditko salasanasi?",
+    "description": "Ei hätää. Syötä sähköpostiosoitteesi alla ja lähetämme sinulle linkin salasanan vaihtamiseen.",
+    "successMessage": "Linkki lähetetty sähköpostiin",
+    "submit": "Lähetä linkki",
+    "backToLogin": "Takaisin"
+  },
+  "resetPassword": {
+    "title": "Vaihda salasana",
+    "description": "Syötä uusi salasanasi alle.",
+    "verifying": "Tarkistetaan nollauslinkkiä...",
+    "newPassword": "Uusi salasana",
+    "confirmPassword": "Vahvista salasana",
+    "submit": "Vaihda salasana",
+    "successMessage": "Salasanasi on vaihdettu onnistuneesti!",
+    "backToLogin": "Takaisin kirjautumiseen",
+    "goToLogin": "Siirry kirjautumaan",
+    "errors": {
+      "confirmPasswordRequired": "Vahvista salasanasi",
+      "passwordsDoNotMatch": "Salasanat eivät täsmää",
+      "invalidToken": "Tämä salasanan nollauslinkki on virheellinen tai vanhentunut. Pyydä uusi linkki."
+    }
   },
   "logout": "Kirjaudu ulos",
   "optional": "valinnainen",

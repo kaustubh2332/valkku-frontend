@@ -302,12 +302,36 @@
       "password_min_length": "Password must be at least 6 characters",
       "password_required": "Password is required"
     },
+    "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account? Sign up",
     "password": "Password",
     "sessionExpired": "Session Expired",
     "sessionExpiredDescription": "Your session has expired. Please sign in again to continue.",
     "submit": "Sign In",
     "title": "Sign in"
+  },
+  "forgotPassword": {
+    "title": "Forgot your password?",
+    "description": "No problem. Just enter your email address below and we'll send you a link to reset your password.",
+    "successMessage": "Link sent to email",
+    "submit": "Send link",
+    "backToLogin": "Back"
+  },
+  "resetPassword": {
+    "title": "Reset Password",
+    "description": "Enter your new password below.",
+    "verifying": "Verifying reset link...",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Reset Password",
+    "successMessage": "Your password has been successfully reset!",
+    "backToLogin": "Back to Sign In",
+    "goToLogin": "Go to Sign In",
+    "errors": {
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "invalidToken": "This password reset link is invalid or has expired. Please request a new one."
+    }
   },
   "logout": "Log out",
   "optional": "optional",

@@ -96,13 +96,24 @@
         <v-text-field
           v-model="password"
           autocomplete="current-password"
-          class="mb-6"
+          class="mb-2"
           :label="$t('login.password')"
           required
           :rules="passwordRules"
           type="password"
           variant="outlined"
         />
+
+        <div class="text-right mb-4">
+          <v-btn
+            color="primary"
+            size="small"
+            variant="text"
+            @click="goToForgotPassword"
+          >
+            {{ $t('login.forgotPassword') }}
+          </v-btn>
+        </div>
 
         <v-btn
           block
@@ -185,6 +196,9 @@
       },
       goToRegister() {
         this.$router.push('/signup')
+      },
+      goToForgotPassword() {
+        this.$router.push('/forgot-password')
       },
       async setLocale(locale: string) {
         await this.userStore.changeLocale(locale)

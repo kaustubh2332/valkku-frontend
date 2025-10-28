@@ -134,5 +134,13 @@ export const backendMessages = {
   "user_already_invited": {
     "en": "User is already invited - check your email",
     "fi": "Käyttäjä on jo kutsuttu - tarkista sähköpostisi"
+  },
+  "invalid_reset_token": {
+    "en": "Invalid reset token",
+    "fi": "Virheellinen nollauslinkki"
+  },
+  "password_reset_success": {
+    "en": "Password reset successful",
+    "fi": "Salasana vaihdettu onnistuneesti"
   }
 }
